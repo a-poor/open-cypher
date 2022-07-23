@@ -1,6 +1,6 @@
 [package]
 name = "open-cypher"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Austin Poor <code@austinpoor.com"]
 description = "A rust library for parsing openCyper queries."
