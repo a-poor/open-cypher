@@ -1,2 +1,200 @@
+Cypher = { 
+    SP? ~ Statement ~ (SP? ~ ";")? ~ SP? ~ EOI 
+}
 
-Cypher = { ANY* }
+Statement = {
+    Query
+}
+
+Query = {
+    RegularQuery | StandaloneCall
+}
+
+RegularQuery = {
+    SingleQuery ~ (SP? ~ Union)*
+}
+
+Union = {
+    UNION ~ (SP ~ ALL)? ~ SP? SingleQuery
+}
+
+UNION = @{ ^"UNION" }
+
+ALL = @{ ^"ALL" }
+
+SingleQuery = {
+    SinglePartQuery | MultiPartQuery
+}
+
+SinglePartQuery = {
+    ((ReadingClause | SP?)* ~ Return) 
+    | ((ReadingClause | SP?)* ~ UpdatingClause ~ (SP? ~ UpdatingClause)* ~ (SP? ~ Return)?)
+}
+
+MultiPartQuery = {
+    ((ReadingClause ~ SP?)* ~ (UpdatingClause ~ SP?)* ~ With ~ SP?)+ ~ SinglePartQuery
+}
+
+UpdatingClause = {
+    Create | Merge | Delete | Set | Remove
+}
+
+ReadingClause = {
+    Match | Unwind | InQueryCall
+}
+
+Match = {
+    (OPTIONAL ~ SP)? ~ MATCH ~ SP? ~ Pattern ~ (SP? ~ Where)?
+}
+
+OPTIONAL = @{ ^"OPTIONAL" }
+
+MATCH = @{ ^"MATCH" }
+
+Unwind = {
+    UNWIND ~ SP? ~ Expression ~ SP ~ AS ~ SP ~ Variable
+}
+
+UNWIND = @{ ^"UNWIND" }
+
+AS = @{ ^"AS" }
+
+Merge = {
+    MERGE ~ SP? ~ PatternPart ~ (SP ~ MergeAction)*
+}
+
+MERGE = @{ ^"MERGE" }
+
+MergeAction = {
+    ON ~ SP ~ (MATCH | CREATE) ~ SP ~ Set
+}
+
+ON = @{ ^"ON" }
+
+CREATE = @{ ^"CREATE" }
+
+Create = {
+    CREATE ~ SP? ~ Pattern
+}
+
+Set = {
+    SET ~ SP? ~ SetItem ~ (SP? ~ "," ~ SP? ~ SetItem)*
+}
+
+SET = @{ ^"SET" }
+
+SetItem = {
+    (PropertyExpression ~ SP? ~ "=" ~ SP? ~ Expression)
+    | (Variable ~ SP? ~ "=" SP? ~ Expression)
+    | (Variable ~ SP? ~ "+=" SP? ~ Expression)
+    | (Variable ~ SP? ~ NodeLabels)
+}
+
+Delete = {
+    (DETACH ~ SP)? ~ DELETE ~ SP? ~ Expression ~ (SP? ~ "," ~ SP? ~ Expression)*
+}
+
+DETACH = @{ ^"DETACH" }
+
+DELETE = @{ ^"DELETE" }
+
+Remove = {
+    REMOVE ~ SP ~ RemoveItem ~ (SP? ~ "," ~ SP? ~ RemoveItem)*
+}
+
+REMOVE = @{ ^"REMOVE" }
+
+RemoveItem = {
+    (Variable ~ NodeLabels)
+    | PropertyExpression
+}
+
+InQueryCall = {
+    CALL ~ SP ~ ExplicitProcedureInvocation ~ (SP? ~ YIELD ~ SP ~ YieldItems)?
+}
+
+CALL = @{ ^"CALL" }
+
+YIELD = @{ ^"YIELD" }
+
+StandaloneCall = {
+    CALL ~ SP ~ (ExplicitProcedureInvocation | ImplicitProcedureCallInvocation) ~
+    (SP? ~ YIELD ~ SP ~ (STAR? | YieldItems))?
+}
+
+STAR = @{ "*" }
+
+YieldItems = {
+    YieldItem ~ (SP? ~ "," ~ SP? ~ YieldItem)* ~ (SP? ~ Where)?
+}
+
+YieldItem = {
+    (ProcedureResultField ~ SP ~ AS ~ SP)? ~ Variable
+}
+
+With = {
+    WITH ~ ProjectionBody ~ (SP? ~ Where)?
+}
+
+WITH = @{ ^"WITH" }
+
+Return = {
+    RETURN ~ ProjectionBody
+}
+
+RETURN = @{ ^"RETURN" }
+
+ProjectionBody = {
+    (SP? ~ DISTINCT)? ~ SP ~ ProjectionItems ~ (SP ~ Order)? ~ (SP ~ Skip)? ~ (SP ~ Limit)?
+}
+
+ProjectionItems = {
+    (STAR ~ (SP? ~ "," ~ SP? ~ ProjectionItem)*)
+    | (ProjectionItem ~ (SP? ~ "," ~ SP? ~ ProjectionItem)*)
+}
+
+ProjectionItem = {
+    Expression ~ (SP ~ AS ~ SP ~ Variable)?
+}
+
+Order = {
+    ORDER ~ SP ~ BY ~ SP ~ SortItem ~ ("," ~ SP? ~ SortItem)*
+}
+
+ORDER = @{ ^"ORDER" }
+
+BY = @{ ^"BY" }
+
+Skip = {
+    SKIP ~ SP ~ Expression
+}
+
+SKIP = @{ ^"SKIP" }
+
+Limit = {
+    LIMIT ~ SP ~ Expression
+}
+
+LIMIT = @{ ^"LIMIT" } 
+
+SortItem = {
+    Expression ~ (SP? ~ (ASCENDING | ASC | DESCENDING | DESC))?
+}
+
+ASCENDING = @{ ^"ASCENDING" }
+
+ASC = @{ ^"ASC" }
+
+DESCENDING = @{ ^"DESCENDING" }
+
+DESC = @{ ^"DESC" }
+
+Where = {
+    WHERE ~ SP ~ Expression
+}
+
+WHERE = @{ ^"WHERE" }
+
+Pattern = {
+    PatternPart ~ (SP? ~ "," ~ SP? ~ PatternPart)*
+}
