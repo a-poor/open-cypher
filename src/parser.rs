@@ -15,8 +15,11 @@ pub fn parse(code: &str) -> Result<Pairs<Rule>, Error<Rule>> {
 }
 
 pub fn parse_string_literal(code: &str) -> Result<Pairs<Rule>, Error<Rule>> {
-    CypherParser::parse(Rule::Atom, code)
+    CypherParser::parse(Rule::UnescapedSymbolicName, code)
 }
+
+
+
 
 
 pub fn print_pairs(pairs: Pairs<Rule>) {

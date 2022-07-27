@@ -248,7 +248,7 @@ StringListNullOperatorExpression = {
         StringOperatorExpression 
         | ListOperatorExpression 
         | NullOperatorExpression
-    )
+    )*
 }
 
 ListOperatorExpression = {
