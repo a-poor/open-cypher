@@ -23,6 +23,8 @@ For reference, the following other projects use pest: https://github.com/pest-pa
   - `main.rs`: Currently the main directory for quick tests (will be removed)
   - `parser.rs`: Contains functions for parsing and viewing parsed cypher queries
   - `ast.rs`: Will contain code for _potentially_ exposing a cleaner cypher AST, than is created by pest
+- `assets/`
+  - `cypher.ebnf`: Open cypher grammar definition from the openCypher site
 
 ## Contributing
 
