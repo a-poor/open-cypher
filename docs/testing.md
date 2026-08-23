@@ -25,6 +25,11 @@ read and write statements, diagnostics and recovery, historical Pest bugs, a
 small file-backed smoke corpus, and property-generated queries. Set
 `PROPTEST_CASES=4096` for the expanded nightly property run.
 
+The `Verify packaged crate` CI job builds the exact `.crate` archive, extracts
+it into a fresh directory, checks every packaged target with all features, and
+runs the packaged test suite. This catches test, example, or benchmark fixtures
+that work from the repository but were omitted from the published archive.
+
 Recovery currently has a public safety invariant of at most 32 diagnostics per
 parse. Unit, property, and fuzz tests all enforce that bound.
 

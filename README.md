@@ -1,5 +1,12 @@
 # open-cypher
 
+[![Crates.io](https://img.shields.io/crates/v/open-cypher.svg)](https://crates.io/crates/open-cypher)
+[![Documentation](https://docs.rs/open-cypher/badge.svg)](https://docs.rs/open-cypher)
+[![CI](https://github.com/a-poor/open-cypher/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/a-poor/open-cypher/actions/workflows/ci.yml)
+[![Scheduled fuzzing](https://github.com/a-poor/open-cypher/actions/workflows/fuzz.yml/badge.svg?branch=main)](https://github.com/a-poor/open-cypher/actions/workflows/fuzz.yml)
+[![Mutation testing](https://github.com/a-poor/open-cypher/actions/workflows/mutation.yml/badge.svg?branch=main)](https://github.com/a-poor/open-cypher/actions/workflows/mutation.yml)
+[![Benchmarks](https://github.com/a-poor/open-cypher/actions/workflows/benchmarks.yml/badge.svg?branch=main)](https://github.com/a-poor/open-cypher/actions/workflows/benchmarks.yml)
+
 `open-cypher` is an unofficial Rust lexer and parser for the
 [openCypher](https://opencypher.org/) query language.
 

@@ -283,7 +283,7 @@ fn contextual_fallback_preserves_aliased_literal_semantics() {
 
 #[test]
 fn contextual_expression_fuzz_seed_remains_a_valid_query() {
-    let source = include_str!("../fuzz/corpus/parse_strict/contextual_expression_names");
+    let source = include_str!("fixtures/regressions/parse_strict/contextual_expression_names");
     parse(source).unwrap_or_else(|errors| {
         panic!("contextual-expression fuzz seed must remain valid: {errors:#?}")
     });

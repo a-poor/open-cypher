@@ -287,10 +287,10 @@ fn standalone_wildcard_yield_retains_all_shape_and_terminator_span() {
 #[test]
 fn ast_variant_fuzz_seeds_remain_valid_queries() {
     for source in [
-        include_str!("../fuzz/corpus/parse_strict/ast_path_factor_variants"),
-        include_str!("../fuzz/corpus/parse_strict/subpath_factor"),
-        include_str!("../fuzz/corpus/parse_strict/legacy_shortest_factor"),
-        include_str!("../fuzz/corpus/parse_strict/standalone_call_yield"),
+        include_str!("fixtures/regressions/parse_strict/ast_path_factor_variants"),
+        include_str!("fixtures/regressions/parse_strict/subpath_factor"),
+        include_str!("fixtures/regressions/parse_strict/legacy_shortest_factor"),
+        include_str!("fixtures/regressions/parse_strict/standalone_call_yield"),
     ] {
         parse(source).unwrap_or_else(|errors| {
             panic!("valid fuzz seed failed to parse: {source}\n{errors:#?}")

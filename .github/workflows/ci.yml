@@ -43,6 +43,48 @@ jobs:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc --workspace --all-features --no-deps --locked
 
+  package:
+    name: Verify packaged crate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Package and test exact archive contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          scratch="$(mktemp -d)"
+          package_target="$scratch/package-target"
+
+          cargo package --package open-cypher --all-features --locked \
+            --target-dir "$package_target"
+
+          shopt -s nullglob
+          archives=("$package_target"/package/open-cypher-*.crate)
+          if (( ${#archives[@]} != 1 )); then
+            printf 'expected one .crate archive, found %d\n' \
+              "${#archives[@]}" >&2
+            exit 1
+          fi
+
+          mkdir "$scratch/extracted"
+          tar -xzf "${archives[0]}" -C "$scratch/extracted"
+          roots=("$scratch"/extracted/open-cypher-*)
+          if (( ${#roots[@]} != 1 )) || [[ ! -d "${roots[0]}" ]]; then
+            printf 'expected one extracted package root, found %d\n' \
+              "${#roots[@]}" >&2
+            exit 1
+          fi
+
+          CARGO_TARGET_DIR="$scratch/test-target" \
+            cargo check --manifest-path "${roots[0]}/Cargo.toml" \
+              --all-targets --all-features --locked
+          CARGO_TARGET_DIR="$scratch/test-target" \
+            cargo test --manifest-path "${roots[0]}/Cargo.toml" \
+              --all-features --locked
+
   compatibility:
     name: Test (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
@@ -142,16 +184,22 @@ jobs:
           --target x86_64-unknown-linux-gnu
           ${{ matrix.target }}
       - name: Replay seed and regression corpus
-        run: >-
-          cargo +nightly fuzz run
-          --target x86_64-unknown-linux-gnu
-          ${{ matrix.target }}
-          fuzz/corpus/${{ matrix.target }} --
-          -dict=fuzz/cypher.dict
-          -runs=0
-          -max_len=65536
-          -timeout=5
-          -rss_limit_mb=2048
+        env:
+          FUZZ_TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          corpora=("fuzz/corpus/$FUZZ_TARGET")
+          if [[ "$FUZZ_TARGET" == "parse_strict" ]]; then
+            corpora+=("tests/fixtures/regressions/parse_strict")
+          fi
+          cargo +nightly fuzz run \
+            --target x86_64-unknown-linux-gnu \
+            "$FUZZ_TARGET" "${corpora[@]}" -- \
+            -dict=fuzz/cypher.dict \
+            -runs=0 \
+            -max_len=65536 \
+            -timeout=5 \
+            -rss_limit_mb=2048
 
   benchmark-build:
     name: Build benchmarks
