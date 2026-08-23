@@ -21,7 +21,7 @@ jobs:
     name: Expanded property suite
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Run property tests with an expanded case budget
@@ -38,7 +38,7 @@ jobs:
       matrix:
         target: [lex_str, parse_strict, parse_recovering, parse_generated_valid, parse_tck_mutations]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - uses: taiki-e/install-action@v2
         with:
@@ -47,7 +47,7 @@ jobs:
         with:
           workspaces: fuzz -> fuzz/target
       - name: Restore evolving corpus
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: fuzz/corpus/${{ matrix.target }}
           key: fuzz-${{ matrix.target }}-${{ github.run_id }}
@@ -72,7 +72,7 @@ jobs:
             -rss_limit_mb=2048
       - name: Upload failure artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fuzz-artifacts-${{ matrix.target }}
           path: fuzz/artifacts/${{ matrix.target }}
@@ -80,7 +80,7 @@ jobs:
           retention-days: 14
       - name: Upload evolved corpus
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fuzz-corpus-${{ matrix.target }}
           path: fuzz/corpus/${{ matrix.target }}
