@@ -588,11 +588,28 @@ pub type PathFactor = Node<PathFactorKind>;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PathFactorKind {
     Node(NodePattern),
+    /// A node pattern followed by a graph-pattern quantifier.
+    QuantifiedNode {
+        pattern: NodePattern,
+        quantifier: Quantifier,
+    },
     Relationship(RelationshipPattern),
     Parenthesized {
         pattern: Box<PathPattern>,
         where_clause: Option<Box<Expr>>,
         quantifier: Option<Quantifier>,
+    },
+    /// A parenthesized path factor with a subpath-variable binding.
+    Subpath {
+        binding: Name,
+        pattern: Box<PathPattern>,
+        where_clause: Option<Box<Expr>>,
+        quantifier: Option<Quantifier>,
+    },
+    /// A legacy `shortestPath(...)` or `allShortestPaths(...)` path factor.
+    LegacyShortest {
+        all: bool,
+        pattern: Box<PathPattern>,
     },
     Error(ErrorNode),
 }
@@ -633,7 +650,7 @@ pub enum RelationshipDirection {
     Both,
 }
 
-/// Repetition applied to a relationship or parenthesized path.
+/// Repetition applied to a node, relationship, or parenthesized path.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Quantifier {

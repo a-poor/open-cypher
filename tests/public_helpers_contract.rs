@@ -68,7 +68,6 @@ fn every_token_kind_has_a_stable_human_readable_name() {
         TokenKind::Percent,
         TokenKind::Caret,
         TokenKind::Bang,
-        TokenKind::Tilde,
         TokenKind::Equal,
         TokenKind::NotEqual,
         TokenKind::Less,

@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use open_cypher::{lex, parse};
+use open_cypher::{DiagnosticCode, lex, parse};
 
 fuzz_target!(|data: &[u8]| {
     let source = String::from_utf8_lossy(data);
@@ -28,6 +28,7 @@ fuzz_target!(|data: &[u8]| {
         }
         Err(errors) => {
             for diagnostic in errors.diagnostics() {
+                assert_ne!(diagnostic.code, DiagnosticCode::Internal);
                 assert!(diagnostic.primary_span.start <= diagnostic.primary_span.end);
                 assert!(diagnostic.primary_span.end <= source.len());
                 assert!(source.is_char_boundary(diagnostic.primary_span.start));

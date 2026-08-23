@@ -28,8 +28,11 @@ cargo +nightly fuzz run parse_strict fuzz/corpus/parse_strict -- \
   -dict=fuzz/cypher.dict -runs=0 -max_len=65536 -timeout=5
 ```
 
-Targets cover the lexer, strict parser, recovery, and a small independent
-grammar-aware valid-query generator. The checked-in corpus contains stable seed
+Targets cover the lexer, strict parser, recovery, a small independent
+grammar-aware valid-query generator, and mutations based on every unique query
+in the generated TCK syntax projection. The TCK mutation target validates the
+projection header and loads all 4,131 unique records, including both accepted
+and rejected syntax expectations. The checked-in corpus contains stable seed
 and regression cases; CI-generated corpus growth is uploaded as an artifact and
 is not committed automatically.
 

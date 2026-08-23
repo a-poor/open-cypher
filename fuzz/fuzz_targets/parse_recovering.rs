@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use open_cypher::{lex, parse_recovering};
+use open_cypher::{DiagnosticCode, lex, parse_recovering};
 
 const MAX_RECOVERY_DIAGNOSTICS: usize = 32;
 
@@ -15,6 +15,7 @@ fuzz_target!(|data: &[u8]| {
         "recovery emitted more than {MAX_RECOVERY_DIAGNOSTICS} diagnostics"
     );
     for diagnostic in &outcome.diagnostics {
+        assert_ne!(diagnostic.code, DiagnosticCode::Internal);
         assert!(diagnostic.primary_span.start <= diagnostic.primary_span.end);
         assert!(diagnostic.primary_span.end <= source.len());
         assert!(source.is_char_boundary(diagnostic.primary_span.start));

@@ -3,7 +3,7 @@ name = "open-cypher-fuzz"
 version = "0.0.0"
 publish = false
 edition = "2024"
-rust-version = "1.86"
+rust-version = "1.88"
 
 [package.metadata]
 cargo-fuzz = true
@@ -11,6 +11,7 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 open-cypher = { path = ".." }
+serde_json = "1.0.140"
 
 [[bin]]
 name = "lex_str"
@@ -40,6 +41,14 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "parse_tck_mutations"
+path = "fuzz_targets/parse_tck_mutations.rs"
+test = false
+doc = false
+bench = false
+
 # Keep the fuzz harness out of the library workspace and its normal lockfile.
 [workspace]
 members = ["."]
+resolver = "3"

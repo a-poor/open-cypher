@@ -1,130 +1,253 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-schema_version = 1
+schema_version = 2
 baseline = "openCypher 2024.3 BNF"
 
 # This is a policy ledger, not a conformance claim. `accepted` means the syntax is
 # intentionally in scope. `open` records an observed difference whose disposition
-# still needs review. Actual implementation coverage is recorded separately in
-# PRODUCTION_MAP.toml and tests.
+# still needs review. Production references and executable cases are validated
+# reciprocally against PRODUCTION_MAP.toml and WITNESSES.toml.
 
 [[deviation]]
-id = "OC2024-TCK-STANDALONE-RETURN"
+id = "OC2024-COUNT-COLLECT-SUBQUERIES"
 status = "accepted"
+productions = ["non-parenthesized value expression primary", "keyword"]
+kind = "explicit-syntax-extension"
+summary = "Accept COUNT and COLLECT subquery expressions alongside EXISTS."
+baseline = "The 2024.3 BNF exposes only EXISTS as a subquery-valued expression primary."
+rationale = "COUNT and COLLECT subqueries are explicit AST forms retained for the modern Cypher surface; COLLECT is one of the five non-baseline spellings intentionally exposed through the public Keyword token class."
+positive_case = "count-collect-subquery-positive"
+negative_case = "count-collect-subquery-negative"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf"
+
+[[deviation]]
+id = "OC2024-EXPRESSION-MAP-PROJECTION-BASE"
+status = "accepted"
+productions = ["map projection"]
+kind = "explicit-syntax-extension"
+summary = "Accept an arbitrary expression as a map-projection base."
+baseline = "The BNF map projection begins with a binding variable."
+rationale = "The AST can preserve any expression base, enabling parenthesized and computed projection sources without ambiguity."
+positive_case = "expression-map-projection-positive"
+negative_case = "expression-map-projection-negative"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#map-projection"
+
+[[deviation]]
+id = "OC2024-REPEATED-MERGE-ACTIONS"
+status = "accepted"
+productions = ["merge statement", "merge action"]
 kind = "tck-over-bnf-clarification"
-summary = "Accept a RETURN result statement without a preceding primitive statement."
-baseline = "The BNF writes <linear statement> as <primitive statement>... followed by an optional <primitive result statement>; the repetition notation is easy to read inconsistently."
-rationale = "The official 2024.3 TCK repeatedly executes standalone RETURN queries."
-positive_witness = "RETURN 1 AS value"
-negative_witness = "RETURN"
-evidence = "vendor/openCypher-2024.3/tck/features/expressions/null/Null3.feature"
+summary = "Accept more than one ON MATCH/ON CREATE action after MERGE."
+baseline = "The BNF shows one optional merge action."
+rationale = "The official TCK exercises the customary ON MATCH plus ON CREATE pair, and the AST stores the actions as an ordered list."
+positive_case = "repeated-merge-action-positive"
+negative_case = "repeated-merge-action-negative"
+evidence = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge4.feature"
+evidence_scenario = "Scenario: [1] Merge should be able to set labels on match and on create"
+
+[[deviation]]
+id = "OC2024-PATTERN-PARAMETER-PROPERTIES"
+status = "accepted"
+productions = ["graph pattern", "node pattern filler", "element pattern predicate", "element property specification", "relationship pattern filler", "merge node pattern filler", "merge relationship pattern filler", "merge node label and property set specification", "merge relationship label and property set specification", "merge element property specification", "subquery expression argument"]
+kind = "syntax-semantic-validation-boundary"
+summary = "Parse bare parameter property maps in graph, subquery, and update patterns, rather than only in CREATE."
+baseline = "The BNF permits a general parameter as a CREATE element property specification, while query and MERGE element property specifications require a braced nonempty key/value map."
+rationale = "The official TCK treats parameter use in MATCH and MERGE pattern predicates as the InvalidParameterUse compile-time semantic error, so the syntax frontend preserves the parameter for later validation in graph, subquery, and update patterns. Simple pattern expressions, comprehensions, and legacy shortest paths remain restricted to braced properties."
+positive_case = "pattern-parameter-properties-extension-positive"
+negative_case = "pattern-parameter-properties-boundary-negative"
+evidence = "vendor/openCypher-2024.3/tck/features/clauses/match/Match1.feature"
+evidence_scenario = "Scenario: [6] Fail when using parameter as node predicate in MATCH"
+
+[[deviation]]
+id = "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"
+status = "accepted"
+productions = ["graph pattern", "simple path pattern", "legacy shortest path pattern", "node pattern filler", "element pattern predicate", "element property specification", "property key value pair list", "relationship pattern filler", "create node pattern filler", "create relationship pattern filler", "create node label and property set specification", "create relationship label and property set specification", "create element property specification", "merge node pattern filler", "merge relationship pattern filler", "merge node label and property set specification", "merge relationship label and property set specification", "merge element property specification", "pattern comprehension", "pattern source", "pattern expression", "subquery expression argument", "shortest path expression"]
+kind = "tck-over-bnf-clarification"
+summary = "Accept an empty braced property map on nodes and relationships throughout pattern syntax."
+baseline = "The BNF element property specification contains a mandatory property-key/value-pair list, so `{}` has no baseline derivation."
+rationale = "The official TCK uses empty node and relationship property maps inside otherwise syntactically valid patterns whose expected failures are semantic. Map-valued properties have an unambiguous empty AST representation, and the shared rule retains it in pattern expressions, comprehensions, and legacy shortest paths too."
+positive_case = "empty-pattern-properties-extension-positive"
+negative_case = "empty-pattern-properties-boundary-negative"
+evidence = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+evidence_scenario = "Scenario: [18] Fail when adding new label predicate on a node that is already bound 4"
+
+[[deviation]]
+id = "OC2024-LEGACY-COLON-LABEL-PREDICATES"
+status = "accepted"
+productions = ["advanced comparison predicate part 2", "is labeled predicate part 2", "is label expression"]
+kind = "tck-over-bnf-clarification"
+summary = "Accept node- and relationship-style repeated-colon legacy forms in generic expression predicates."
+baseline = "The BNF generic labeled predicate uses an IS/colon-prefixed boolean label expression; the repeated-colon legacy production is scoped to node patterns."
+rationale = "The official TCK exercises `a:A:B` as a conjunctive label predicate. The shared legacy-label recognizer also accepts `a:A|:B`; both are normalized to explicit label-expression AST nodes, while mixtures of legacy `|:` and boolean operators remain rejected."
+positive_case = "label-predicate-colon-chain-extension-positive"
+negative_case = "label-predicate-legacy-boundary-negative"
+evidence = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph5.feature"
+evidence_scenario = "Scenario: [3] Conjunctive labels expression on nodes"
+
+[[deviation]]
+id = "OC2024-MODERN-UPDATE-LABEL-EXPRESSIONS"
+status = "accepted"
+productions = ["set labels item", "remove labels item"]
+kind = "explicit-syntax-extension"
+summary = "Accept boolean and IS label expressions in SET and REMOVE."
+baseline = "The BNF update label-set productions allow repeated colon-prefixed label names only."
+rationale = "The parser uses the modern explicit label-expression AST consistently for label predicates and label updates."
+positive_case = "modern-update-labels-positive"
+negative_case = "modern-update-labels-negative"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#set-labels-item"
+
+[[deviation]]
+id = "OC2024-UPPERCASE-OCTAL-PREFIX"
+status = "accepted"
+productions = ["unsigned octal integer"]
+kind = "lexical-alias"
+summary = "Accept 0O as an uppercase alias for the BNF 0o octal prefix."
+baseline = "The BNF spells the octal prefix with a lowercase o."
+rationale = "Numeric radix prefixes are recognized case-insensitively, matching the hexadecimal prefix policy."
+positive_case = "uppercase-octal-positive"
+negative_case = "uppercase-octal-negative"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#unsigned-octal-integer"
+
+[[deviation]]
+id = "OC2024-NESTED-UNARY-SIGNS"
+status = "accepted"
+productions = ["arithmetic unary"]
+kind = "expression-extension"
+summary = "Accept recursively nested unary plus and minus operators."
+baseline = "The BNF arithmetic-unary production permits at most one optional sign."
+rationale = "Recursive unary operators have conventional precedence, a direct AST representation, and no parsing ambiguity."
+positive_case = "nested-unary-positive"
+negative_case = "nested-unary-negative"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#arithmetic-unary"
+
+[[deviation]]
+id = "OC2024-UNICODE-SCALAR-SAFETY"
+status = "accepted"
+productions = ["escaped character", "unicode escape value", "unicode 4 digit escape value", "unicode 6 digit escape value"]
+kind = "representation-safety-restriction"
+summary = "Reject surrogate and out-of-range Unicode escapes that cannot form Rust scalar values."
+baseline = "The BNF constrains Unicode escapes by hexadecimal width and does not exclude surrogate code points."
+rationale = "Rust String values contain Unicode scalar values, so accepting a surrogate would require storing an invalid or lossy character representation."
+positive_case = "unicode-surrogate-rejected"
+negative_case = "escaped-string-negative"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#unicode-escape-value"
 
 [[deviation]]
 id = "OC2024-COMMENTS-AS-SEPARATORS"
 status = "accepted"
+productions = ["separator"]
 kind = "practical-compatibility-extension"
 summary = "Treat // line comments and nested /* block comments */ as trivia/separators."
 baseline = "The 2024.3 BNF defines <separator> only as unicode: WHITESPACE and has no comment production."
 rationale = "Comments are lexical trivia required by existing Cypher source compatibility and the lossless-token API; nested block comments are deliberately preserved by the lexer."
-positive_witness = "RETURN /* outer /* nested */ outer */ 1 // trailing comment\n"
-negative_witness = "RETURN /* unterminated"
+positive_case = "comments-positive"
+negative_case = "comments-negative"
 evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#separator"
 
 [[deviation]]
 id = "OC2024-GQL-PATH-MODE-EXTENSIONS"
 status = "accepted"
+productions = ["path pattern prefix", "keyword"]
 kind = "explicit-syntax-extension"
 summary = "Accept WALK, TRAIL, SIMPLE, and ACYCLIC before a graph pattern."
 baseline = "The openCypher 2024.3 BNF defines path selectors and PATH/PATHS keywords but does not define these four path-mode spellings."
-rationale = "They are useful GQL-style compatibility extensions and are represented explicitly in the AST rather than being confused with baseline syntax."
-positive_witness = "MATCH TRAIL p = (a)-[]->{1,3}(b) RETURN p"
-negative_witness = "MATCH UNKNOWN p = (a)-[]->{1,3}(b) RETURN p"
+rationale = "They are useful GQL-style compatibility extensions, represented explicitly in the AST, and intentionally exposed through the public Keyword token class rather than being confused with baseline identifiers."
+positive_case = "path-mode-positive"
+negative_case = "path-mode-negative"
 evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#path-pattern-prefix"
 
 [[deviation]]
 id = "OC2024-OPTIONAL-GRAPH-QUANTIFIER"
 status = "accepted"
+productions = ["graph pattern quantifier"]
 kind = "explicit-syntax-extension"
 summary = "Accept ? as the optional graph-pattern quantifier."
 baseline = "The 2024.3 BNF graph-pattern quantifier permits *, +, and braced fixed/general quantifiers, but not ?."
 rationale = "The parser and AST deliberately model the familiar optional quantifier alongside the other GQL-style graph quantifiers."
-positive_witness = "MATCH (a)-[]->?(b) RETURN a"
-negative_witness = "MATCH (a)-[]->??(b) RETURN a"
+positive_case = "optional-quantifier-positive"
+negative_case = "optional-quantifier-negative"
 evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#graph-pattern-quantifier"
 
 [[deviation]]
 id = "OC2024-BANG-NOT-EQUALS-ALIAS"
 status = "accepted"
+productions = ["not equals operator"]
 kind = "operator-alias"
 summary = "Accept != as an alias for the BNF <> not-equals operator."
 baseline = "The 2024.3 BNF spells the not-equals operator only as <>."
 rationale = "The alias is widely understood, is losslessly tokenized, and maps to the same explicit AST operator."
-positive_witness = "RETURN 1 != 2 AS different"
-negative_witness = "RETURN 1 ! 2"
+positive_case = "bang-not-equals-positive"
+negative_case = "bang-not-equals-negative"
 evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#not-equals-operator"
 
 [[deviation]]
 id = "OC2024-DOUBLE-PIPE-CONCATENATION"
 status = "accepted"
+productions = ["value expression", "concatenation operator"]
 kind = "bnf-token-placement-extension"
 summary = "Accept || as a value-expression concatenation operator."
 baseline = "The 2024.3 BNF defines a <concatenation operator> token but does not place it in the value-expression precedence hierarchy."
 rationale = "The parser gives the upstream token an explicit binary concatenation AST node and stable precedence."
-positive_witness = "RETURN 'a' || 'b' AS joined"
-negative_witness = "RETURN 'a' | 'b'"
+positive_case = "concatenation-positive"
+negative_case = "concatenation-negative"
 evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#concatenation-operator"
 
 [[deviation]]
 id = "OC2024-EMPTY-PROGRAM"
 status = "accepted"
+productions = ["program"]
 kind = "parser-input-envelope"
 summary = "Accept empty or trivia-only source as a program with no statements."
 baseline = "The 2024.3 BNF <program> requires a statement and has no empty alternative."
 rationale = "An empty program is useful for incremental editor input and is represented without inventing a query node."
-positive_witness = " \n"
-negative_witness = ";"
+positive_case = "empty-program-positive"
+negative_case = "empty-program-negative"
 evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#program"
 
 [[deviation]]
 id = "OC2024-TRAILING-SEMICOLON"
 status = "accepted"
+productions = ["program"]
 kind = "parser-input-envelope"
 summary = "Accept one optional semicolon after a query."
 baseline = "The 2024.3 BNF <program> does not include a statement terminator."
 rationale = "A single trailing terminator is common in query tools and is preserved in the syntax tree."
-positive_witness = "RETURN 1;"
-negative_witness = "RETURN 1;;"
+positive_case = "trailing-semicolon-positive"
+negative_case = "trailing-semicolon-negative"
 evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#program"
 
 [[deviation]]
 id = "OC2024-UNDERSCORE-IDENTIFIER-START"
-status = "open"
-kind = "alignment-review"
-summary = "Review whether an underscore may begin an unquoted regular identifier."
+status = "accepted"
+productions = ["regular identifier"]
+kind = "practical-compatibility-extension"
+summary = "Accept an underscore at the start of an unquoted regular identifier."
 baseline = "The 2024.3 BNF requires unicode XID_START for the first character; underscore is not XID_START."
-rationale = "The lexer currently includes underscore explicitly in its word-start class. This entry records the mismatch without accepting it as policy."
-positive_witness = "RETURN _value"
-negative_witness = "RETURN 1 AS"
+rationale = "Underscore-prefixed names are common in existing Cypher source and are intentionally retained as a documented lexical compatibility extension."
+positive_case = "underscore-identifier-positive"
+negative_case = "underscore-identifier-negative"
 evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#regular-identifier"
 
 [[deviation]]
-id = "OC2024-HYBRID-LABEL-EXPRESSIONS"
-status = "open"
-kind = "alignment-review"
-summary = "Review the shared boolean label grammar used after both : and IS."
-baseline = "The BNF restricts legacy colon-prefixed node labels to colon-separated names and reserves the full boolean label expression for IS/: label-expression forms with distinct node and relationship rules."
-rationale = "The parser currently shares one recursive boolean rule across node, relationship, colon, and IS contexts. The resulting extra combinations require an explicit compatibility decision."
-positive_witness = "MATCH (n:A|B) RETURN n"
-negative_witness = "MATCH (n:) RETURN n"
-evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#is-node-label-expression"
+id = "OC2024-CREATE-PATTERN-SEMANTIC-BOUNDARY"
+status = "accepted"
+productions = ["create statement"]
+kind = "syntax-semantic-validation-boundary"
+summary = "Parse general pattern forms in CREATE and leave update restrictions to semantic validation."
+baseline = "The BNF defines restricted create/merge graph-pattern families separately from general query graph patterns."
+rationale = "The official TCK's syntax projection expects these forms to parse and classifies direction, type-cardinality, selector, and related update restrictions as compile-time semantic errors. The syntax parser therefore preserves the complete pattern for a later semantic-validation phase."
+positive_case = "update-pattern-positive"
+negative_case = "update-pattern-negative"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#create-statement"
 
 [[deviation]]
-id = "OC2024-UPDATE-PATTERN-OVERACCEPTANCE"
-status = "open"
-kind = "alignment-review"
-summary = "Review CREATE and MERGE reuse of general query-pattern rules."
-baseline = "The BNF defines restricted create/merge graph-pattern families separately from general query graph patterns."
-rationale = "The parser currently reuses general Pattern/PatternPart rules, which may admit selectors, directions, predicates, or quantifiers that update-pattern productions exclude. This is not accepted policy."
-positive_witness = "CREATE ANY (n)"
-negative_witness = "CREATE"
-evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#create-statement"
+id = "OC2024-MERGE-PATTERN-SEMANTIC-BOUNDARY"
+status = "accepted"
+productions = ["merge statement"]
+kind = "syntax-semantic-validation-boundary"
+summary = "Parse general pattern forms in MERGE and leave update restrictions to semantic validation."
+baseline = "The BNF defines restricted merge graph-pattern families separately from general query graph patterns."
+rationale = "The official TCK's syntax projection expects these forms to parse and classifies direction, type-cardinality, selector, and related update restrictions as compile-time semantic errors. The syntax parser therefore preserves the complete pattern for a later semantic-validation phase."
+positive_case = "merge-update-pattern-positive"
+negative_case = "merge-negative"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#merge-statement"

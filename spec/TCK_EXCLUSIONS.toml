@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Exact, temporary parser-conformance exceptions. Patterns and globs are not
+# supported; every entry must name one current projection occurrence.
+
+schema_version = 1
+release = "2024.3"
+commit = "677cbafabb8c3c5eed458fd3b1ec0daec8d67d23"
+exclusion_count = 0
+
+# Example shape (keep exclusion_count synchronized):
+# [[exclusion]]
+# occurrence_id = "occ:vendor/openCypher-2024.3/tck/features/...:42:0:1"
+# direction = "expected_accept_but_rejected"
+# issue = "https://github.com/example/project/issues/123"
+# rationale = "Concise, reviewed reason this exact mismatch is temporarily allowed."

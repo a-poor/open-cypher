@@ -6,9 +6,10 @@ use lalrpop_util::ParseError;
 
 use crate::ast::{
     BinaryOperator, Clause, ClauseKind, ErrorNode, Expr, ExprKind, Identifier, IntegerLiteral,
-    IntegerRadix, IsPredicate, ListComprehension, Literal, LiteralKind, Name, Node, Parameter,
-    ParameterName, PathFactor, PathFactorKind, PatternComprehension, Program, QualifiedName,
-    Quantifier, QueryKind, QueryStatement, QuoteStyle, RegularQuery, RelationshipDirection,
+    IntegerRadix, IsPredicate, LabelExpression, ListComprehension, Literal, LiteralKind,
+    MapProjection, MapProjectionItem, MatchClause, Name, Node, Parameter, ParameterName,
+    PathFactor, PathFactorKind, Pattern, PatternComprehension, Program, QualifiedName, Quantifier,
+    Query, QueryKind, QueryStatement, QuoteStyle, RegularQuery, RelationshipDirection,
     RelationshipPattern, SingleQuery, SingleQueryKind, StatementKind, StringLiteral, UnionBranch,
     UnionOperator,
 };
@@ -73,7 +74,7 @@ pub fn parse_recovering(source: &str) -> ParseOutcome<ParsedProgram> {
     let mut diagnostics = lexed.diagnostics.clone();
     let significant = parser_tokens(&lexed.tokens);
 
-    let parsed = parse_program(source, &significant);
+    let parsed = parse_program_with_contextual_names(source, &significant);
     let program = match parsed {
         Ok(program) => Some(program),
         Err(error) => {
@@ -100,6 +101,154 @@ pub fn parse_recovering(source: &str) -> ParseOutcome<ParsedProgram> {
 
 type SpannedParserToken = (usize, ParserToken, usize);
 
+fn parse_program_with_contextual_names(
+    source: &str,
+    tokens: &[SpannedParserToken],
+) -> Result<Program, LalrpopError> {
+    parse_tokens_with_contextual_names(tokens, |contextual| parse_program(source, contextual))
+}
+
+fn parse_tokens_with_contextual_names<T>(
+    tokens: &[SpannedParserToken],
+    mut parse_tokens: impl FnMut(&[SpannedParserToken]) -> Result<T, LalrpopError>,
+) -> Result<T, LalrpopError> {
+    let mut contextual = tokens.to_vec();
+    let mut converted = vec![false; tokens.len()];
+    for index in 0..tokens.len() {
+        let follows_name_marker = index
+            .checked_sub(1)
+            .and_then(|previous| tokens.get(previous))
+            .is_some_and(|token| matches!(token.1, ParserToken::As | ParserToken::Dot));
+        if tokens[index].1.is_contextual_name_candidate()
+            && ((follows_name_marker
+                && !(tokens[index].1 == ParserToken::As && tokens[index - 1].1 == ParserToken::As))
+                || is_solo_projection_keyword(tokens, index))
+        {
+            converted[index] = true;
+            contextual[index].1 = ParserToken::Identifier;
+        }
+    }
+
+    let initial_error = match parse_tokens(&contextual) {
+        Ok(value) => return Ok(value),
+        Err(error) => error,
+    };
+
+    let mut best_error = initial_error.clone();
+    let mut error = initial_error;
+
+    // LALRPOP reports the keyword that prevented a name production from
+    // reducing (or the following token/EOF when a keyword was interpreted as
+    // syntax). Reclassify the nearest remaining contextual keyword and retry.
+    // Each pass commits one lexical-context signature (the keyword and its two
+    // neighboring tokens), so repeated non-reserved words in the same name
+    // position are handled together without conflating distinct token kinds.
+    // Valid queries can use an arbitrary number of non-reserved names, and
+    // malformed input is bounded by the finite set of signatures instead of
+    // an exponential search through keyword subsets.
+    loop {
+        if error_location(&error) >= error_location(&best_error) {
+            best_error = error.clone();
+        }
+
+        let location = error_location(&error);
+        let candidate = tokens
+            .iter()
+            .enumerate()
+            .filter(|(index, (_, token, _))| {
+                token.is_contextual_name_candidate() && !converted[*index]
+            })
+            .map(|(index, (start, _, end))| {
+                let distance = if location < *start {
+                    *start - location
+                } else {
+                    location.saturating_sub(*end)
+                };
+                let exact = (*start..*end).contains(&location);
+                let followed_by_as = tokens
+                    .get(index + 1)
+                    .is_some_and(|token| token.1 == ParserToken::As);
+                let priority = if exact && (tokens[index].1 != ParserToken::As || followed_by_as) {
+                    0
+                } else if followed_by_as && tokens[index].1 != ParserToken::As {
+                    1
+                } else if exact {
+                    2
+                } else {
+                    3
+                };
+                (priority, distance, index)
+            })
+            .min();
+        let Some((_, _, index)) = candidate else {
+            break;
+        };
+
+        let signature = contextual_name_signature(tokens, index);
+        for peer in 0..tokens.len() {
+            if !converted[peer]
+                && tokens[peer].1.is_contextual_name_candidate()
+                && contextual_name_signature(tokens, peer) == signature
+            {
+                converted[peer] = true;
+                contextual[peer].1 = ParserToken::Identifier;
+            }
+        }
+        match parse_tokens(&contextual) {
+            Ok(value) => return Ok(value),
+            Err(next_error)
+                if error_location(&next_error) > location
+                    || matches!(error, ParseError::User { .. }) =>
+            {
+                error = next_error;
+            }
+            Err(_) => break,
+        }
+    }
+
+    Err(best_error)
+}
+
+fn is_solo_projection_keyword(tokens: &[SpannedParserToken], index: usize) -> bool {
+    if !matches!(tokens[index].1, ParserToken::SetAll | ParserToken::Distinct)
+        || !index
+            .checked_sub(1)
+            .and_then(|previous| tokens.get(previous))
+            .is_some_and(|token| matches!(token.1, ParserToken::Return | ParserToken::With))
+    {
+        return false;
+    }
+
+    tokens.get(index + 1).is_none_or(|token| {
+        matches!(
+            token.1,
+            ParserToken::As
+                | ParserToken::Comma
+                | ParserToken::Order
+                | ParserToken::Offset
+                | ParserToken::Skip
+                | ParserToken::Limit
+                | ParserToken::Where
+                | ParserToken::Union
+                | ParserToken::Semicolon
+        ) || clause_starts(token.1)
+    })
+}
+
+fn contextual_name_signature(
+    tokens: &[SpannedParserToken],
+    index: usize,
+) -> (Option<ParserToken>, ParserToken, Option<ParserToken>) {
+    (
+        index
+            .checked_sub(1)
+            .and_then(|previous| tokens.get(previous))
+            .map(|token| token.1),
+        tokens[index].1,
+        tokens.get(index + 1).map(|token| token.1),
+    )
+}
+
 fn parse_program(source: &str, tokens: &[SpannedParserToken]) -> Result<Program, LalrpopError> {
     if tokens.is_empty() {
         return Ok(Program::new(Vec::new(), Span::empty(0)));
@@ -119,7 +268,31 @@ fn parse_program(source: &str, tokens: &[SpannedParserToken]) -> Result<Program,
         });
     }
 
-    let (head, unions) = parse_regular_query(source, query_tokens)?;
+    let (head, unions) = match parse_regular_query(source, query_tokens) {
+        Ok(query) => query,
+        Err(regular_error)
+            if !top_level_indices(query_tokens, |token| token == ParserToken::Union).is_empty() =>
+        {
+            return Err(regular_error);
+        }
+        Err(regular_error) => {
+            let input = query_tokens.iter().copied().map(Ok);
+            let clause = match generated::StandaloneCallRootParser::new().parse(source, input) {
+                Ok(clause) => clause,
+                Err(_) => return Err(regular_error),
+            };
+            let span = clause.span;
+            (
+                Node::new(
+                    SingleQueryKind {
+                        clauses: vec![clause],
+                    },
+                    span,
+                ),
+                Vec::new(),
+            )
+        }
+    };
     let query_span = Span::new(
         query_tokens.first().expect("non-empty query").0,
         query_tokens.last().expect("non-empty query").2,
@@ -452,8 +625,8 @@ fn parse_diagnostic(source: &str, error: LalrpopError) -> Diagnostic {
             Span::new(start, end),
         ),
         ParseError::User { .. } => Diagnostic::error(
-            DiagnosticCode::Internal,
-            "the parser rejected a token supplied by the lexer",
+            DiagnosticCode::UnexpectedToken,
+            "input does not satisfy the selected syntax production",
             Span::empty(source.len()),
         ),
     }
@@ -487,6 +660,15 @@ fn parser_tokens(tokens: &[Token]) -> Vec<SpannedParserToken> {
     let mut result = Vec::with_capacity(significant.len());
     let mut index = 0;
     while index < significant.len() {
+        if let Some(end) = escaped_parameter_end(&significant, index) {
+            result.push((
+                significant[index].span.start,
+                ParserToken::Parameter,
+                significant[end].span.end,
+            ));
+            index = end + 1;
+            continue;
+        }
         if let Some(end) = pattern_comprehension_end(&significant, index) {
             result.push((
                 significant[index].span.start,
@@ -496,7 +678,43 @@ fn parser_tokens(tokens: &[Token]) -> Vec<SpannedParserToken> {
             index = end + 1;
             continue;
         }
-        if let Some(end) = qualified_function_name_end(&significant, index) {
+        if significant[index].kind == TokenKind::LeftParen
+            && is_pattern_expression_context(&significant, index)
+            && let Some(end) = pattern_expression_end(&significant, index)
+        {
+            result.push((
+                significant[index].span.start,
+                ParserToken::PatternExpression,
+                significant[end].span.end,
+            ));
+            index = end + 1;
+            continue;
+        }
+        if is_relationship_label_start(&significant, index)
+            && let Some(end) = relationship_label_end(&significant, index)
+        {
+            result.push((
+                significant[index].span.start,
+                ParserToken::RelationshipLabelExpression,
+                significant[end].span.end,
+            ));
+            index = end + 1;
+            continue;
+        }
+        if is_label_predicate_context(&significant, index)
+            && let Some(end) = label_predicate_end(&significant, index)
+        {
+            result.push((
+                significant[index].span.start,
+                ParserToken::LabelPredicate,
+                significant[end].span.end,
+            ));
+            index = end + 1;
+            continue;
+        }
+        if !is_procedure_name_start(&significant, index)
+            && let Some(end) = qualified_function_name_end(&significant, index)
+        {
             result.push((
                 significant[index].span.start,
                 ParserToken::QualifiedFunctionName,
@@ -514,6 +732,14 @@ fn parser_tokens(tokens: &[Token]) -> Vec<SpannedParserToken> {
         index += 1;
     }
     result
+}
+
+fn escaped_parameter_end(tokens: &[&Token], start: usize) -> Option<usize> {
+    (tokens.get(start)?.kind == TokenKind::Dollar
+        && tokens.get(start + 1).is_some_and(|token| {
+            token.kind == TokenKind::EscapedIdentifier && tokens[start].span.end == token.span.start
+        }))
+    .then_some(start + 1)
 }
 
 fn qualified_function_name_end(tokens: &[&Token], start: usize) -> Option<usize> {
@@ -539,6 +765,21 @@ fn qualified_function_name_end(tokens: &[&Token], start: usize) -> Option<usize>
             .get(end + 1)
             .is_some_and(|token| token.kind == TokenKind::LeftParen))
     .then_some(end)
+}
+
+fn is_procedure_name_start(tokens: &[&Token], start: usize) -> bool {
+    let mut first_component = start;
+    while first_component >= 2
+        && tokens[first_component - 1].kind == TokenKind::Dot
+        && is_symbolic_name_kind(tokens[first_component - 2].kind)
+    {
+        first_component -= 2;
+    }
+
+    first_component
+        .checked_sub(1)
+        .and_then(|index| tokens.get(index))
+        .is_some_and(|token| token.kind == TokenKind::Keyword(Keyword::Call))
 }
 
 fn is_symbolic_name_kind(kind: TokenKind) -> bool {
@@ -632,6 +873,421 @@ fn pattern_comprehension_end(tokens: &[&Token], start: usize) -> Option<usize> {
     None
 }
 
+fn is_pattern_expression_context(tokens: &[&Token], start: usize) -> bool {
+    if start >= 2
+        && tokens[start - 1].kind == TokenKind::LeftParen
+        && matches!(
+            tokens[start - 2].kind,
+            TokenKind::Keyword(Keyword::ShortestPath | Keyword::AllShortestPaths)
+        )
+    {
+        return false;
+    }
+    if start >= 2
+        && tokens[start - 1].kind == TokenKind::LeftBrace
+        && matches!(
+            tokens[start - 2].kind,
+            TokenKind::Keyword(Keyword::Exists | Keyword::Count | Keyword::Collect)
+        )
+    {
+        return false;
+    }
+    if is_in_map_entry_value(tokens, start) {
+        return true;
+    }
+
+    for (index, token) in tokens[..start].iter().enumerate().rev() {
+        if tokens
+            .get(index + 1)
+            .is_some_and(|next| next.kind == TokenKind::Equal)
+        {
+            continue;
+        }
+        match token.kind {
+            TokenKind::Keyword(
+                Keyword::Where
+                | Keyword::Return
+                | Keyword::With
+                | Keyword::Unwind
+                | Keyword::Set
+                | Keyword::Delete
+                | Keyword::Then
+                | Keyword::Else
+                | Keyword::When
+                | Keyword::Case,
+            ) => return true,
+            TokenKind::Keyword(
+                Keyword::Match | Keyword::Create | Keyword::Merge | Keyword::Call | Keyword::Remove,
+            ) => return false,
+            _ => {}
+        }
+    }
+    false
+}
+
+fn pattern_expression_end(tokens: &[&Token], start: usize) -> Option<usize> {
+    if tokens.get(start)?.kind != TokenKind::LeftParen {
+        return None;
+    }
+
+    let mut node_end =
+        matching_delimiter(tokens, start, TokenKind::LeftParen, TokenKind::RightParen)?;
+    let mut relationships = 0usize;
+    while let Some(after_relationship) = relationship_syntax_end(tokens, node_end + 1) {
+        let mut next_node = after_relationship;
+        if matches!(
+            tokens.get(next_node).map(|token| token.kind),
+            Some(TokenKind::Star | TokenKind::Plus | TokenKind::Question)
+        ) {
+            next_node += 1;
+        } else if tokens
+            .get(next_node)
+            .is_some_and(|token| token.kind == TokenKind::LeftBrace)
+        {
+            next_node = matching_delimiter(
+                tokens,
+                next_node,
+                TokenKind::LeftBrace,
+                TokenKind::RightBrace,
+            )? + 1;
+        }
+        if !tokens
+            .get(next_node)
+            .is_some_and(|token| token.kind == TokenKind::LeftParen)
+        {
+            break;
+        }
+        node_end = matching_delimiter(
+            tokens,
+            next_node,
+            TokenKind::LeftParen,
+            TokenKind::RightParen,
+        )?;
+        relationships += 1;
+    }
+
+    (relationships > 0).then_some(node_end)
+}
+
+fn relationship_syntax_end(tokens: &[&Token], start: usize) -> Option<usize> {
+    let mut cursor = match (
+        tokens.get(start).map(|token| token.kind),
+        tokens.get(start + 1).map(|token| token.kind),
+    ) {
+        (Some(TokenKind::Minus | TokenKind::LeftArrow), _) => start + 1,
+        (Some(TokenKind::Less), Some(TokenKind::Minus)) => start + 2,
+        _ => return None,
+    };
+    if tokens
+        .get(cursor)
+        .is_some_and(|token| token.kind == TokenKind::LeftBracket)
+    {
+        cursor = matching_delimiter(
+            tokens,
+            cursor,
+            TokenKind::LeftBracket,
+            TokenKind::RightBracket,
+        )? + 1;
+    }
+    match (
+        tokens.get(cursor).map(|token| token.kind),
+        tokens.get(cursor + 1).map(|token| token.kind),
+    ) {
+        (Some(TokenKind::Minus), Some(TokenKind::Greater)) => Some(cursor + 2),
+        (Some(TokenKind::Minus | TokenKind::RightArrow), _) => Some(cursor + 1),
+        _ => None,
+    }
+}
+
+fn matching_delimiter(
+    tokens: &[&Token],
+    start: usize,
+    open: TokenKind,
+    close: TokenKind,
+) -> Option<usize> {
+    if tokens.get(start)?.kind != open {
+        return None;
+    }
+    let mut depth = 0usize;
+    for (index, token) in tokens.iter().enumerate().skip(start) {
+        if token.kind == open {
+            depth += 1;
+        } else if token.kind == close {
+            depth = depth.saturating_sub(1);
+            if depth == 0 {
+                return Some(index);
+            }
+        }
+    }
+    None
+}
+
+fn is_relationship_label_start(tokens: &[&Token], start: usize) -> bool {
+    if tokens
+        .get(start)
+        .is_none_or(|token| token.kind != TokenKind::Colon)
+    {
+        return false;
+    }
+    match start.checked_sub(1).and_then(|index| tokens.get(index)) {
+        Some(token) if token.kind == TokenKind::LeftBracket => true,
+        Some(token) if is_symbolic_name_kind(token.kind) => {
+            start >= 2 && tokens[start - 2].kind == TokenKind::LeftBracket
+        }
+        _ => false,
+    }
+}
+
+fn relationship_label_end(tokens: &[&Token], start: usize) -> Option<usize> {
+    let end = label_predicate_end(tokens, start)?;
+    if !(start + 1..=end).any(|index| tokens[index].kind == TokenKind::Colon) {
+        return Some(end);
+    }
+
+    let mut cursor = start + 1;
+    loop {
+        if cursor > end || !is_symbolic_name_kind(tokens[cursor].kind) {
+            return None;
+        }
+        cursor += 1;
+        if cursor > end {
+            return Some(end);
+        }
+        if tokens[cursor].kind != TokenKind::Pipe
+            || tokens
+                .get(cursor + 1)
+                .is_none_or(|token| token.kind != TokenKind::Colon)
+        {
+            return None;
+        }
+        cursor += 2;
+    }
+}
+
+fn is_label_predicate_context(tokens: &[&Token], start: usize) -> bool {
+    if !matches!(
+        tokens.get(start).map(|token| token.kind),
+        Some(TokenKind::Colon | TokenKind::Keyword(Keyword::Is))
+    ) {
+        return false;
+    }
+    if tokens[start].kind == TokenKind::Keyword(Keyword::Is)
+        && tokens
+            .get(start + 1)
+            .is_some_and(|token| token.kind == TokenKind::Keyword(Keyword::As))
+        && tokens
+            .get(start + 2)
+            .is_some_and(|token| is_symbolic_name_kind(token.kind))
+    {
+        return false;
+    }
+    if tokens[start].kind == TokenKind::Colon
+        && start >= 2
+        && is_symbolic_name_kind(tokens[start - 1].kind)
+        && matches!(tokens[start - 2].kind, TokenKind::LeftBrace)
+    {
+        return false;
+    }
+    if is_in_map_entry_value(tokens, start) {
+        return true;
+    }
+    if tokens[start].kind == TokenKind::Colon
+        && start >= 2
+        && is_symbolic_name_kind(tokens[start - 1].kind)
+        && tokens[start - 2].kind == TokenKind::Comma
+        && is_inside_braces(tokens, start)
+    {
+        return false;
+    }
+
+    // Ignore context markers inside a completed bracketed/braced construct.
+    // In particular, a relationship-type `|` in `[:A|B]` must not make a
+    // later node label look like an expression predicate. Markers in the
+    // construct that currently encloses the candidate still have zero
+    // relative depth and remain visible (for example a comprehension `|`).
+    let mut nested_brackets = 0usize;
+    let mut nested_braces = 0usize;
+    for (index, token) in tokens[..start].iter().enumerate().rev() {
+        match token.kind {
+            TokenKind::RightBracket => {
+                nested_brackets = nested_brackets.saturating_add(1);
+                continue;
+            }
+            TokenKind::LeftBracket if nested_brackets != 0 => {
+                nested_brackets = nested_brackets.saturating_sub(1);
+                continue;
+            }
+            TokenKind::RightBrace => {
+                nested_braces = nested_braces.saturating_add(1);
+                continue;
+            }
+            TokenKind::LeftBrace if nested_braces != 0 => {
+                nested_braces = nested_braces.saturating_sub(1);
+                continue;
+            }
+            _ if nested_brackets != 0 || nested_braces != 0 => continue,
+            _ => {}
+        }
+        if tokens
+            .get(index + 1)
+            .is_some_and(|next| next.kind == TokenKind::Equal)
+        {
+            continue;
+        }
+        match token.kind {
+            TokenKind::Pipe => return true,
+            TokenKind::Keyword(
+                Keyword::Where
+                | Keyword::Return
+                | Keyword::With
+                | Keyword::Unwind
+                | Keyword::Delete
+                | Keyword::Then
+                | Keyword::Else
+                | Keyword::When
+                | Keyword::Case,
+            ) => return true,
+            TokenKind::Keyword(
+                Keyword::Match
+                | Keyword::Create
+                | Keyword::Merge
+                | Keyword::Call
+                | Keyword::Set
+                | Keyword::Remove,
+            ) => return false,
+            _ => {}
+        }
+    }
+    false
+}
+
+fn is_inside_braces(tokens: &[&Token], start: usize) -> bool {
+    let mut nested = 0usize;
+    for token in tokens[..start].iter().rev() {
+        match token.kind {
+            TokenKind::RightBrace => nested += 1,
+            TokenKind::LeftBrace if nested == 0 => return true,
+            TokenKind::LeftBrace => nested = nested.saturating_sub(1),
+            _ => {}
+        }
+    }
+    false
+}
+
+fn is_in_map_entry_value(tokens: &[&Token], start: usize) -> bool {
+    let mut open_braces = Vec::new();
+    for (index, token) in tokens.iter().enumerate().take(start) {
+        match token.kind {
+            TokenKind::LeftBrace => open_braces.push(index),
+            TokenKind::RightBrace => {
+                let _ = open_braces.pop();
+            }
+            _ => {}
+        }
+    }
+    let Some(open) = open_braces.last().copied() else {
+        return false;
+    };
+
+    let mut depth = 0usize;
+    let mut after_separator = false;
+    for token in &tokens[open + 1..start] {
+        match token.kind {
+            TokenKind::LeftParen | TokenKind::LeftBracket | TokenKind::LeftBrace => {
+                depth += 1;
+            }
+            TokenKind::RightParen | TokenKind::RightBracket | TokenKind::RightBrace => {
+                depth = depth.saturating_sub(1);
+            }
+            TokenKind::Comma if depth == 0 => after_separator = false,
+            TokenKind::Colon if depth == 0 => after_separator = true,
+            _ => {}
+        }
+    }
+    after_separator
+}
+
+fn label_predicate_end(tokens: &[&Token], start: usize) -> Option<usize> {
+    let expression_start = match tokens.get(start)?.kind {
+        TokenKind::Colon => start + 1,
+        TokenKind::Keyword(Keyword::Is) => {
+            if (matches!(
+                tokens.get(start + 1).map(|token| token.kind),
+                Some(TokenKind::Keyword(Keyword::Null))
+            ) && !matches!(
+                tokens.get(start + 2).map(|token| token.kind),
+                Some(TokenKind::Pipe | TokenKind::Ampersand)
+            )) || matches!(
+                (
+                    tokens.get(start + 1).map(|token| token.kind),
+                    tokens.get(start + 2).map(|token| token.kind),
+                ),
+                (
+                    Some(TokenKind::Keyword(Keyword::Not)),
+                    Some(TokenKind::Keyword(Keyword::Null)),
+                )
+            ) {
+                return None;
+            }
+            start + 1
+        }
+        _ => return None,
+    };
+    let end = label_or_end(tokens, expression_start)?;
+    Some(end.saturating_sub(1))
+}
+
+fn label_or_end(tokens: &[&Token], start: usize) -> Option<usize> {
+    let mut cursor = label_and_end(tokens, start)?;
+    while tokens
+        .get(cursor)
+        .is_some_and(|token| token.kind == TokenKind::Pipe)
+    {
+        cursor += 1;
+        if tokens
+            .get(cursor)
+            .is_some_and(|token| token.kind == TokenKind::Colon)
+        {
+            cursor += 1;
+        }
+        cursor = label_and_end(tokens, cursor)?;
+    }
+    Some(cursor)
+}
+
+fn label_and_end(tokens: &[&Token], start: usize) -> Option<usize> {
+    let mut cursor = label_primary_end(tokens, start)?;
+    while matches!(
+        tokens.get(cursor).map(|token| token.kind),
+        Some(TokenKind::Ampersand | TokenKind::Colon)
+    ) {
+        cursor = label_primary_end(tokens, cursor + 1)?;
+    }
+    Some(cursor)
+}
+
+fn label_primary_end(tokens: &[&Token], start: usize) -> Option<usize> {
+    let mut cursor = start;
+    if tokens
+        .get(cursor)
+        .is_some_and(|token| token.kind == TokenKind::Bang)
+    {
+        cursor += 1;
+    }
+    match tokens.get(cursor)?.kind {
+        TokenKind::Percent => Some(cursor + 1),
+        kind if is_symbolic_name_kind(kind) => Some(cursor + 1),
+        TokenKind::LeftParen => {
+            let end = label_or_end(tokens, cursor + 1)?;
+            tokens
+                .get(end)
+                .is_some_and(|token| token.kind == TokenKind::RightParen)
+                .then_some(end + 1)
+        }
+        _ => None,
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum ParserToken {
     Identifier,
@@ -643,6 +1299,9 @@ pub(crate) enum ParserToken {
     Float,
     String,
     PatternComprehension,
+    PatternExpression,
+    LabelPredicate,
+    RelationshipLabelExpression,
     QualifiedFunctionName,
     All,
     SetAll,
@@ -656,6 +1315,7 @@ pub(crate) enum ParserToken {
     Call,
     Case,
     Contains,
+    Collect,
     Count,
     Create,
     Delete,
@@ -735,7 +1395,6 @@ pub(crate) enum ParserToken {
     Percent,
     Caret,
     Bang,
-    Tilde,
     Equal,
     NotEqual,
     Less,
@@ -757,6 +1416,61 @@ impl fmt::Display for ParserToken {
 }
 
 impl ParserToken {
+    const fn is_contextual_name_candidate(self) -> bool {
+        !matches!(
+            self,
+            Self::Identifier
+                | Self::EscapedIdentifier
+                | Self::Parameter
+                | Self::Integer
+                | Self::HexInteger
+                | Self::OctalInteger
+                | Self::Float
+                | Self::String
+                | Self::PatternComprehension
+                | Self::PatternExpression
+                | Self::LabelPredicate
+                | Self::RelationshipLabelExpression
+                | Self::QualifiedFunctionName
+                | Self::LeftParen
+                | Self::RightParen
+                | Self::LeftBracket
+                | Self::RightBracket
+                | Self::LeftBrace
+                | Self::RightBrace
+                | Self::Comma
+                | Self::Dot
+                | Self::DotDot
+                | Self::Colon
+                | Self::DoubleColon
+                | Self::Semicolon
+                | Self::Pipe
+                | Self::DoublePipe
+                | Self::Ampersand
+                | Self::Question
+                | Self::Dollar
+                | Self::Plus
+                | Self::Minus
+                | Self::Star
+                | Self::Slash
+                | Self::Percent
+                | Self::Caret
+                | Self::Bang
+                | Self::Equal
+                | Self::NotEqual
+                | Self::Less
+                | Self::LessEqual
+                | Self::Greater
+                | Self::GreaterEqual
+                | Self::PlusEqual
+                | Self::FatArrow
+                | Self::RegexMatch
+                | Self::LeftArrow
+                | Self::RightArrow
+                | Self::Invalid
+        )
+    }
+
     const fn name(self) -> &'static str {
         match self {
             Self::Identifier => "identifier",
@@ -768,6 +1482,9 @@ impl ParserToken {
             Self::Float => "float",
             Self::String => "string",
             Self::PatternComprehension => "pattern comprehension",
+            Self::PatternExpression => "pattern expression",
+            Self::LabelPredicate => "label predicate",
+            Self::RelationshipLabelExpression => "relationship label expression",
             Self::QualifiedFunctionName => "qualified function name",
             Self::All => "ALL",
             Self::SetAll => "ALL",
@@ -781,6 +1498,7 @@ impl ParserToken {
             Self::Call => "CALL",
             Self::Case => "CASE",
             Self::Contains => "CONTAINS",
+            Self::Collect => "COLLECT",
             Self::Count => "COUNT",
             Self::Create => "CREATE",
             Self::Delete => "DELETE",
@@ -860,7 +1578,6 @@ impl ParserToken {
             Self::Percent => "%",
             Self::Caret => "^",
             Self::Bang => "!",
-            Self::Tilde => "~",
             Self::Equal => "=",
             Self::NotEqual => "<>",
             Self::Less => "<",
@@ -913,7 +1630,6 @@ impl From<TokenKind> for ParserToken {
             TokenKind::Percent => Self::Percent,
             TokenKind::Caret => Self::Caret,
             TokenKind::Bang => Self::Bang,
-            TokenKind::Tilde => Self::Tilde,
             TokenKind::Equal => Self::Equal,
             TokenKind::NotEqual => Self::NotEqual,
             TokenKind::Less => Self::Less,
@@ -946,6 +1662,7 @@ fn keyword_token(keyword: Keyword) -> ParserToken {
         Keyword::Call => ParserToken::Call,
         Keyword::Case => ParserToken::Case,
         Keyword::Contains => ParserToken::Contains,
+        Keyword::Collect => ParserToken::Collect,
         Keyword::Count => ParserToken::Count,
         Keyword::Create => ParserToken::Create,
         Keyword::Delete => ParserToken::Delete,
@@ -1001,7 +1718,6 @@ fn keyword_token(keyword: Keyword) -> ParserToken {
         Keyword::Xor => ParserToken::Xor,
         Keyword::Yield => ParserToken::Yield,
         Keyword::Acyclic => ParserToken::Acyclic,
-        _ => ParserToken::Identifier,
     }
 }
 
@@ -1042,7 +1758,9 @@ pub(crate) fn qualified_function_name(source: &str, start: usize, end: usize) ->
 
 pub(crate) fn parameter(source: &str, start: usize, end: usize) -> Parameter {
     let raw = &source[start + 1..end];
-    let name = if raw.bytes().all(|byte| byte.is_ascii_digit()) {
+    let name = if raw.starts_with('`') && raw.ends_with('`') {
+        ParameterName::Named(decode_delimited(raw, '`'))
+    } else if raw.bytes().all(|byte| byte.is_ascii_digit()) {
         ParameterName::Positional(raw.to_owned())
     } else {
         ParameterName::Named(raw.to_owned())
@@ -1108,10 +1826,8 @@ fn decode_delimited(raw: &str, delimiter: char) -> String {
                         }
                     }
                 }
-                if complete {
-                    if let Some(character) = char::from_u32(scalar) {
-                        decoded.push(character);
-                    }
+                if complete && let Some(character) = char::from_u32(scalar) {
+                    decoded.push(character);
                 }
             }
             other => {
@@ -1239,12 +1955,12 @@ pub(crate) fn pattern_comprehension(
 
     let pipe = find_top_level_token(&tokens, outer_start + 1, outer_end, ParserToken::Pipe)
         .ok_or_else(user_parse_error)?;
-    let where_index = find_top_level_token(&tokens, outer_start + 1, pipe, ParserToken::Where);
 
     let mut pattern_start = outer_start + 1;
     let binding = if pattern_start + 1 < pipe
         && tokens[pattern_start + 1].1 == ParserToken::Equal
-        && is_name_token(tokens[pattern_start].1)
+        && (is_name_token(tokens[pattern_start].1)
+            || tokens[pattern_start].1.is_contextual_name_candidate())
     {
         let token = tokens[pattern_start];
         pattern_start += 2;
@@ -1258,24 +1974,21 @@ pub(crate) fn pattern_comprehension(
         None
     };
 
+    let where_index = find_top_level_token(&tokens, pattern_start, pipe, ParserToken::Where);
     let pattern_end = where_index.unwrap_or(pipe);
     if pattern_start >= pattern_end || pipe + 1 >= outer_end {
         return Err(user_parse_error());
     }
-    let pattern = generated::PatternFragmentParser::new().parse(
-        source,
-        tokens[pattern_start..pattern_end].iter().copied().map(Ok),
-    )?;
+    let pattern = parse_pattern_fragment(source, &tokens[pattern_start..pattern_end])?;
     let predicate = match where_index {
-        Some(index) if index + 1 < pipe => Some(Box::new(
-            generated::ExprFragmentParser::new()
-                .parse(source, tokens[index + 1..pipe].iter().copied().map(Ok))?,
-        )),
+        Some(index) if index + 1 < pipe => Some(Box::new(parse_expr_fragment(
+            source,
+            &tokens[index + 1..pipe],
+        )?)),
         Some(_) => return Err(user_parse_error()),
         None => None,
     };
-    let projection = generated::ExprFragmentParser::new()
-        .parse(source, tokens[pipe + 1..outer_end].iter().copied().map(Ok))?;
+    let projection = parse_expr_fragment(source, &tokens[pipe + 1..outer_end])?;
 
     Ok(Node::new(
         ExprKind::PatternComprehension(PatternComprehension {
@@ -1286,6 +1999,163 @@ pub(crate) fn pattern_comprehension(
         }),
         Span::new(start, end),
     ))
+}
+
+pub(crate) fn pattern_expression(
+    source: &str,
+    start: usize,
+    end: usize,
+) -> Result<Expr, LalrpopError> {
+    let Some(fragment) = source.get(start..end) else {
+        return Err(user_parse_error());
+    };
+    let lexed = lexer::lex(fragment);
+    if !lexed.diagnostics.is_empty() {
+        return Err(user_parse_error());
+    }
+    let tokens = nested_parser_tokens(&lexed.tokens, start);
+    let pattern = parse_pattern_fragment(source, &tokens)?;
+    Ok(Node::new(ExprKind::Pattern(pattern), Span::new(start, end)))
+}
+
+fn parse_pattern_fragment(
+    source: &str,
+    tokens: &[SpannedParserToken],
+) -> Result<Pattern, LalrpopError> {
+    parse_tokens_with_contextual_names(tokens, |contextual| {
+        generated::PatternFragmentParser::new().parse(source, contextual.iter().copied().map(Ok))
+    })
+}
+
+fn parse_expr_fragment(source: &str, tokens: &[SpannedParserToken]) -> Result<Expr, LalrpopError> {
+    parse_tokens_with_contextual_names(tokens, |contextual| {
+        generated::ExprFragmentParser::new().parse(source, contextual.iter().copied().map(Ok))
+    })
+}
+
+pub(crate) fn label_comparison_suffix(
+    source: &str,
+    start: usize,
+    end: usize,
+) -> Result<ComparisonSuffix, LalrpopError> {
+    Ok(ComparisonSuffix::Is {
+        negated: false,
+        predicate: IsPredicate::Label(parse_label_expression(source, start, end, true)?),
+        end,
+    })
+}
+
+pub(crate) fn relationship_label_expression(
+    source: &str,
+    start: usize,
+    end: usize,
+) -> Result<LabelExpression, LalrpopError> {
+    parse_label_expression(source, start, end, true)
+}
+
+fn parse_label_expression(
+    source: &str,
+    start: usize,
+    end: usize,
+    normalize_legacy_relationship: bool,
+) -> Result<LabelExpression, LalrpopError> {
+    let Some(fragment) = source.get(start..end) else {
+        return Err(user_parse_error());
+    };
+    let lexed = lexer::lex(fragment);
+    if !lexed.diagnostics.is_empty() {
+        return Err(user_parse_error());
+    }
+    let mut tokens = lexed
+        .tokens
+        .iter()
+        .filter(|token| !token.is_trivia())
+        .map(|token| {
+            (
+                start + token.span.start,
+                ParserToken::from(token.kind),
+                start + token.span.end,
+            )
+        })
+        .collect::<Vec<_>>();
+    if normalize_legacy_relationship && !legacy_label_tokens_are_consistent(&tokens) {
+        return Err(user_parse_error());
+    }
+    let mut normalized = Vec::with_capacity(tokens.len());
+    for (index, mut token) in tokens.drain(..).enumerate() {
+        if normalize_legacy_relationship
+            && token.1 == ParserToken::Colon
+            && normalized
+                .last()
+                .is_some_and(|previous: &SpannedParserToken| previous.1 == ParserToken::Pipe)
+        {
+            continue;
+        }
+        if index > 0 && token.1.is_contextual_name_candidate() {
+            token.1 = ParserToken::Identifier;
+        }
+        normalized.push(token);
+    }
+    generated::LabelPredicateFragmentParser::new().parse(source, normalized.into_iter().map(Ok))
+}
+
+fn legacy_label_tokens_are_consistent(tokens: &[SpannedParserToken]) -> bool {
+    let has_internal_colon = tokens
+        .iter()
+        .enumerate()
+        .skip(1)
+        .any(|(_, token)| token.1 == ParserToken::Colon);
+    if !has_internal_colon {
+        return true;
+    }
+    if tokens
+        .first()
+        .is_none_or(|token| token.1 != ParserToken::Colon)
+    {
+        return false;
+    }
+
+    let mut cursor = 1usize;
+    if tokens
+        .get(cursor)
+        .is_none_or(|token| !is_name_token(token.1) && !token.1.is_contextual_name_candidate())
+    {
+        return false;
+    }
+    cursor += 1;
+    let pipe_separated = tokens
+        .get(cursor)
+        .is_some_and(|token| token.1 == ParserToken::Pipe);
+    while cursor < tokens.len() {
+        if pipe_separated {
+            if tokens
+                .get(cursor)
+                .is_none_or(|token| token.1 != ParserToken::Pipe)
+                || tokens
+                    .get(cursor + 1)
+                    .is_none_or(|token| token.1 != ParserToken::Colon)
+            {
+                return false;
+            }
+            cursor += 2;
+        } else {
+            if tokens
+                .get(cursor)
+                .is_none_or(|token| token.1 != ParserToken::Colon)
+            {
+                return false;
+            }
+            cursor += 1;
+        }
+        if tokens
+            .get(cursor)
+            .is_none_or(|token| !is_name_token(token.1) && !token.1.is_contextual_name_candidate())
+        {
+            return false;
+        }
+        cursor += 1;
+    }
+    true
 }
 
 fn user_parse_error() -> LalrpopError {
@@ -1300,6 +2170,15 @@ fn nested_parser_tokens(tokens: &[Token], base: usize) -> Vec<SpannedParserToken
     let mut result = Vec::with_capacity(significant.len());
     let mut index = 0;
     while index < significant.len() {
+        if let Some(end) = escaped_parameter_end(&significant, index) {
+            result.push((
+                base + significant[index].span.start,
+                ParserToken::Parameter,
+                base + significant[end].span.end,
+            ));
+            index = end + 1;
+            continue;
+        }
         if index != 0 {
             if let Some(end) = pattern_comprehension_end(&significant, index) {
                 result.push((
@@ -1310,9 +2189,45 @@ fn nested_parser_tokens(tokens: &[Token], base: usize) -> Vec<SpannedParserToken
                 index = end + 1;
                 continue;
             }
+            if significant[index].kind == TokenKind::LeftParen
+                && is_pattern_expression_context(&significant, index)
+                && let Some(end) = pattern_expression_end(&significant, index)
+            {
+                result.push((
+                    base + significant[index].span.start,
+                    ParserToken::PatternExpression,
+                    base + significant[end].span.end,
+                ));
+                index = end + 1;
+                continue;
+            }
+            if is_relationship_label_start(&significant, index)
+                && let Some(end) = relationship_label_end(&significant, index)
+            {
+                result.push((
+                    base + significant[index].span.start,
+                    ParserToken::RelationshipLabelExpression,
+                    base + significant[end].span.end,
+                ));
+                index = end + 1;
+                continue;
+            }
+            if is_label_predicate_context(&significant, index)
+                && let Some(end) = label_predicate_end(&significant, index)
+            {
+                result.push((
+                    base + significant[index].span.start,
+                    ParserToken::LabelPredicate,
+                    base + significant[end].span.end,
+                ));
+                index = end + 1;
+                continue;
+            }
         }
 
-        if let Some(end) = qualified_function_name_end(&significant, index) {
+        if !is_procedure_name_start(&significant, index)
+            && let Some(end) = qualified_function_name_end(&significant, index)
+        {
             result.push((
                 base + significant[index].span.start,
                 ParserToken::QualifiedFunctionName,
@@ -1367,6 +2282,33 @@ fn is_name_token(token: ParserToken) -> bool {
             | ParserToken::Match
             | ParserToken::Path
             | ParserToken::Return
+    )
+}
+
+pub(crate) fn query_from_pattern(pattern: Pattern, where_clause: Option<Expr>) -> Query {
+    let span = pattern.span;
+    let clause = Node::new(
+        ClauseKind::Match(MatchClause {
+            optional: false,
+            mode: None,
+            pattern,
+            hints: Vec::new(),
+            where_clause,
+        }),
+        span,
+    );
+    let head = Node::new(
+        SingleQueryKind {
+            clauses: vec![clause],
+        },
+        span,
+    );
+    Node::new(
+        QueryKind::Regular(RegularQuery {
+            head,
+            unions: Vec::new(),
+        }),
+        span,
     )
 }
 
@@ -1462,6 +2404,10 @@ pub(crate) fn fold_comparison(mut expression: Expr, tail: Vec<ComparisonSuffix>)
 
 pub(crate) enum PostfixSuffix {
     Property(Name),
+    MapProjection {
+        items: Vec<MapProjectionItem>,
+        end: usize,
+    },
     Index {
         index: Expr,
         end: usize,
@@ -1483,6 +2429,16 @@ pub(crate) fn fold_postfix(mut expression: Expr, suffixes: Vec<PostfixSuffix>) -
                         expression: Box::new(expression),
                         key,
                     },
+                    span,
+                )
+            }
+            PostfixSuffix::MapProjection { items, end } => {
+                let span = Span::new(expression.span.start, end);
+                Node::new(
+                    ExprKind::MapProjection(MapProjection {
+                        base: Box::new(expression),
+                        items,
+                    }),
                     span,
                 )
             }

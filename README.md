@@ -10,17 +10,22 @@ type checking, execute queries, or claim official TCK certification.
 
 ## Status
 
-Version `0.2.0-alpha.1` is a clean break from the original Pest-based API. The
-grammar implementation and its conformance inventory are still being audited.
-All 377 upstream productions remain conservatively marked `unassessed`, the
-vendored TCK is not yet run as a syntax projection, and some non-reserved
-keywords are not accepted in every identifier position. This alpha therefore
-makes no conformance claim.
+Version `0.2.0-alpha.1` is a clean break from the original Pest-based API. Its
+2024.3 syntax coverage is measured by a deterministic projection of every query
+occurrence in the pinned TCK and by executable traceability for all 377 BNF
+productions. This is parser evidence only, not semantic, runtime, or official
+TCK certification.
+
+The checked projection contains 4,131 unique queries and 4,882 materialized
+occurrences: 4,880 active occurrences plus two upstream `@ignore` scenarios
+retained as supplemental evidence. All cases remain part of the release gate.
 
 The language snapshot is pinned independently of the crate version:
 
 - openCypher release: `2024.3`
 - upstream commit: `677cbafabb8c3c5eed458fd3b1ec0daec8d67d23`
+
+The workspace minimum supported Rust version is 1.88.
 
 See `spec/UPSTREAM.toml`, the production map, and the deviation ledger for
 provenance and implementation coverage.
@@ -66,6 +71,10 @@ provided through the workspace's `cargo xtask` alias.
 cargo test --workspace --all-features
 cargo xtask grammar verify
 cargo xtask spec verify
+cargo xtask tck verify
+cargo xtask tck check
+cargo xtask tck report
+cargo xtask spec release-check
 cargo bench --bench parser
 ```
 

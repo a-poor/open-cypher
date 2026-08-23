@@ -87,6 +87,16 @@ fn overlapping_operators_use_maximal_munch() {
 }
 
 #[test]
+fn bare_tilde_is_not_an_open_cypher_token() {
+    let outcome = lex("~");
+    assert_eq!(outcome.tokens.len(), 1);
+    assert_eq!(outcome.tokens[0].kind, TokenKind::Invalid);
+    assert_eq!(outcome.diagnostics.len(), 1);
+    assert_eq!(outcome.diagnostics[0].code, DiagnosticCode::InvalidToken);
+    assert!(open_cypher::parse("RETURN ~value").is_err());
+}
+
+#[test]
 fn current_path_search_words_are_keywords() {
     assert_eq!(
         significant_kinds("ANY SHORTEST ALL SHORTEST WALK TRAIL ACYCLIC SIMPLE"),
@@ -101,6 +111,83 @@ fn current_path_search_words_are_keywords() {
             TokenKind::Keyword(Keyword::Simple),
         ]
     );
+}
+
+#[test]
+fn syntax_neutral_ascii_words_remain_identifiers() {
+    for word in [
+        "BOTH",
+        "BREAK",
+        "CLOSE",
+        "CONSTRAINT",
+        "CONTINUE",
+        "CSV",
+        "CURRENT",
+        "DIFFERENT",
+        "DO",
+        "DROP",
+        "DRYRUN",
+        "EACH",
+        "ERROR",
+        "EXPLAIN",
+        "FAIL",
+        "FIELDTERMINATOR",
+        "FILTER",
+        "FINISH",
+        "FOR",
+        "FOREACH",
+        "FIRST",
+        "FROM",
+        "GRAPH",
+        "HEADERS",
+        "INSERT",
+        "INDEX",
+        "JOIN",
+        "LABEL",
+        "LABELS",
+        "LAST",
+        "LEADING",
+        "LET",
+        "LOAD",
+        "MANDATORY",
+        "NEXT",
+        "NODE",
+        "NODETACH",
+        "NORMALIZE",
+        "NULLS",
+        "OF",
+        "ONLY",
+        "PERIODIC",
+        "PROFILE",
+        "PROPERTY",
+        "REPORT",
+        "REPEATABLE",
+        "REPLACE",
+        "REQUIRE",
+        "ROWS",
+        "SAME",
+        "SCALAR",
+        "SCAN",
+        "SEEK",
+        "SELECT",
+        "STATUS",
+        "TRAILING",
+        "TRANSACTIONS",
+        "TYPED",
+        "UNIQUE",
+        "USE",
+        "USING",
+        "VALUE",
+        "VALUES",
+        "WITHOUT",
+        "WRITE",
+    ] {
+        assert_eq!(
+            significant_kinds(word),
+            [TokenKind::Identifier],
+            "syntax-neutral word was classified as a keyword: {word}"
+        );
+    }
 }
 
 #[test]
@@ -127,6 +214,20 @@ fn unicode_and_escaped_names_are_lexed() {
     assert!(outcome.diagnostics.is_empty(), "{:#?}", outcome.diagnostics);
     assert!(!outcome.tokens.is_empty());
     assert_lossless_spans(source);
+}
+
+#[test]
+fn parameter_names_may_begin_with_identifier_continuation_characters() {
+    assert_eq!(
+        significant_kinds("$1abc $1_abc $\u{0301} $\u{00b7} $\u{203f}"),
+        [
+            TokenKind::Parameter,
+            TokenKind::Parameter,
+            TokenKind::Parameter,
+            TokenKind::Parameter,
+            TokenKind::Parameter,
+        ]
+    );
 }
 
 #[test]

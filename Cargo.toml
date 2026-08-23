@@ -1,8 +1,8 @@
 [package]
 name = "open-cypher"
 version = "0.2.0-alpha.1"
-edition = "2024"
-rust-version = "1.86"
+edition.workspace = true
+rust-version.workspace = true
 authors = ["Austin Poor <code@austinpoor.com>"]
 description = "An unofficial Rust parser for the openCypher query language."
 documentation = "https://docs.rs/open-cypher"
@@ -17,7 +17,11 @@ autobins = false
 [workspace]
 members = [".", "xtask"]
 default-members = ["."]
-resolver = "2"
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.88"
 
 [features]
 default = []

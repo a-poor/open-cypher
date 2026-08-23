@@ -14,6 +14,10 @@ cargo bench --workspace --all-features --no-run --locked
 cargo check --manifest-path fuzz/Cargo.toml --bins --locked
 cargo run --package open-cypher-xtask -- grammar verify
 cargo run --package open-cypher-xtask -- spec verify
+cargo run --package open-cypher-xtask -- tck verify
+cargo run --package open-cypher-xtask -- tck check
+cargo run --package open-cypher-xtask -- tck report
+cargo run --package open-cypher-xtask -- spec release-check
 ```
 
 The integration suite covers the public API, lexer boundaries, representative
@@ -34,30 +38,42 @@ The 2024.3 grammar, TCK feature files, and graph fixtures are vendored at an
 exact tag and commit. `spec/UPSTREAM.toml` records the archive SHA-256, per-file
 digests, and Apache-2.0 provenance; `spec verify` checks that snapshot offline.
 
-The parser does not yet execute an extracted TCK syntax projection. Before a
-conformance claim, an offline query manifest must be generated from the vendored
-features. That manifest must:
+The repository checks in a deterministic syntax projection generated from the
+vendored TCK. The projector:
 
-- expand Scenario Outlines;
-- include initialization, inline, docstring, and named-graph Cypher queries;
-- classify only queries expecting a compile-time `SyntaxError` as parser-negative;
-- classify compile-time `SemanticError` queries as syntactically positive;
-- preserve feature path and scenario name for failures; and
-- fail extraction when a new query-bearing TCK step is not recognized.
+- expands Scenario Outlines and records each Examples row's source line;
+- materializes Background, initialization, primary, control, and named-graph
+  Cypher queries with their original provenance;
+- stores each unique query once and records every scenario occurrence;
+- requires an explicit reviewed expectation for every compile-time
+  `SyntaxError` scenario, because many such scenarios contain valid syntax and
+  test name, scope, type, or other semantic rules;
+- preserves feature path and scenario name for failures; and
+- fails extraction when any new or malformed TCK step is not recognized.
+
+For the pinned snapshot this produces 4,131 unique query records and 4,882
+occurrences, split into 4,880 active and two upstream `@ignore` supplemental
+occurrences. `tck verify` checks that the JSONL is current, `tck check` executes
+the projection, and `tck report` writes the exhaustive machine-readable result
+to `target/tck-syntax-report.json`. The report command still exits unsuccessfully
+when an expectation does not match, so it is safe to use as a CI gate.
 
 That result should be described as the **syntax projection of the TCK**. The TCK
 also specifies runtime semantics, which a parser cannot execute or certify.
 Grammar completeness additionally requires a traceability manifest mapping each
-2024.3 BNF production to the lexer/parser rule and at least one positive witness.
+2024.3 BNF production to validated lexer/parser targets and executable positive
+and negative witnesses.
 
-Stable-release acceptance is zero known syntax-conformance exclusions: every positive
-witness/query parses, every compile-time SyntaxError query is rejected, and every
-upstream production is mapped. Temporary exclusions used while porting must name
-an issue and must be removed before release.
+`cargo xtask spec release-check` is the closure gate: every reviewed projected
+query must have the expected syntax result, all 377 productions must be fully
+supported and witnessed, and the temporary-exclusion and open-deviation counts
+must both be zero.
 
-The current alpha has two deliberately visible limitations: all production-map
-entries remain `unassessed`, and not every 2024.3 non-reserved keyword is yet
-accepted in every identifier position. Neither is treated as conformance.
+This remains a **syntax projection**, not official TCK certification. The TCK
+also specifies runtime results, side effects, errors, procedure behavior, and
+semantic analysis that this crate intentionally does not implement. Ignored
+upstream scenarios are executed and reported as supplemental evidence, outside
+the active denominator.
 
 ## Fuzzing and coverage
 

@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [lex_str, parse_strict, parse_recovering, parse_generated_valid]
+        target: [lex_str, parse_strict, parse_recovering, parse_generated_valid, parse_tck_mutations]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly

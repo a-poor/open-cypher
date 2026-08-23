@@ -7,9 +7,11 @@ grammar<'input>(source: &'input str);
 
 use crate::ast::*;
 use crate::parser::{
-    ComparisonSuffix, ParserToken, PostfixSuffix, fold_binary, fold_comparison, fold_postfix,
-    integer_literal, list_comprehension_expr, list_singleton_or_comprehension, name, parameter,
-    pattern_comprehension, qualified_function_name, relationship_factor, string_literal,
+    ComparisonSuffix, ParserToken, PostfixSuffix, RelationshipDetail, fold_binary, fold_comparison, fold_postfix,
+    integer_literal, label_comparison_suffix, list_comprehension_expr,
+    list_singleton_or_comprehension, name, parameter, pattern_comprehension, pattern_expression,
+    qualified_function_name, query_from_pattern, relationship_factor,
+    relationship_label_expression, string_literal,
 };
 use crate::span::Span;
 
@@ -77,6 +79,18 @@ SingleQuery: SingleQuery = {
 pub ClauseRoot: Clause = {
     NonResultClause,
     ReturnClause,
+};
+
+pub StandaloneCallRoot: Clause = {
+    <l:@L> "CALL" <procedure:QualifiedName> <arguments:ArgumentList?>
+    <yield_clause:StandaloneYieldClause?> <r:@R> => Node::new(
+        ClauseKind::Call(CallClause {
+            optional: false,
+            target: CallTarget::Procedure { name: procedure, arguments },
+            yield_clause,
+        }),
+        Span::new(l, r),
+    ),
 };
 
 NonResultClause: Clause = {
@@ -306,14 +320,29 @@ DeleteClause: Clause = {
 };
 
 CallClause: Clause = {
-    <l:@L> "CALL" <procedure:QualifiedName> <arguments:ArgumentList?> <yield_clause:YieldClause?> <r:@R> => Node::new(
+    <l:@L> "CALL" <procedure:QualifiedName> <arguments:ArgumentList> <yield_clause:NamedYieldClause?> <r:@R> => Node::new(
         ClauseKind::Call(CallClause {
             optional: false,
-            target: CallTarget::Procedure { name: procedure, arguments },
+            target: CallTarget::Procedure { name: procedure, arguments: Some(arguments) },
             yield_clause,
         }),
         Span::new(l, r),
     ),
+};
+
+StandaloneYieldClause: YieldClause = {
+    <l:@L> "YIELD" "*" <r:@R> => YieldClause {
+        all: true,
+        items: Vec::new(),
+        where_clause: None,
+        span: Span::new(l, r),
+    },
+    <l:@L> "YIELD" <head:YieldItem> <tail:("," <YieldItem>)*> <r:@R> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        YieldClause { all: false, items, where_clause: None, span: Span::new(l, r) }
+    },
 };
 
 ArgumentList: Vec<Expr> = {
@@ -326,13 +355,7 @@ ArgumentList: Vec<Expr> = {
     },
 };
 
-YieldClause: YieldClause = {
-    <l:@L> "YIELD" "*" <r:@R> => YieldClause {
-        all: true,
-        items: Vec::new(),
-        where_clause: None,
-        span: Span::new(l, r),
-    },
+NamedYieldClause: YieldClause = {
     <l:@L> "YIELD" <head:YieldItem> <tail:("," <YieldItem>)*> <where_clause:WhereClause?> <r:@R> => {
         let mut items = Vec::with_capacity(1 + tail.len());
         items.push(head);
@@ -381,8 +404,12 @@ PathSelectorNode: Node<PathSelector> = {
         PathSelector::AllShortest,
         Span::new(l, r),
     ),
-    <l:@L> "SHORTEST" <count:PathCount?> <_path:PathKeyword?> <groups:GroupKeyword?> <r:@R> => Node::new(
-        PathSelector::Shortest { count, groups: groups.is_some() },
+    <l:@L> "SHORTEST" <count:PathCount> <_path:PathKeyword?> <r:@R> => Node::new(
+        PathSelector::Shortest { count: Some(count), groups: false },
+        Span::new(l, r),
+    ),
+    <l:@L> "SHORTEST" <count:PathCount?> <_path:PathKeyword?> <_groups:GroupKeyword> <r:@R> => Node::new(
+        PathSelector::Shortest { count, groups: true },
         Span::new(l, r),
     ),
 };
@@ -396,18 +423,15 @@ PathKeyword: () = { "PATH" => (), "PATHS" => () };
 GroupKeyword: () = { "GROUP" => (), "GROUPS" => () };
 
 PathPattern: PathPattern = {
-    <l:@L> <head:NodeFactor> <tail:SimplePathTail*> <r:@R> => {
-        let mut factors = Vec::with_capacity(1 + tail.len() * 2);
-        factors.push(head);
-        for (relationship, node) in tail {
-            factors.push(relationship);
-            factors.push(node);
-        }
-        Node::new(PathPatternKind { factors }, Span::new(l, r))
-    },
-    <factor:ParenthesizedPathFactor> => {
+    <factor:LegacyShortestPathFactor> => {
         let span = factor.span;
         Node::new(PathPatternKind { factors: vec![factor] }, span)
+    },
+    <l:@L> <head:PathFactor> <tail:PathFactor*> <r:@R> => {
+        let mut factors = Vec::with_capacity(1 + tail.len());
+        factors.push(head);
+        factors.extend(tail);
+        Node::new(PathPatternKind { factors }, Span::new(l, r))
     },
 };
 
@@ -418,7 +442,25 @@ PathFactor: PathFactor = {
 };
 
 NodeFactor: PathFactor = {
-    <l:@L> "(" <filler:NodeFiller> ")" <r:@R> => {
+    <l:@L> "(" <filler:NodeFiller> ")" <quantifier:GraphQuantifier?> <r:@R> => {
+        let (variable, labels, properties, where_clause) = filler;
+        let pattern = NodePattern {
+            variable,
+            labels,
+            properties: properties.map(Box::new),
+            where_clause: where_clause.map(Box::new),
+        };
+        let kind = if let Some(quantifier) = quantifier {
+            PathFactorKind::QuantifiedNode { pattern, quantifier }
+        } else {
+            PathFactorKind::Node(pattern)
+        };
+        Node::new(kind, Span::new(l, r))
+    },
+};
+
+SimpleNodeFactor: PathFactor = {
+    <l:@L> "(" <filler:SimpleNodeFiller> ")" <r:@R> => {
         let (variable, labels, properties, where_clause) = filler;
         Node::new(
             PathFactorKind::Node(NodePattern {
@@ -429,6 +471,13 @@ NodeFactor: PathFactor = {
             }),
             Span::new(l, r),
         )
+    },
+};
+
+SimpleNodeFiller: (Option<Name>, Option<LabelExpression>, Option<Expr>, Option<Expr>) = {
+    <variable:Name?> <labels:PrefixedLabelExpression?> <predicate:SimpleElementPredicate?> => {
+        let (properties, where_clause) = predicate.unwrap_or((None, None));
+        (variable, labels, properties, where_clause)
     },
 };
 
@@ -452,38 +501,142 @@ Properties: Expr = {
     ),
 };
 
+SimpleElementPredicate: (Option<Expr>, Option<Expr>) = {
+    <properties:MapValue> => (Some(properties), None),
+    <where_clause:WhereClause> => (None, Some(where_clause)),
+};
+
 RelationshipFactor: PathFactor = {
-    <l:@L> "-" <detail:RelationshipDetail?> "-" <quantifier:GraphQuantifier?> <r:@R> =>
-        relationship_factor(l, r, RelationshipDirection::Undirected, detail, quantifier),
-    <l:@L> "-" <detail:RelationshipDetail?> "->" <quantifier:GraphQuantifier?> <r:@R> =>
-        relationship_factor(l, r, RelationshipDirection::Right, detail, quantifier),
-    <l:@L> "<-" <detail:RelationshipDetail?> "-" <quantifier:GraphQuantifier?> <r:@R> =>
-        relationship_factor(l, r, RelationshipDirection::Left, detail, quantifier),
-    <l:@L> "<-" <detail:RelationshipDetail?> "->" <quantifier:GraphQuantifier?> <r:@R> =>
-        relationship_factor(l, r, RelationshipDirection::Both, detail, quantifier),
+    <primary:RelationshipPrimary> <quantifier:GraphQuantifier?> => {
+        let (l, base_r, direction, detail) = primary;
+        let r = quantifier.as_ref().map_or(base_r, |value| value.span.end);
+        relationship_factor(l, r, direction, detail, quantifier)
+    },
+};
+
+SimpleRelationshipFactor: PathFactor = {
+    <primary:SimpleRelationshipPrimary> => {
+        let (l, r, direction, detail) = primary;
+        relationship_factor(l, r, direction, detail, None)
+    },
+};
+
+SimpleRelationshipPrimary: (usize, usize, RelationshipDirection, Option<RelationshipDetail>) = {
+    <l:@L> "-" <detail:SimpleRelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Undirected, detail),
+    <l:@L> "-" <detail:SimpleRelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Right, detail),
+    <l:@L> "-" <detail:SimpleRelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Right, detail),
+    <l:@L> "<-" <detail:SimpleRelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Left, detail),
+    <l:@L> "<" "-" <detail:SimpleRelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Left, detail),
+    <l:@L> "<-" <detail:SimpleRelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<-" <detail:SimpleRelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<" "-" <detail:SimpleRelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<" "-" <detail:SimpleRelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+};
+
+RelationshipPrimary: (usize, usize, RelationshipDirection, Option<RelationshipDetail>) = {
+    <l:@L> "-" <detail:RelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Undirected, detail),
+    <l:@L> "-" <detail:RelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Right, detail),
+    <l:@L> "-" <detail:RelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Right, detail),
+    <l:@L> "<-" <detail:RelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Left, detail),
+    <l:@L> "<" "-" <detail:RelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Left, detail),
+    <l:@L> "<-" <detail:RelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<-" <detail:RelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<" "-" <detail:RelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<" "-" <detail:RelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
 };
 
 RelationshipDetail: (Option<Name>, Option<LabelExpression>, Option<Quantifier>, Option<Expr>, Option<Expr>) = {
     "[" <filler:RelationshipFiller> "]" => filler,
 };
 
+SimpleRelationshipDetail: (Option<Name>, Option<LabelExpression>, Option<Quantifier>, Option<Expr>, Option<Expr>) = {
+    "[" <filler:SimpleRelationshipFiller> "]" => filler,
+};
+
 RelationshipFiller: (Option<Name>, Option<LabelExpression>, Option<Quantifier>, Option<Expr>, Option<Expr>) = {
-    <variable:Name?> <labels:PrefixedLabelExpression?> <quantifier:LegacyQuantifier?>
+    <variable:Name?> <labels:RelationshipLabels?> <quantifier:LegacyQuantifier?>
     <predicate:ElementPredicate?> => {
         let (properties, where_clause) = predicate.unwrap_or((None, None));
         (variable, labels, quantifier, properties, where_clause)
     },
 };
 
+SimpleRelationshipFiller: (Option<Name>, Option<LabelExpression>, Option<Quantifier>, Option<Expr>, Option<Expr>) = {
+    <variable:Name?> <labels:RelationshipLabels?> <quantifier:LegacyQuantifier?>
+    <predicate:SimpleElementPredicate?> => {
+        let (properties, where_clause) = predicate.unwrap_or((None, None));
+        (variable, labels, quantifier, properties, where_clause)
+    },
+};
+
+RelationshipLabels: LabelExpression = {
+    "IS" <expression:LabelOr> => expression,
+    <l:@L> "relationship label expression" <r:@R> =>?
+        relationship_label_expression(source, l, r),
+};
+
 ParenthesizedPathFactor: PathFactor = {
-    <l:@L> "(" <pattern:PathPattern> <where_clause:WhereClause?> ")" <quantifier:GraphQuantifier?> <r:@R> => Node::new(
-        PathFactorKind::Parenthesized {
-            pattern: Box::new(pattern),
-            where_clause: where_clause.map(Box::new),
-            quantifier,
-        },
-        Span::new(l, r),
-    ),
+    <l:@L> "(" <binding:(<Name> "=")?> <pattern:PathPattern> <where_clause:WhereClause?> ")"
+    <quantifier:GraphQuantifier?> <r:@R> => {
+        let where_clause = where_clause.map(Box::new);
+        let kind = if let Some(binding) = binding {
+            PathFactorKind::Subpath {
+                binding,
+                pattern: Box::new(pattern),
+                where_clause,
+                quantifier,
+            }
+        } else {
+            PathFactorKind::Parenthesized {
+                pattern: Box::new(pattern),
+                where_clause,
+                quantifier,
+            }
+        };
+        Node::new(kind, Span::new(l, r))
+    },
+};
+
+LegacyShortestPathFactor: PathFactor = {
+    <l:@L> <all:LegacyShortestPathKind> "(" <pattern:LegacyShortestPathInner> ")" <r:@R> => {
+        Node::new(
+            PathFactorKind::LegacyShortest { all, pattern: Box::new(pattern) },
+            Span::new(l, r),
+        )
+    },
+};
+
+LegacyShortestPathInner: PathPattern = {
+    <l:@L> <head:SimpleNodeFactor> <tail:SimplePathTail> <r:@R> => {
+        let (relationship, node) = tail;
+        Node::new(
+            PathPatternKind { factors: vec![head, relationship, node] },
+            Span::new(l, r),
+        )
+    },
+};
+
+LegacyShortestPathKind: bool = {
+    "SHORTESTPATH" => false,
+    "ALLSHORTESTPATHS" => true,
 };
 
 LegacyQuantifier: Quantifier = {
@@ -515,8 +668,22 @@ GraphQuantifier: Quantifier = {
 DecimalText: String = <l:@L> "integer" <r:@R> => source[l..r].to_owned();
 
 PrefixedLabelExpression: LabelExpression = {
-    ":" <LabelOr>,
+    ":" <ColonPrefixedLabelExpression>,
     "IS" <LabelOr>,
+};
+
+ColonPrefixedLabelExpression: LabelExpression = {
+    LabelOr,
+    <l:@L> <head:Name> <tail:(":" <Name>)+> <r:@R> => {
+        let head_span = head.span;
+        let mut labels = Vec::with_capacity(1 + tail.len());
+        labels.push(Node::new(LabelExpressionKind::Name(head), head_span));
+        labels.extend(tail.into_iter().map(|label| {
+            let span = label.span;
+            Node::new(LabelExpressionKind::Name(label), span)
+        }));
+        Node::new(LabelExpressionKind::And(labels), Span::new(l, r))
+    },
 };
 
 LabelOr: LabelExpression = {
@@ -533,15 +700,11 @@ LabelAnd: LabelExpression = {
         LabelExpressionKind::And(vec![left, right]),
         Span::new(l, r),
     ),
-    <l:@L> <left:LabelAnd> ":" <right:LabelNot> <r:@R> => Node::new(
-        LabelExpressionKind::And(vec![left, right]),
-        Span::new(l, r),
-    ),
 };
 
 LabelNot: LabelExpression = {
     LabelPrimary,
-    <l:@L> "!" <primary:LabelNot> <r:@R> => Node::new(
+    <l:@L> "!" <primary:LabelPrimary> <r:@R> => Node::new(
         LabelExpressionKind::Not(Box::new(primary)),
         Span::new(l, r),
     ),
@@ -590,6 +753,7 @@ AndTail: (Node<BinaryOperator>, Expr) = {
 
 NotExpr: Expr = {
     ComparisonExpr,
+    PatternExpressionExpr,
     <l:@L> <op_l:@L> "NOT" <op_r:@R> <operand:NotExpr> <r:@R> => Node::new(
         ExprKind::Unary {
             operator: Node::new(UnaryOperator::Not, Span::new(op_l, op_r)),
@@ -600,16 +764,21 @@ NotExpr: Expr = {
 };
 
 ComparisonExpr: Expr = {
-    <head:ConcatExpr> <advanced:AdvancedComparisonSuffix?> <simple:SimpleComparisonSuffix*> => {
-        let mut tail = Vec::with_capacity(simple.len() + usize::from(advanced.is_some()));
+    <head:AdvancedComparisonExpr> <simple:SimpleComparisonSuffix*> =>
+        fold_comparison(head, simple),
+};
+
+AdvancedComparisonExpr: Expr = {
+    <head:ConcatExpr> <advanced:AdvancedComparisonSuffix?> => {
+        let mut tail = Vec::with_capacity(usize::from(advanced.is_some()));
         tail.extend(advanced);
-        tail.extend(simple);
         fold_comparison(head, tail)
     },
 };
 
 SimpleComparisonSuffix: ComparisonSuffix = {
-    <operator:SimpleComparisonOperator> <right:ConcatExpr> => ComparisonSuffix::Binary(operator, right),
+    <operator:SimpleComparisonOperator> <right:AdvancedComparisonExpr> =>
+        ComparisonSuffix::Binary(operator, right),
 };
 
 AdvancedComparisonSuffix: ComparisonSuffix = {
@@ -619,6 +788,7 @@ AdvancedComparisonSuffix: ComparisonSuffix = {
         predicate: IsPredicate::Null,
         end,
     },
+    <l:@L> "label predicate" <r:@R> =>? label_comparison_suffix(source, l, r),
 };
 
 SimpleComparisonOperator: Node<BinaryOperator> = {
@@ -704,9 +874,41 @@ PostfixExpr: Expr = {
 
 PostfixSuffixNode: PostfixSuffix = {
     "." <key:Name> => PostfixSuffix::Property(key),
+    "{" <items:MapProjectionItemList?> "}" <end:@R> => PostfixSuffix::MapProjection {
+        items: items.unwrap_or_default(),
+        end,
+    },
     "[" <index:Expr> "]" <end:@R> => PostfixSuffix::Index { index, end },
     "[" <lower:Expr?> ".." <upper:Expr?> "]" <end:@R> =>
         PostfixSuffix::Slice { lower, upper, end },
+};
+
+MapProjectionItemList: Vec<MapProjectionItem> = {
+    <head:MapProjectionItemNode> <tail:("," <MapProjectionItemNode>)*> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        items
+    },
+};
+
+MapProjectionItemNode: MapProjectionItem = {
+    <l:@L> "." <key:Name> <r:@R> => Node::new(
+        MapProjectionItemKind::Property(key),
+        Span::new(l, r),
+    ),
+    <l:@L> "." "*" <r:@R> => Node::new(
+        MapProjectionItemKind::AllProperties,
+        Span::new(l, r),
+    ),
+    <l:@L> <key:Name> ":" <value:Expr> <r:@R> => {
+        let entry = MapEntry { key, value, span: Span::new(l, r) };
+        Node::new(MapProjectionItemKind::Entry(entry), Span::new(l, r))
+    },
+    <variable:Name> => {
+        let span = variable.span;
+        Node::new(MapProjectionItemKind::Variable(variable), span)
+    },
 };
 
 PrimaryExpr: Expr = {
@@ -721,9 +923,59 @@ PrimaryExpr: Expr = {
     QuantifiedPredicateExpr,
     CountFunctionExpr,
     CountStarExpr,
+    SubqueryExpr,
+    LegacyShortestPathExpr,
     QualifiedFunctionExpr,
     NamedExpr,
     ParenthesizedExpr,
+};
+
+PatternExpressionExpr: Expr = {
+    <l:@L> "pattern expression" <r:@R> =>? pattern_expression(source, l, r),
+};
+
+LegacyShortestPathExpr: Expr = {
+    <l:@L> <function:LegacyShortestPathName> "(" <path:LegacyShortestPathInner> ")" <r:@R> => {
+        let pattern_span = path.span;
+        let part = Node::new(
+            PatternPartKind { binding: None, selector: None, path },
+            pattern_span,
+        );
+        let pattern = Pattern { parts: vec![part], span: pattern_span };
+        let argument = Node::new(ExprKind::Pattern(pattern), pattern_span);
+        let name_span = function.span;
+        Node::new(
+            ExprKind::Function(FunctionInvocation {
+                name: QualifiedName { parts: vec![function], span: name_span },
+                quantifier: None,
+                arguments: vec![argument],
+            }),
+            Span::new(l, r),
+        )
+    },
+};
+
+LegacyShortestPathName: Name = {
+    <l:@L> "SHORTESTPATH" <r:@R> => name(source, l, r, false),
+    <l:@L> "ALLSHORTESTPATHS" <r:@R> => name(source, l, r, false),
+};
+
+SubqueryExpr: Expr = {
+    <l:@L> <kind:SubqueryExpressionKindNode> "{" <query:SubqueryArgument> "}" <r:@R> => Node::new(
+        ExprKind::Subquery(SubqueryExpression { kind, query: Box::new(query) }),
+        Span::new(l, r),
+    ),
+};
+
+SubqueryExpressionKindNode: Node<SubqueryExpressionKind> = {
+    <l:@L> "EXISTS" <r:@R> => Node::new(SubqueryExpressionKind::Exists, Span::new(l, r)),
+    <l:@L> "COUNT" <r:@R> => Node::new(SubqueryExpressionKind::Count, Span::new(l, r)),
+    <l:@L> "COLLECT" <r:@R> => Node::new(SubqueryExpressionKind::Collect, Span::new(l, r)),
+};
+
+SubqueryArgument: Query = {
+    Query,
+    <pattern:Pattern> <where_clause:WhereClause?> => query_from_pattern(pattern, where_clause),
 };
 
 LiteralExpr: Expr = {
@@ -834,6 +1086,10 @@ ListValue: Expr = {
 
 MapValue: Expr = {
     <l:@L> "{" "}" <r:@R> => Node::new(ExprKind::Map(Vec::new()), Span::new(l, r)),
+    NonemptyMapValue,
+};
+
+NonemptyMapValue: Expr = {
     <l:@L> "{" <head:MapEntry> <tail:("," <MapEntry>)*> "}" <r:@R> => {
         let mut entries = Vec::with_capacity(1 + tail.len());
         entries.push(head);
@@ -919,8 +1175,12 @@ pub PatternFragment: Pattern = SimplePathPattern;
 
 pub ExprFragment: Expr = Expr;
 
+pub LabelPredicateFragment: LabelExpression = {
+    PrefixedLabelExpression,
+};
+
 SimplePathPattern: Pattern = {
-    <l:@L> <head:NodeFactor> <tail:SimplePathTail+> <r:@R> => {
+    <l:@L> <head:SimpleNodeFactor> <tail:SimplePathTail+> <r:@R> => {
         let mut factors = Vec::with_capacity(1 + tail.len() * 2);
         factors.push(head);
         for (relationship, node) in tail {
@@ -937,7 +1197,7 @@ SimplePathPattern: Pattern = {
 };
 
 SimplePathTail: (PathFactor, PathFactor) = {
-    <relationship:RelationshipFactor> <node:NodeFactor> => (relationship, node),
+    <relationship:SimpleRelationshipFactor> <node:SimpleNodeFactor> => (relationship, node),
 };
 
 QuantifiedPredicateExpr: Expr = {
@@ -1019,6 +1279,9 @@ extern {
         "float" => ParserToken::Float,
         "string" => ParserToken::String,
         "pattern comprehension" => ParserToken::PatternComprehension,
+        "pattern expression" => ParserToken::PatternExpression,
+        "label predicate" => ParserToken::LabelPredicate,
+        "relationship label expression" => ParserToken::RelationshipLabelExpression,
         "qualified function name" => ParserToken::QualifiedFunctionName,
         "ALL" => ParserToken::All,
         "set ALL" => ParserToken::SetAll,
@@ -1032,6 +1295,7 @@ extern {
         "CALL" => ParserToken::Call,
         "CASE" => ParserToken::Case,
         "CONTAINS" => ParserToken::Contains,
+        "COLLECT" => ParserToken::Collect,
         "COUNT" => ParserToken::Count,
         "CREATE" => ParserToken::Create,
         "DELETE" => ParserToken::Delete,
@@ -1111,7 +1375,6 @@ extern {
         "%" => ParserToken::Percent,
         "^" => ParserToken::Caret,
         "!" => ParserToken::Bang,
-        "~" => ParserToken::Tilde,
         "=" => ParserToken::Equal,
         "<>" => ParserToken::NotEqual,
         "<" => ParserToken::Less,

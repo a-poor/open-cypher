@@ -1,12 +1,14 @@
 # Benchmarking policy
 
-The Criterion harness measures five independent concerns:
+The Criterion harness measures six independent concerns:
 
 - `lexer`: tokenization without parsing;
 - `parse_valid`: end-to-end strict parsing and AST construction;
 - `parse_invalid`: diagnostic recovery on malformed inputs;
-- `corpus`: the checked-in representative batch; and
-- `scaling`: approximately 1 KiB, 10 KiB, and 100 KiB generated inputs.
+- `corpus`: the checked-in representative batch;
+- `tck_corpus`: every unique accepted query in the generated syntax projection;
+- `scaling`: approximately 1 KiB, 10 KiB, and 100 KiB generated inputs, plus
+  valid and malformed 64 KiB contextual-keyword stress cases.
 
 Run it in release mode through Cargo:
 

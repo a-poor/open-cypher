@@ -1,0 +1,1913 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+schema_version = 1
+
+# These cases make the policy ledger executable. `baseline` records the
+# openCypher 2024.3 BNF expectation; `expect` records the current implementation
+# expectation. A difference is allowed only through a reviewed deviation.
+# Production-level positive and negative cases will reuse this catalog as the
+# 377-production audit progresses.
+
+[[case]]
+id = "standalone-return-positive"
+description = "The TCK-supported standalone RETURN clarification parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 1 AS value"
+expect = "accept"
+
+[[case]]
+id = "standalone-return-negative"
+description = "A standalone RETURN still requires a projection."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN"
+expect = "reject"
+
+[[case]]
+id = "comments-positive"
+description = "Nested block and trailing line comments are accepted as trivia."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN /* outer /* nested */ outer */ 1 // trailing comment\n"
+expect = "accept"
+
+[[case]]
+id = "comments-negative"
+description = "An unterminated block comment is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN /* unterminated"
+expect = "reject"
+diagnostics = ["OCY-L004"]
+
+[[case]]
+id = "path-mode-positive"
+description = "The accepted TRAIL path-mode extension parses."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH TRAIL p = (a)-[]->{1,3}(b) RETURN p"
+expect = "accept"
+
+[[case]]
+id = "path-mode-negative"
+description = "An unknown path mode is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH UNKNOWN p = (a)-[]->{1,3}(b) RETURN p"
+expect = "reject"
+
+[[case]]
+id = "optional-quantifier-positive"
+description = "The accepted optional graph-pattern quantifier parses."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (a)-[]->?(b) RETURN a"
+expect = "accept"
+
+[[case]]
+id = "optional-quantifier-negative"
+description = "A doubled optional graph-pattern quantifier is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (a)-[]->??(b) RETURN a"
+expect = "reject"
+
+[[case]]
+id = "bang-not-equals-positive"
+description = "The accepted != comparison alias parses."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1 != 2 AS different"
+expect = "accept"
+
+[[case]]
+id = "bang-not-equals-negative"
+description = "A bare exclamation mark is not a comparison operator."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1 ! 2"
+expect = "reject"
+
+[[case]]
+id = "concatenation-positive"
+description = "The accepted double-pipe concatenation expression parses."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 'a' || 'b' AS joined"
+expect = "accept"
+
+[[case]]
+id = "concatenation-negative"
+description = "A single pipe is not a value concatenation operator."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 'a' | 'b'"
+expect = "reject"
+
+[[case]]
+id = "empty-program-positive"
+description = "The accepted empty-program envelope parses trivia-only input."
+baseline = "reject"
+entrypoint = "parser"
+source = " \n"
+expect = "accept"
+
+[[case]]
+id = "empty-program-negative"
+description = "A bare statement terminator is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = ";"
+expect = "reject"
+
+[[case]]
+id = "trailing-semicolon-positive"
+description = "One accepted trailing statement terminator parses."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1;"
+expect = "accept"
+
+[[case]]
+id = "trailing-semicolon-negative"
+description = "A second trailing statement terminator is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1;;"
+expect = "reject"
+
+[[case]]
+id = "underscore-identifier-positive"
+description = "The currently accepted underscore-prefixed identifier parses."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN _value"
+expect = "accept"
+
+[[case]]
+id = "underscore-identifier-negative"
+description = "An alias without a following identifier is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1 AS"
+expect = "reject"
+
+[[case]]
+id = "hybrid-label-negative"
+description = "A node-style colon conjunction is rejected in a relationship label expression."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH ()-[:A:B]->() RETURN 1"
+expect = "reject"
+
+[[case]]
+id = "update-pattern-positive"
+description = "The currently overaccepted path selector in CREATE parses."
+baseline = "reject"
+entrypoint = "parser"
+source = "CREATE ANY (n)"
+expect = "accept"
+
+[[case]]
+id = "update-pattern-negative"
+description = "CREATE without a graph pattern is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "CREATE"
+expect = "reject"
+
+[[case]]
+id = "program-positive"
+description = "A complete one-query program parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 1"
+expect = "accept"
+
+[[case]]
+id = "merge-negative"
+description = "MERGE without a graph pattern is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "MERGE"
+expect = "reject"
+
+[[case]]
+id = "path-prefix-positive"
+description = "A baseline ANY PATHS search prefix parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH p = ANY PATHS (a)-->(b) RETURN p"
+expect = "accept"
+
+[[case]]
+id = "graph-quantifier-positive"
+description = "A baseline braced graph-pattern quantifier parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (a)-[]->{1,3}(b) RETURN a"
+expect = "accept"
+
+[[case]]
+id = "node-label-expression-positive"
+description = "A baseline IS node-label expression parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n IS Person) RETURN n"
+expect = "accept"
+
+[[case]]
+id = "regular-identifier-positive"
+description = "A Unicode-XID-compatible regular identifier parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN value"
+expect = "accept"
+
+[[case]]
+id = "concatenation-token-positive"
+description = "Double pipe is recognized as the BNF concatenation token."
+baseline = "accept"
+entrypoint = "lexer"
+source = "||"
+expect = "tokens"
+tokens = ["DoublePipe"]
+
+[[case]]
+id = "concatenation-token-negative"
+description = "Single pipe is not the BNF concatenation token."
+baseline = "reject"
+entrypoint = "lexer"
+source = "|"
+expect = "tokens"
+tokens = ["Pipe"]
+
+[[case]]
+id = "not-equals-positive"
+description = "The baseline angle-bracket not-equals operator parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 1 <> 2"
+expect = "accept"
+
+[[case]]
+id = "separator-positive"
+description = "BNF whitespace separates parser tokens."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN \n 1"
+expect = "accept"
+
+[[case]]
+id = "union-positive"
+description = "A UNION ALL composite statement parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 1 UNION ALL RETURN 2"
+expect = "accept"
+
+[[case]]
+id = "union-negative"
+description = "UNION requires a following linear statement."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1 UNION"
+expect = "reject"
+
+[[case]]
+id = "match-positive"
+description = "OPTIONAL MATCH with a predicate parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "OPTIONAL MATCH (n) WHERE n.x = 1 RETURN n"
+expect = "accept"
+
+[[case]]
+id = "match-negative"
+description = "MATCH requires a graph pattern."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH"
+expect = "reject"
+
+[[case]]
+id = "unwind-positive"
+description = "UNWIND with a binding variable parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "UNWIND [1, 2] AS item RETURN item"
+expect = "accept"
+
+[[case]]
+id = "unwind-negative"
+description = "UNWIND requires AS and a binding variable."
+baseline = "reject"
+entrypoint = "parser"
+source = "UNWIND [1, 2]"
+expect = "reject"
+
+[[case]]
+id = "with-positive"
+description = "WITH projection, paging, and WHERE parse together."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n) WITH n ORDER BY n.x SKIP 1 LIMIT 2 WHERE n.x > 0 RETURN n"
+expect = "accept"
+
+[[case]]
+id = "with-negative"
+description = "WITH requires a projection body."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) WITH RETURN n"
+expect = "reject"
+
+[[case]]
+id = "set-positive"
+description = "Every SET item family parses in one clause."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n) SET n = {x: 1}, n += {y: 2}, n:Label, n.x = 3 RETURN n"
+expect = "accept"
+
+[[case]]
+id = "set-negative"
+description = "SET requires at least one assignment or label item."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) SET RETURN n"
+expect = "reject"
+
+[[case]]
+id = "remove-positive"
+description = "REMOVE accepts both label and property items."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n) REMOVE n:Label, n.x RETURN n"
+expect = "accept"
+
+[[case]]
+id = "remove-negative"
+description = "REMOVE requires an item."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) REMOVE RETURN n"
+expect = "reject"
+
+[[case]]
+id = "delete-positive"
+description = "DETACH DELETE with an expression parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n) DETACH DELETE n"
+expect = "accept"
+
+[[case]]
+id = "delete-negative"
+description = "DELETE requires an expression."
+baseline = "reject"
+entrypoint = "parser"
+source = "DELETE"
+expect = "reject"
+
+[[case]]
+id = "call-positive"
+description = "A qualified procedure call with arguments and YIELD parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "CALL db.proc(1) YIELD item AS result WHERE result > 0 RETURN result"
+expect = "accept"
+
+[[case]]
+id = "call-negative"
+description = "CALL requires a procedure reference."
+baseline = "reject"
+entrypoint = "parser"
+source = "CALL"
+expect = "reject"
+
+[[case]]
+id = "projection-positive"
+description = "A quantified projection with aliases parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN DISTINCT 1 AS one, 2 AS two"
+expect = "accept"
+
+[[case]]
+id = "projection-negative"
+description = "A projection alias requires an identifier."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1 AS"
+expect = "reject"
+
+[[case]]
+id = "order-page-positive"
+description = "ORDER BY direction, OFFSET, and LIMIT parse together."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 1 AS one ORDER BY one DESC OFFSET 1 LIMIT 2"
+expect = "accept"
+
+[[case]]
+id = "order-page-negative"
+description = "ORDER requires BY and a sort specification."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1 ORDER"
+expect = "reject"
+
+[[case]]
+id = "where-positive"
+description = "A graph-pattern WHERE search condition parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n) WHERE n.x > 0 RETURN n"
+expect = "accept"
+
+[[case]]
+id = "where-negative"
+description = "WHERE requires a search condition."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) WHERE RETURN n"
+expect = "reject"
+
+[[case]]
+id = "pattern-positive"
+description = "A bound selected path with labeled elements parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH p = ANY SHORTEST PATHS (a:Person)-[r:KNOWS]->(b) RETURN p"
+expect = "accept"
+
+[[case]]
+id = "pattern-negative"
+description = "A relationship detail in a path must close its bracket."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (a)-[r RETURN r"
+expect = "reject"
+
+[[case]]
+id = "parenthesized-pattern-positive"
+description = "A parenthesized path predicate and graph quantifier parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ((a)-[:R]->(b) WHERE a.x){1,2} RETURN a"
+expect = "accept"
+
+[[case]]
+id = "relationship-positive"
+description = "Directed, bidirected, and undirected relationship forms parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (a)<-[l:L]-(b)-[u:U]-(c)<-[d:D]->(e) RETURN l, u, d"
+expect = "accept"
+
+[[case]]
+id = "properties-positive"
+description = "Element property specifications parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n {x: 1, y: 2}) RETURN n"
+expect = "accept"
+
+[[case]]
+id = "properties-negative"
+description = "A property specification requires a field value."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n {x:}) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "legacy-length-positive"
+description = "A legacy relationship path-length range parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (a)-[r*1..3]->(b) RETURN r"
+expect = "accept"
+
+[[case]]
+id = "legacy-length-negative"
+description = "A legacy path length cannot contain two range separators."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (a)-[r*1..2..3]->(b) RETURN r"
+expect = "reject"
+
+[[case]]
+id = "label-expression-positive"
+description = "A parenthesized boolean label expression parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n IS (Person | Employee) & !Suspended) RETURN n"
+expect = "accept"
+
+[[case]]
+id = "label-expression-negative"
+description = "A label conjunction requires a right operand."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n IS Person &) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "expression-positive"
+description = "Boolean, comparison, concatenation, and arithmetic precedence parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN NOT 1 < 2 XOR false OR true AND 2 + 3 * 4 ^ 2 = 50"
+expect = "accept"
+
+[[case]]
+id = "expression-negative"
+description = "A parenthesized value expression requires a closing delimiter."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (1 + 2"
+expect = "reject"
+
+[[case]]
+id = "comparison-positive"
+description = "All advanced comparison predicate families parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 'abc' STARTS WITH 'a' AND 'abc' ENDS WITH 'c' AND 'abc' CONTAINS 'b' AND 1 IN [1] AND 'a' =~ 'a'"
+expect = "accept"
+
+[[case]]
+id = "comparison-negative"
+description = "An advanced comparison operator requires a right predicand."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1 IN"
+expect = "reject"
+
+[[case]]
+id = "postfix-positive"
+description = "Property, dynamic index, and slicing postfix operators parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN value.field[0][1..2]"
+expect = "accept"
+
+[[case]]
+id = "postfix-negative"
+description = "A dynamic index requires a closing bracket."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN value[0"
+expect = "reject"
+
+[[case]]
+id = "case-positive"
+description = "Simple CASE with multiple WHEN operands and ELSE parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN CASE n WHEN 1, 2 THEN 'small' ELSE 'other' END"
+expect = "accept"
+
+[[case]]
+id = "case-negative"
+description = "CASE requires at least one WHEN clause."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN CASE n ELSE 1 END"
+expect = "reject"
+
+[[case]]
+id = "exists-positive"
+description = "An EXISTS subquery expression parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN EXISTS { MATCH (n) RETURN n }"
+expect = "accept"
+
+[[case]]
+id = "exists-negative"
+description = "EXISTS requires a subquery argument."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN EXISTS { MATCH ("
+expect = "reject"
+
+[[case]]
+id = "map-projection-positive"
+description = "All map-projection element forms parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n) RETURN n{.name, n, key: 1, .*}"
+expect = "accept"
+
+[[case]]
+id = "map-projection-negative"
+description = "A map projection field requires a value."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) RETURN n{key:}"
+expect = "reject"
+
+[[case]]
+id = "list-comprehension-positive"
+description = "A filtered and projected list comprehension parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN [item IN [1, 2] WHERE item > 1 | item * 2]"
+expect = "accept"
+
+[[case]]
+id = "list-comprehension-negative"
+description = "A list comprehension requires a source expression."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN [item IN | item]"
+expect = "reject"
+
+[[case]]
+id = "pattern-comprehension-positive"
+description = "A bound, filtered pattern comprehension parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN [p = (a)-->(b) WHERE a.x | p]"
+expect = "accept"
+
+[[case]]
+id = "pattern-comprehension-negative"
+description = "A pattern comprehension requires a projection."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN [(a)-->(b) | ]"
+expect = "reject"
+
+[[case]]
+id = "reduce-positive"
+description = "A REDUCE accumulator, source, and step parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN reduce(total = 0, item IN [1, 2] | total + item)"
+expect = "accept"
+
+[[case]]
+id = "reduce-negative"
+description = "REDUCE requires a step expression."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN reduce(total = 0, item IN [1] |)"
+expect = "reject"
+
+[[case]]
+id = "quantifier-expression-positive"
+description = "A quantified predicate expression parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN ALL(item IN [1, 2] WHERE item > 0)"
+expect = "accept"
+
+[[case]]
+id = "quantifier-expression-negative"
+description = "A quantified predicate requires an expression after WHERE."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN ALL(item IN [1, 2] WHERE)"
+expect = "reject"
+
+[[case]]
+id = "trim-positive"
+description = "The single-character TRIM form parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN trim(' value ')"
+expect = "accept"
+
+[[case]]
+id = "trim-negative"
+description = "A TRIM invocation requires a closing delimiter."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN trim('value'"
+expect = "reject"
+
+[[case]]
+id = "function-positive"
+description = "A qualified, quantified function invocation parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN analytics.math.score(DISTINCT 1, 2)"
+expect = "accept"
+
+[[case]]
+id = "function-negative"
+description = "A function argument list cannot end in a comma."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN score(1,)"
+expect = "reject"
+
+[[case]]
+id = "count-star-positive"
+description = "COUNT star parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN count(*)"
+expect = "accept"
+
+[[case]]
+id = "literal-positive"
+description = "Numeric, boolean, string, null, list, and map literals parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN -INF, NAN, 0xFF, 0o7, 1.2e3F, true, \"text\", null, [1], {x: 1}"
+expect = "accept"
+
+[[case]]
+id = "literal-negative"
+description = "An invalid hexadecimal spelling is rejected as an expression."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 0x"
+expect = "reject"
+
+[[case]]
+id = "escaped-string-positive"
+description = "Quoted strings and every supported escape family lex successfully."
+baseline = "accept"
+entrypoint = "parser"
+source = '''RETURN '\\ \' \" \` \t \b \n \r \f \u0041 \U01F642' '''
+expect = "accept"
+
+[[case]]
+id = "escaped-string-negative"
+description = "An unknown string escape is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN '\\q'"
+expect = "reject"
+diagnostics = ["OCY-L005"]
+
+[[case]]
+id = "parameter-positive"
+description = "Named and ordinal parameters parse."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN $name, $1"
+expect = "accept"
+
+[[case]]
+id = "parameter-negative"
+description = "A bare dollar sign is not a general parameter reference."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN $"
+expect = "reject"
+
+[[case]]
+id = "escaped-identifier-positive"
+description = "A grave-accent-delimited identifier parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN `odd``name`"
+expect = "accept"
+
+[[case]]
+id = "escaped-identifier-negative"
+description = "An unterminated grave-accent identifier is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN `name"
+expect = "reject"
+diagnostics = ["OCY-L003"]
+
+[[case]]
+id = "keyword-positive"
+description = "A baseline non-reserved word is recognized case-insensitively."
+baseline = "accept"
+entrypoint = "lexer"
+source = "mAtCh"
+expect = "tokens"
+tokens = ["Keyword(Match)"]
+
+[[case]]
+id = "baseline-keyword-family-positive"
+description = "All 62 BNF non-reserved words receive their exact public Keyword token classification."
+baseline = "accept"
+entrypoint = "lexer"
+source = "allshortestpaths all and any as asc ascending by call case contains count create delete desc descending detach distinct else end ends exists false group groups in inf infinity is limit match merge nan none not null offset on optional or order path paths reduce remove return set shortest shortestpath single skip starts then trim true union unwind when where with xor yield"
+expect = "tokens"
+tokens = ["Keyword(AllShortestPaths)", "Whitespace", "Keyword(All)", "Whitespace", "Keyword(And)", "Whitespace", "Keyword(Any)", "Whitespace", "Keyword(As)", "Whitespace", "Keyword(Asc)", "Whitespace", "Keyword(Ascending)", "Whitespace", "Keyword(By)", "Whitespace", "Keyword(Call)", "Whitespace", "Keyword(Case)", "Whitespace", "Keyword(Contains)", "Whitespace", "Keyword(Count)", "Whitespace", "Keyword(Create)", "Whitespace", "Keyword(Delete)", "Whitespace", "Keyword(Desc)", "Whitespace", "Keyword(Descending)", "Whitespace", "Keyword(Detach)", "Whitespace", "Keyword(Distinct)", "Whitespace", "Keyword(Else)", "Whitespace", "Keyword(End)", "Whitespace", "Keyword(Ends)", "Whitespace", "Keyword(Exists)", "Whitespace", "Keyword(False)", "Whitespace", "Keyword(Group)", "Whitespace", "Keyword(Groups)", "Whitespace", "Keyword(In)", "Whitespace", "Keyword(Inf)", "Whitespace", "Keyword(Infinity)", "Whitespace", "Keyword(Is)", "Whitespace", "Keyword(Limit)", "Whitespace", "Keyword(Match)", "Whitespace", "Keyword(Merge)", "Whitespace", "Keyword(Nan)", "Whitespace", "Keyword(None)", "Whitespace", "Keyword(Not)", "Whitespace", "Keyword(Null)", "Whitespace", "Keyword(Offset)", "Whitespace", "Keyword(On)", "Whitespace", "Keyword(Optional)", "Whitespace", "Keyword(Or)", "Whitespace", "Keyword(Order)", "Whitespace", "Keyword(Path)", "Whitespace", "Keyword(Paths)", "Whitespace", "Keyword(Reduce)", "Whitespace", "Keyword(Remove)", "Whitespace", "Keyword(Return)", "Whitespace", "Keyword(Set)", "Whitespace", "Keyword(Shortest)", "Whitespace", "Keyword(ShortestPath)", "Whitespace", "Keyword(Single)", "Whitespace", "Keyword(Skip)", "Whitespace", "Keyword(Starts)", "Whitespace", "Keyword(Then)", "Whitespace", "Keyword(Trim)", "Whitespace", "Keyword(True)", "Whitespace", "Keyword(Union)", "Whitespace", "Keyword(Unwind)", "Whitespace", "Keyword(When)", "Whitespace", "Keyword(Where)", "Whitespace", "Keyword(With)", "Whitespace", "Keyword(Xor)", "Whitespace", "Keyword(Yield)"]
+
+[[case]]
+id = "syntax-neutral-keyword-superset-negative"
+description = "Sixty-four removed syntax-neutral compatibility spellings remain regular identifiers, not public Keyword tokens."
+baseline = "reject"
+entrypoint = "lexer"
+source = "both break close constraint continue csv current different do drop dryrun each error explain fail fieldterminator filter finish for foreach first from graph headers insert index join label labels last leading let load mandatory next node nodetach normalize nulls of only periodic profile property report repeatable replace require rows same scalar scan seek select status trailing transactions typed unique use using value values without"
+expect = "tokens"
+tokens = ["Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier", "Whitespace", "Identifier"]
+
+[[case]]
+id = "syntax-neutral-write-keyword-negative"
+description = "WRITE, the sixty-fifth removed syntax-neutral compatibility spelling, lexes as a regular identifier."
+baseline = "reject"
+entrypoint = "lexer"
+source = "write"
+expect = "tokens"
+tokens = ["Identifier"]
+
+[[case]]
+id = "tilde-invalid-negative"
+description = "A bare tilde is outside the 2024.3 token grammar and produces an invalid-token diagnostic."
+baseline = "reject"
+entrypoint = "lexer"
+source = "~"
+expect = "tokens"
+tokens = ["Invalid"]
+diagnostics = ["OCY-L001"]
+
+[[case]]
+id = "arrow-token-normalization-positive"
+description = "Contiguous arrows coalesce into backend tokens while split BNF arrowhead/line pieces remain separate tokens."
+baseline = "accept"
+entrypoint = "lexer"
+source = "<- -> < - - >"
+expect = "tokens"
+tokens = ["LeftArrow", "Whitespace", "RightArrow", "Whitespace", "Less", "Whitespace", "Minus", "Whitespace", "Minus", "Whitespace", "Greater"]
+
+[[case]]
+id = "invalid-token-negative"
+description = "A character outside the token grammar is rejected."
+baseline = "reject"
+entrypoint = "lexer"
+source = "@"
+expect = "tokens"
+tokens = ["Invalid"]
+diagnostics = ["OCY-L001"]
+
+[[case]]
+id = "operator-token-positive"
+description = "A representative multi-character delimiter token lexes atomically."
+baseline = "accept"
+entrypoint = "lexer"
+source = "=>"
+expect = "tokens"
+tokens = ["FatArrow"]
+
+[[case]]
+id = "integer-token-positive"
+description = "A decimal digit sequence lexes as an integer."
+baseline = "accept"
+entrypoint = "lexer"
+source = "123"
+expect = "tokens"
+tokens = ["Integer"]
+
+[[case]]
+id = "standalone-call-positive"
+description = "A standalone procedure call may omit the argument list and project named output."
+baseline = "accept"
+entrypoint = "parser"
+source = "CALL db.proc YIELD item"
+expect = "accept"
+
+[[case]]
+id = "standalone-call-negative"
+description = "A standalone YIELD clause requires an item or asterisk."
+baseline = "reject"
+entrypoint = "parser"
+source = "CALL db.proc YIELD"
+expect = "reject"
+
+[[case]]
+id = "standalone-yield-all-positive"
+description = "The standalone procedure-call YIELD * alternative parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "CALL db.proc YIELD *"
+expect = "accept"
+
+[[case]]
+id = "subpath-binding-positive"
+description = "A parenthesized path expression may bind its subpath variable."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (p = (a)-[r]->(b)) RETURN p"
+expect = "accept"
+
+[[case]]
+id = "subpath-binding-negative"
+description = "A subpath variable declaration requires an equals sign."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (p (a)-[r]->(b)) RETURN p"
+expect = "reject"
+
+[[case]]
+id = "path-term-positive"
+description = "A quantified parenthesized path factor may be followed by another relationship/node factor pair."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ((a)-[r]->(b)){1,3}-[s]->(c) RETURN c"
+expect = "accept"
+
+[[case]]
+id = "path-term-negative"
+description = "A path term rejects an unterminated relationship detail."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH ((a)-[r]->(b)){1,3}-[s RETURN b"
+expect = "reject"
+
+[[case]]
+id = "relationship-element-positive"
+description = "A relationship is a valid element-pattern/path-primary alternative."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH -[r]-> RETURN r"
+expect = "accept"
+
+[[case]]
+id = "legacy-shortest-pattern-positive"
+description = "The legacy shortestPath spelling parses as a path-pattern expression."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH p = shortestPath((a)-->(b)) RETURN p"
+expect = "accept"
+
+[[case]]
+id = "legacy-shortest-pattern-negative"
+description = "A legacy shortest-path pattern requires a complete parenthesized path."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH p = shortestPath((a)-->) RETURN p"
+expect = "reject"
+
+[[case]]
+id = "create-pattern-positive"
+description = "CREATE exercises a path list, directed relationship, variables, labels, and property sets."
+baseline = "accept"
+entrypoint = "parser"
+source = "CREATE (a:Person {id: 1})-[r:KNOWS {since: 2020}]->(b:Employee {id: 2}), (c)"
+expect = "accept"
+
+[[case]]
+id = "create-pattern-negative"
+description = "A CREATE relationship property set requires a value after its colon."
+baseline = "reject"
+entrypoint = "parser"
+source = "CREATE (a)-[r:KNOWS {since:}]->(b)"
+expect = "reject"
+
+[[case]]
+id = "merge-pattern-positive"
+description = "MERGE exercises its node, directed relationship, label, property, and action productions."
+baseline = "accept"
+entrypoint = "parser"
+source = "MERGE (a:Person {id: 1})-[r:KNOWS {since: 2020}]->(b:Employee {id: 2}) ON MATCH SET a.seen = true"
+expect = "accept"
+
+[[case]]
+id = "merge-pattern-negative"
+description = "A MERGE relationship property set requires a value after its colon."
+baseline = "reject"
+entrypoint = "parser"
+source = "MERGE (a)-[r:KNOWS {since:}]->(b)"
+expect = "reject"
+
+[[case]]
+id = "relationship-label-legacy-positive"
+description = "The legacy relationship label disjunction with repeated colons parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ()-[:A|:B]->() RETURN 1"
+expect = "accept"
+
+[[case]]
+id = "relationship-label-legacy-negative"
+description = "A legacy relationship label disjunction requires a type after each colon."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH ()-[:A|:]->() RETURN 1"
+expect = "reject"
+
+[[case]]
+id = "graph-quantifier-range-positive"
+description = "A comma-bounded graph quantifier parses after a parenthesized path."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ((a)-->(b)){1,3} RETURN a"
+expect = "accept"
+
+[[case]]
+id = "graph-quantifier-range-negative"
+description = "A graph quantifier permits only one comma-separated bound pair."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH ((a)-->(b)){1,2,3} RETURN a"
+expect = "reject"
+
+[[case]]
+id = "null-predicate-positive"
+description = "The IS NULL predicate suffix parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN null IS NULL"
+expect = "accept"
+
+[[case]]
+id = "null-predicate-negative"
+description = "A null predicate rejects an extra NULL token after its suffix."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN null IS NOT NULL NULL"
+expect = "reject"
+
+[[case]]
+id = "searched-case-positive"
+description = "A searched CASE expression exercises WHEN search conditions without a case operand."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN CASE WHEN 1 = 1 THEN 'yes' ELSE 'no' END"
+expect = "accept"
+
+[[case]]
+id = "searched-case-negative"
+description = "A searched CASE WHEN requires a result after THEN."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN CASE WHEN 1 = 1 THEN END"
+expect = "reject"
+
+[[case]]
+id = "list-constructor-positive"
+description = "A list constructor with multiple value-expression elements parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN [1, 2 + 3]"
+expect = "accept"
+
+[[case]]
+id = "list-constructor-negative"
+description = "A list constructor rejects a trailing comma without an element."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN [1,]"
+expect = "reject"
+
+[[case]]
+id = "map-constructor-positive"
+description = "A record/map constructor exercises the field list and field productions."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN {first: 1, second: 2}"
+expect = "accept"
+
+[[case]]
+id = "map-constructor-negative"
+description = "A record/map field requires a value after its colon."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN {first:}"
+expect = "reject"
+
+[[case]]
+id = "parameter-extended-positive"
+description = "A parameter name may be a digit-starting extended identifier."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN $1abc, $1_abc"
+expect = "accept"
+
+[[case]]
+id = "parameter-delimited-positive"
+description = "A parameter name may be a backtick-delimited identifier."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN $`a b`"
+expect = "accept"
+
+[[case]]
+id = "parameter-delimited-whitespace-gap-negative"
+description = "A dollar sign separated by whitespace from a delimited name is not one parameter reference."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN $ `a b`"
+expect = "reject"
+
+[[case]]
+id = "parameter-delimited-comment-gap-negative"
+description = "A comment between a dollar sign and delimited name cannot be folded into one parameter reference."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN $/**/`a b`"
+expect = "reject"
+
+[[case]]
+id = "contextual-identifiers-positive"
+description = "All baseline non-reserved words remain usable as identifiers in one list."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 0 AS allshortestpaths, 0 AS all, 0 AS and, 0 AS any, 0 AS as, 0 AS asc, 0 AS ascending, 0 AS by, 0 AS call, 0 AS case, 0 AS contains, 0 AS count, 0 AS create, 0 AS delete, 0 AS desc, 0 AS descending, 0 AS detach, 0 AS distinct, 0 AS else, 0 AS end, 0 AS ends, 0 AS exists, 0 AS false, 0 AS group, 0 AS groups, 0 AS in, 0 AS inf, 0 AS infinity, 0 AS is, 0 AS limit, 0 AS match, 0 AS merge, 0 AS nan, 0 AS none, 0 AS not, 0 AS null, 0 AS offset, 0 AS on, 0 AS optional, 0 AS or, 0 AS order, 0 AS path, 0 AS paths, 0 AS reduce, 0 AS remove, 0 AS return, 0 AS set, 0 AS shortest, 0 AS shortestpath, 0 AS single, 0 AS skip, 0 AS starts, 0 AS then, 0 AS trim, 0 AS true, 0 AS union, 0 AS unwind, 0 AS when, 0 AS where, 0 AS with, 0 AS xor, 0 AS yield"
+expect = "accept"
+
+[[case]]
+id = "contextual-identifier-expressions-positive"
+description = "All 62 words in the vendored non-reserved-word production parse in expression position with regular aliases."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN allshortestpaths AS x0, all AS x1, and AS x2, any AS x3, as AS x4, asc AS x5, ascending AS x6, by AS x7, call AS x8, case AS x9, contains AS x10, count AS x11, create AS x12, delete AS x13, desc AS x14, descending AS x15, detach AS x16, distinct AS x17, else AS x18, end AS x19, ends AS x20, exists AS x21, false AS x22, group AS x23, groups AS x24, in AS x25, inf AS x26, infinity AS x27, is AS x28, limit AS x29, match AS x30, merge AS x31, nan AS x32, none AS x33, not AS x34, null AS x35, offset AS x36, on AS x37, optional AS x38, or AS x39, order AS x40, path AS x41, paths AS x42, reduce AS x43, remove AS x44, return AS x45, set AS x46, shortest AS x47, shortestpath AS x48, single AS x49, skip AS x50, starts AS x51, then AS x52, trim AS x53, true AS x54, union AS x55, unwind AS x56, when AS x57, where AS x58, with AS x59, xor AS x60, yield AS x61"
+expect = "accept"
+
+[[case]]
+id = "contextual-identifiers-negative"
+description = "A contextual-identifier list rejects a trailing comma without an element."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN [return,]"
+expect = "reject"
+
+[[case]]
+id = "numeric-family-positive"
+description = "Common, scientific, hexadecimal, octal, signed, and approximate numeric forms parse together."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 12, -12, 1.25, 1e3, 0x2A, 0o17, 1.0F"
+expect = "accept"
+
+[[case]]
+id = "numeric-family-negative"
+description = "A hexadecimal prefix requires at least one hexadecimal digit."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 0x"
+expect = "reject"
+
+[[case]]
+id = "hex-token-positive"
+description = "A hexadecimal integer lexes atomically."
+baseline = "accept"
+entrypoint = "lexer"
+source = "0x2A"
+expect = "tokens"
+tokens = ["HexInteger"]
+
+[[case]]
+id = "octal-token-positive"
+description = "An octal integer lexes atomically."
+baseline = "accept"
+entrypoint = "lexer"
+source = "0o17"
+expect = "tokens"
+tokens = ["OctalInteger"]
+
+[[case]]
+id = "float-token-positive"
+description = "A scientific decimal lexes atomically as a float."
+baseline = "accept"
+entrypoint = "lexer"
+source = "1.25e3F"
+expect = "tokens"
+tokens = ["Float"]
+
+[[case]]
+id = "multi-operator-tokens-positive"
+description = "Every baseline multi-character operator lexes atomically in a separated sequence."
+baseline = "accept"
+entrypoint = "lexer"
+source = ":: .. =~ >= <= <> += => ||"
+expect = "tokens"
+tokens = ["DoubleColon", "Whitespace", "DotDot", "Whitespace", "RegexMatch", "Whitespace", "GreaterEqual", "Whitespace", "LessEqual", "Whitespace", "NotEqual", "Whitespace", "PlusEqual", "Whitespace", "FatArrow", "Whitespace", "DoublePipe"]
+
+[[case]]
+id = "punctuation-tokens-positive"
+description = "Every standalone punctuation token lexes distinctly in a separated sequence."
+baseline = "accept"
+entrypoint = "lexer"
+source = "& * : , $ = ! > < { } [ ] ( ) - % . + ? / | ^ ;"
+expect = "tokens"
+tokens = ["Ampersand", "Whitespace", "Star", "Whitespace", "Colon", "Whitespace", "Comma", "Whitespace", "Dollar", "Whitespace", "Equal", "Whitespace", "Bang", "Whitespace", "Greater", "Whitespace", "Less", "Whitespace", "LeftBrace", "Whitespace", "RightBrace", "Whitespace", "LeftBracket", "Whitespace", "RightBracket", "Whitespace", "LeftParen", "Whitespace", "RightParen", "Whitespace", "Minus", "Whitespace", "Percent", "Whitespace", "Dot", "Whitespace", "Plus", "Whitespace", "Question", "Whitespace", "Slash", "Whitespace", "Pipe", "Whitespace", "Caret", "Whitespace", "Semicolon"]
+
+[[case]]
+id = "create-left-relationship-positive"
+description = "CREATE exercises the baseline left-pointing relationship production."
+baseline = "accept"
+entrypoint = "parser"
+source = "CREATE (b:Person {id: 2})<-[r:KNOWS {since: 2020}]-(a:Person {id: 1})"
+expect = "accept"
+
+[[case]]
+id = "merge-left-relationship-positive"
+description = "MERGE exercises the baseline left-pointing relationship production."
+baseline = "accept"
+entrypoint = "parser"
+source = "MERGE (b:Person {id: 2})<-[r:KNOWS {since: 2020}]-(a:Person {id: 1})"
+expect = "accept"
+
+[[case]]
+id = "merge-update-pattern-positive"
+description = "The syntax layer accepts a path selector in MERGE for later semantic validation."
+baseline = "reject"
+entrypoint = "parser"
+source = "MERGE ANY (n)"
+expect = "accept"
+
+[[case]]
+id = "all-path-selector-positive"
+description = "The ALL PATHS selector alternative parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ALL PATHS (a)-->(b) RETURN a"
+expect = "accept"
+
+[[case]]
+id = "any-counted-path-selector-positive"
+description = "The ANY selector accepts an explicit number of paths."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ANY 2 PATHS (a)-->(b) RETURN a"
+expect = "accept"
+
+[[case]]
+id = "all-shortest-selector-positive"
+description = "The ALL SHORTEST PATHS selector alternative parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ALL SHORTEST PATHS (a)-->(b) RETURN a"
+expect = "accept"
+
+[[case]]
+id = "any-shortest-selector-positive"
+description = "The ANY SHORTEST PATHS selector alternative parses."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ANY SHORTEST PATHS (a)-->(b) RETURN a"
+expect = "accept"
+
+[[case]]
+id = "counted-shortest-selector-positive"
+description = "The SHORTEST selector accepts an explicit path count."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH SHORTEST 2 PATHS (a)-->(b) RETURN a"
+expect = "accept"
+
+[[case]]
+id = "counted-shortest-group-selector-positive"
+description = "The counted shortest-group selector accepts a parameter count and GROUPS keyword."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH SHORTEST $n PATHS GROUPS (a)-->(b) RETURN a"
+expect = "accept"
+
+[[case]]
+id = "path-selector-negative"
+description = "A path selector rejects two adjacent count specifications."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH SHORTEST 2 3 PATHS (a)-->(b) RETURN a"
+expect = "reject"
+
+[[case]]
+id = "path-keywords-positive"
+description = "PATH and PATHS are recognized case-insensitively as distinct keyword occurrences."
+baseline = "accept"
+entrypoint = "lexer"
+source = "pAtH PATHS"
+expect = "tokens"
+tokens = ["Keyword(Path)", "Whitespace", "Keyword(Paths)"]
+
+[[case]]
+id = "fixed-graph-quantifier-positive"
+description = "A fixed braced graph quantifier exercises the single-bound production."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ((a)-->(b)){2} RETURN a"
+expect = "accept"
+
+[[case]]
+id = "fixed-path-length-positive"
+description = "A fixed legacy relationship path length exercises the single integer alternative."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (a)-[r*2]->(b) RETURN r"
+expect = "accept"
+
+[[case]]
+id = "doubled-quote-positive"
+description = "Single- and double-quoted strings accept doubled delimiter representations."
+baseline = "accept"
+entrypoint = "parser"
+source = '''RETURN 'it''s', "a""b"'''
+expect = "accept"
+
+[[case]]
+id = "doubled-quote-negative"
+description = "An unterminated doubled-delimiter string is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = '''RETURN 'it''s'''
+expect = "reject"
+
+[[case]]
+id = "count-collect-subquery-positive"
+description = "COUNT and COLLECT subquery expressions parse as documented compatibility syntax."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN COUNT { MATCH (n) RETURN n }, COLLECT { MATCH (m) RETURN m }"
+expect = "accept"
+
+[[case]]
+id = "count-collect-subquery-negative"
+description = "A COUNT subquery requires a complete query body."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN COUNT { MATCH (n) RETURN }"
+expect = "reject"
+
+[[case]]
+id = "expression-map-projection-positive"
+description = "Map projection accepts literal and parenthesized-expression bases as compatibility syntax."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1{.*}, (n){.x}"
+expect = "accept"
+
+[[case]]
+id = "expression-map-projection-negative"
+description = "An expression-base map projection still requires a complete map field value."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 1{key:}"
+expect = "reject"
+
+[[case]]
+id = "repeated-merge-action-positive"
+description = "MERGE accepts repeated ON actions in line with the official TCK."
+baseline = "reject"
+entrypoint = "parser"
+source = "MERGE (n) ON MATCH SET n.x = 1 ON CREATE SET n.y = 2"
+expect = "accept"
+
+[[case]]
+id = "repeated-merge-action-negative"
+description = "Each MERGE ON action requires a complete SET body."
+baseline = "reject"
+entrypoint = "parser"
+source = "MERGE (n) ON MATCH SET"
+expect = "reject"
+
+[[case]]
+id = "modern-update-labels-positive"
+description = "SET and REMOVE accept boolean/IS label expressions as modern compatibility syntax."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) SET n IS A | B REMOVE n IS C RETURN n"
+expect = "accept"
+
+[[case]]
+id = "modern-update-labels-negative"
+description = "An IS label update requires a label expression."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) SET n IS RETURN n"
+expect = "reject"
+
+[[case]]
+id = "uppercase-octal-positive"
+description = "An uppercase 0O prefix is accepted as an octal compatibility spelling."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 0O7"
+expect = "accept"
+
+[[case]]
+id = "uppercase-octal-negative"
+description = "An uppercase octal prefix rejects a digit outside the octal range."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN 0O8"
+expect = "reject"
+
+[[case]]
+id = "nested-unary-positive"
+description = "Repeated unary signs are accepted as an expression compatibility extension."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN +++1"
+expect = "accept"
+
+[[case]]
+id = "nested-unary-negative"
+description = "Repeated unary signs still require a following operand."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN +++"
+expect = "reject"
+
+[[case]]
+id = "unicode-scalar-boundaries-positive"
+description = "The highest pre-surrogate and maximum Unicode scalar escapes parse."
+baseline = "accept"
+entrypoint = "parser"
+source = '''RETURN '\uD7FF', '\U10FFFF' '''
+expect = "accept"
+
+[[case]]
+id = "unicode-surrogate-rejected"
+description = "Syntactically shaped surrogate and out-of-range escapes are rejected by Rust scalar-value policy."
+baseline = "accept"
+entrypoint = "parser"
+source = '''RETURN '\uD800', '\U110000' '''
+expect = "reject"
+
+[[case]]
+id = "underscore-token-positive"
+description = "An underscore terminal is preserved as an identifier token."
+baseline = "accept"
+entrypoint = "lexer"
+source = "_"
+expect = "tokens"
+tokens = ["Identifier"]
+
+[[case]]
+id = "element-where-positive"
+description = "A node element-pattern predicate exercises its inline WHERE alternative."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n WHERE n.x > 0) RETURN n"
+expect = "accept"
+
+[[case]]
+id = "element-where-negative"
+description = "An inline element WHERE predicate requires a value expression."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n WHERE) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "shortest-path-expression-positive"
+description = "The legacy shortestPath spelling parses as a value expression."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN shortestPath((a)-->(b))"
+expect = "accept"
+
+[[case]]
+id = "shortest-path-expression-negative"
+description = "A shortest-path value expression requires a complete path argument."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN shortestPath((a)-->)"
+expect = "reject"
+
+[[case]]
+id = "legacy-node-label-positive"
+description = "A node legacy label expression exercises repeated colon-prefixed label names."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n:Person:Employee) RETURN n"
+expect = "accept"
+
+[[case]]
+id = "legacy-node-label-negative"
+description = "A legacy node label chain requires a name after each colon."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n:Person:) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "wildcard-label-positive"
+description = "A wildcard label primary parses after IS."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n IS %) RETURN n"
+expect = "accept"
+
+[[case]]
+id = "wildcard-label-negative"
+description = "A wildcard label primary cannot be followed by an unjoined label name."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n IS % Person) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "ascending-order-positive"
+description = "An ORDER BY item exercises the ASCENDING alternative."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN 1 AS one ORDER BY one ASCENDING"
+expect = "accept"
+
+[[case]]
+id = "parenthesized-expression-positive"
+description = "A parenthesized value expression parses as a primary."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN (1 + 2)"
+expect = "accept"
+
+[[case]]
+id = "parenthesized-expression-negative"
+description = "A parenthesized value expression requires its closing parenthesis."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (1 + 2"
+expect = "reject"
+
+[[case]]
+id = "double-quoted-string-positive"
+description = "A double-quoted character sequence exercises doubled delimiters and a backslash escape."
+baseline = "accept"
+entrypoint = "parser"
+source = '''RETURN "a""b", "line\n"'''
+expect = "accept"
+
+[[case]]
+id = "double-quoted-string-negative"
+description = "An unterminated double-quoted character sequence is rejected."
+baseline = "reject"
+entrypoint = "parser"
+source = '''RETURN "unterminated'''
+expect = "reject"
+
+[[case]]
+id = "unary-sign-positive"
+description = "Baseline unary plus and unary minus each parse once before an operand."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN +1, -2"
+expect = "accept"
+
+[[case]]
+id = "unary-sign-negative"
+description = "A baseline unary sign requires a following operand."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN +"
+expect = "reject"
+
+[[case]]
+id = "binary-digit-positive"
+description = "The binary digit terminals 0 and 1 each lex as decimal integer tokens."
+baseline = "accept"
+entrypoint = "lexer"
+source = "0 1"
+expect = "tokens"
+tokens = ["Integer", "Whitespace", "Integer"]
+
+[[case]]
+id = "is-colon-label-negative"
+description = "IS label expressions reject node-style colon conjunctions in node and relationship contexts."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n IS A:B)-[r IS C:D]->() RETURN n"
+expect = "reject"
+
+[[case]]
+id = "mixed-node-label-negative"
+description = "A legacy colon chain cannot be mixed with a boolean-disjunction node label."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n:A:B|C) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "mixed-node-label-malformed-negative"
+description = "A mixed node label expression requires a label after its disjunction."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n:A:B|) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "boolean-node-label-positive"
+description = "A baseline colon-prefixed boolean node label disjunction parses without a legacy colon chain."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n:A|B) RETURN n"
+expect = "accept"
+
+[[case]]
+id = "pattern-expression-positive"
+description = "A simple path pattern parses in value-expression position."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN (a)-->(b)"
+expect = "accept"
+
+[[case]]
+id = "pattern-expression-negative"
+description = "A pattern expression rejects an unterminated relationship detail."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (a)-[r"
+expect = "reject"
+
+[[case]]
+id = "legacy-shortest-multihop-pattern-negative"
+description = "A legacy shortest-path pattern is restricted to one relationship hop."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH p = shortestPath((a)-->(b)-->(c)) RETURN p"
+expect = "reject"
+
+[[case]]
+id = "legacy-shortest-multihop-expression-negative"
+description = "A shortestPath value expression is restricted to one relationship hop."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN shortestPath((a)-->(b)-->(c))"
+expect = "reject"
+
+[[case]]
+id = "empty-pattern-properties-extension-positive"
+description = "Empty node and relationship property maps parse in graph/subquery/update patterns, pattern expressions/comprehensions, and legacy shortest paths."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n {})-[r {}]->(m) CREATE (a {})-[s {}]->(b) MERGE (c {})-[t {}]->(d) RETURN (e {})-[u {}]->(f), [(g {})-[v {}]->(h) | g], shortestPath((i {})-[w {}]->(j)), EXISTS { (k {})-[x {}]->(l) }"
+expect = "accept"
+
+[[case]]
+id = "empty-pattern-properties-boundary-negative"
+description = "An empty-map extension still rejects an unterminated pattern property map."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n {) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "parameter-continuation-start-positive"
+description = "An extended parameter identifier may begin with the XID_CONTINUE-only U+0301 combining acute accent."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN $\u0301"
+expect = "accept"
+
+[[case]]
+id = "parameter-invalid-start-negative"
+description = "A parameter name rejects U+200B, which is not an identifier-continue character."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN $\u200B"
+expect = "reject"
+
+[[case]]
+id = "create-parameter-properties-positive"
+description = "CREATE accepts general parameters as node and relationship element property specifications."
+baseline = "accept"
+entrypoint = "parser"
+source = "CREATE (a $nodeProps)-[r:R $relationshipProps]->(b)"
+expect = "accept"
+
+[[case]]
+id = "pattern-parameter-properties-extension-positive"
+description = "Bare parameter properties parse on nodes and relationships in graph, subquery, and update patterns for semantic validation."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n $matchNode)-[r:R $matchRel]->(m) CREATE (a $createNode)-[s:S $createRel]->(b) MERGE (c $mergeNode)-[t:T $mergeRel]->(d) RETURN EXISTS { (e $subNode)-[u:U $subRel]->(f) }"
+expect = "accept"
+
+[[case]]
+id = "pattern-parameter-properties-boundary-negative"
+description = "The parameter-property extension still allows at most one property specification per element."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n $first $second) RETURN n"
+expect = "reject"
+
+[[case]]
+id = "call-union-explicit-positive"
+description = "A procedure call with an explicit argument list may participate in a UNION composite statement."
+baseline = "accept"
+entrypoint = "parser"
+source = "CALL foo() UNION RETURN 1"
+expect = "accept"
+
+[[case]]
+id = "standalone-call-union-negative"
+description = "A standalone implicit-argument CALL cannot leak into a UNION composite statement."
+baseline = "reject"
+entrypoint = "parser"
+source = "CALL foo UNION RETURN 1"
+expect = "reject"
+
+[[case]]
+id = "nested-call-explicit-positive"
+description = "A procedure call with explicit arguments may appear inside an EXISTS subquery."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN EXISTS { CALL foo() RETURN 1 }"
+expect = "accept"
+
+[[case]]
+id = "nested-standalone-call-negative"
+description = "A standalone implicit-argument CALL cannot leak into an EXISTS subquery."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN EXISTS { CALL foo }"
+expect = "reject"
+
+[[case]]
+id = "split-left-arrow-positive"
+description = "A left arrowhead and arrow line may be separated by whitespace and a comment."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (a)< /* split */ -[r:R]-(b) RETURN r"
+expect = "accept"
+
+[[case]]
+id = "split-right-arrow-positive"
+description = "An arrow line and right arrowhead may be separated by whitespace and a comment."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (a)-[r:R]- /* split */ > (b) RETURN r"
+expect = "accept"
+
+[[case]]
+id = "pattern-expression-relationship-graph-quantifier-negative"
+description = "A simple path pattern in expression position cannot graph-quantify its relationship."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (a)-->{1,3}(b)"
+expect = "reject"
+
+[[case]]
+id = "pattern-expression-node-graph-quantifier-negative"
+description = "A simple path pattern in expression position cannot graph-quantify its node."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (a){2}-->(b)"
+expect = "reject"
+
+[[case]]
+id = "pattern-comprehension-graph-quantifier-negative"
+description = "A pattern-comprehension source is a simple path and cannot use a graph quantifier."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN [(a)-->{1,3}(b) | b]"
+expect = "reject"
+
+[[case]]
+id = "legacy-shortest-pattern-graph-quantifier-negative"
+description = "A legacy shortest-path pattern cannot use a graph quantifier after its relationship."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH p = shortestPath((a)-->{1,3}(b)) RETURN p"
+expect = "reject"
+
+[[case]]
+id = "legacy-shortest-expression-graph-quantifier-negative"
+description = "A legacy shortest-path expression cannot use a graph quantifier after its relationship."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN shortestPath((a)-->{1,3}(b))"
+expect = "reject"
+
+[[case]]
+id = "legacy-shortest-length-positive"
+description = "A legacy shortest-path relationship keeps its bracketed legacy length quantifier."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN shortestPath((a)-[*1..3]->(b))"
+expect = "accept"
+
+[[case]]
+id = "relationship-label-boolean-positive"
+description = "A relationship pattern accepts a pure IS-prefixed boolean label expression."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH ()-[r IS (A | B) & !C]->() RETURN r"
+expect = "accept"
+
+[[case]]
+id = "relationship-label-mixed-legacy-boolean-negative"
+description = "A legacy relationship |: label list cannot be mixed with boolean conjunction syntax."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH ()-[r:A|:B&C]->() RETURN r"
+expect = "reject"
+
+[[case]]
+id = "label-predicate-boolean-positive"
+description = "Generic expression predicates accept pure colon- and IS-prefixed boolean label expressions."
+baseline = "accept"
+entrypoint = "parser"
+source = "MATCH (n) RETURN n:A|B AS colon_form, n IS A&B AS is_form"
+expect = "accept"
+
+[[case]]
+id = "label-predicate-colon-chain-extension-positive"
+description = "A generic expression accepts node- and relationship-style repeated-colon legacy label predicates."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) RETURN n:A:B AS conjunction, n:A|:B AS disjunction"
+expect = "accept"
+
+[[case]]
+id = "label-predicate-legacy-boundary-negative"
+description = "A generic expression cannot mix relationship-style |: legacy labels with boolean conjunction."
+baseline = "reject"
+entrypoint = "parser"
+source = "MATCH (n) RETURN n:A|:B&C"
+expect = "reject"
+
+[[case]]
+id = "pattern-expression-boolean-control-positive"
+description = "An unparenthesized pattern expression participates at boolean-primary precedence."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN (a)-->(b) OR true"
+expect = "accept"
+
+[[case]]
+id = "pattern-expression-comparison-negative"
+description = "An unparenthesized pattern expression cannot serve as a comparison predicand."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (a)-->(b) = true"
+expect = "reject"
+
+[[case]]
+id = "pattern-expression-arithmetic-negative"
+description = "An unparenthesized pattern expression cannot serve as an arithmetic primary."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (a)-->(b) + 1"
+expect = "reject"
+
+[[case]]
+id = "parenthesized-pattern-arithmetic-control-positive"
+description = "Parenthesizing a pattern value makes the parenthesized expression an arithmetic primary syntactically."
+baseline = "accept"
+entrypoint = "parser"
+source = "RETURN ((a)-->(b)) + 1"
+expect = "accept"
+
+[[case]]
+id = "with-all-identifier-positive"
+description = "The non-reserved word ALL remains a binding-variable reference immediately after WITH."
+baseline = "accept"
+entrypoint = "parser"
+source = "WITH all RETURN all"
+expect = "accept"
+
+[[case]]
+id = "with-distinct-identifier-positive"
+description = "The non-reserved word DISTINCT remains a binding-variable reference immediately after WITH."
+baseline = "accept"
+entrypoint = "parser"
+source = "WITH distinct RETURN distinct"
+expect = "accept"
+
+[[case]]
+id = "pattern-expression-node-parameter-properties-negative"
+description = "A simple pattern expression rejects a bare parameter as node properties."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (n $p)-->()"
+expect = "reject"
+
+[[case]]
+id = "pattern-expression-relationship-parameter-properties-negative"
+description = "A simple pattern expression rejects a bare parameter as relationship properties."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN (n)-[r $p]->()"
+expect = "reject"
+
+[[case]]
+id = "pattern-comprehension-node-parameter-properties-negative"
+description = "A pattern-comprehension source rejects a bare parameter as node properties."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN [(n $p)-->() | n]"
+expect = "reject"
+
+[[case]]
+id = "pattern-comprehension-relationship-parameter-properties-negative"
+description = "A pattern-comprehension source rejects a bare parameter as relationship properties."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN [(n)-[r $p]->() | n]"
+expect = "reject"
+
+[[case]]
+id = "legacy-shortest-node-parameter-properties-negative"
+description = "A legacy shortest-path expression rejects a bare parameter as node properties."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN shortestPath((n $p)-->(m))"
+expect = "reject"
+
+[[case]]
+id = "legacy-shortest-relationship-parameter-properties-negative"
+description = "A legacy shortest-path expression rejects a bare parameter as relationship properties."
+baseline = "reject"
+entrypoint = "parser"
+source = "RETURN shortestPath((n)-[r $p]->(m))"
+expect = "reject"

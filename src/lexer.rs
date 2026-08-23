@@ -45,8 +45,7 @@ enum RawToken {
     #[token("`", lex_escaped_identifier)]
     EscapedIdentifier,
 
-    #[regex(r"\$[0-9]+")]
-    #[regex(r"\$[_\p{XID_Start}][_\p{XID_Continue}]*")]
+    #[regex(r"\$[_\p{XID_Continue}]+")]
     Parameter,
 
     #[regex(r"0[xX](?:_?[0-9A-Fa-f])+")]
@@ -131,8 +130,6 @@ enum RawToken {
     Caret,
     #[token("!")]
     Bang,
-    #[token("~")]
-    Tilde,
     #[token("=")]
     Equal,
     #[token("<")]
@@ -331,7 +328,6 @@ fn token_kind(raw: RawToken, text: &str) -> TokenKind {
         RawToken::Percent => TokenKind::Percent,
         RawToken::Caret => TokenKind::Caret,
         RawToken::Bang => TokenKind::Bang,
-        RawToken::Tilde => TokenKind::Tilde,
         RawToken::Equal => TokenKind::Equal,
         RawToken::NotEqual => TokenKind::NotEqual,
         RawToken::Less => TokenKind::Less,

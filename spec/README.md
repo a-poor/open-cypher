@@ -19,24 +19,40 @@ available under MIT OR Apache-2.0.
 
 `UPSTREAM.toml` records the exact release, commit, source URLs, import date,
 counts, and SHA-256 digest of every vendored file. `PRODUCTION_MAP.toml`
-inventories all 377 BNF productions without claiming unfinished coverage.
-`DEVIATIONS.toml` is the review ledger for deliberate differences and open
-alignment questions between the BNF and the implemented syntax. An `accepted`
-entry is intentional; an `open` entry remains under review and cannot support a
-conformance claim.
+inventories all 377 BNF productions and records reviewed support separately
+from implementation targets and policy deviations. `WITNESSES.toml` owns the
+executable cases used by the map and deviation ledger. `DEVIATIONS.toml` is the
+reciprocal review ledger for deliberate differences. `TCK_EXPECTATIONS.toml` records the reviewed
+syntax/semantic boundary for upstream compile-time errors, while
+`TCK_EXCLUSIONS.toml` is an exact-ID temporary gap ledger that must be empty at
+the release gate.
 
 Run these commands from the repository root:
 
 ```console
 cargo run -p open-cypher-xtask -- spec verify
 cargo run -p open-cypher-xtask -- spec report
+cargo run -p open-cypher-xtask -- tck verify
+cargo run -p open-cypher-xtask -- tck check
+cargo run -p open-cypher-xtask -- tck report
+cargo run -p open-cypher-xtask -- spec release-check
 ```
 
-`verify` is offline and fails for missing, extra, or modified snapshot files,
-an inconsistent production inventory, duplicate or invalid deviation records,
-or missing evidence files and named BNF/Markdown fragments. It validates ledger
-structure but does not execute production or deviation witnesses. `report`
-summarizes the snapshot and production dispositions.
+`spec verify` is offline and fails for missing, extra, or modified snapshot
+files, invalid implementation targets or aliases, changed witness behavior, and
+non-reciprocal deviation references. It permits explicitly unassessed records
+while the audit is in progress. `tck verify` regenerates the checked-in
+projection in memory and byte-compares it; `tck check` aggregates parser
+mismatches instead of stopping at the first. `spec release-check` additionally
+requires all 377 productions to have full support, all witnesses to pass, zero
+exclusions, and zero open deviations. A passing ordinary verification is an
+integrity result, not a conformance claim.
+
+The public token stream uses a lossless backend normalization for arrows:
+contiguous `<-` and `->` are emitted as `LeftArrow` and `RightArrow`, while
+spaced or commented BNF arrowhead/line pieces remain `Less`/`Minus` and
+`Minus`/`Greater`. Token spans preserve the exact source, and executable
+traceability cases require the parser to accept both representations.
 
 Maintainers can inspect another explicitly pinned release with:
 

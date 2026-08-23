@@ -1,2276 +1,3780 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# This inventory is generated from the pristine 2024.3 BNF.
-#
-# `unassessed` is deliberately conservative: it does not claim that the
-# handwritten lexer or LALRPOP grammar implements the production. Change a record
-# to `lexer`, `parser`, `alias`, or `deviation` only with a concrete target and
-# positive witness. Release conformance requires zero `unassessed` records.
+# This reviewed traceability inventory follows the pristine 2024.3 BNF order.
+# Direct targets name normalized lexer/parser symbols; aliases name the BNF
+# productions whose implementation deliberately subsumes a wrapper rule.
 
-schema_version = 1
+schema_version = 2
+assessment_complete = true
 grammar = "vendor/openCypher-2024.3/grammar/openCypher.bnf"
 grammar_sha256 = "ea0b36b29d80a615e9f16ae00d90a279edcae1a126c37cf1c0004f1970f1fcc1"
 production_count = 377
 
 [[production]]
 name = "program"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:parser::parse_program"]
+positive_cases = ["program-positive"]
+negative_cases = ["empty-program-negative"]
+deviations = ["OC2024-EMPTY-PROGRAM", "OC2024-TRAILING-SEMICOLON"]
+note = ""
 
 [[production]]
 name = "procedure specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:statement block"]
+positive_cases = ["program-positive"]
+negative_cases = ["standalone-return-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "statement block"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:statement"]
+positive_cases = ["program-positive"]
+negative_cases = ["standalone-return-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:composite statement"]
+positive_cases = ["program-positive"]
+negative_cases = ["standalone-return-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "composite statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Query"]
+positive_cases = ["union-positive", "call-union-explicit-positive"]
+negative_cases = ["union-negative", "standalone-call-union-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "composite conjunction"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:UnionTail"]
+positive_cases = ["union-positive", "call-union-explicit-positive"]
+negative_cases = ["union-negative", "standalone-call-union-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "linear statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:parser::parse_single_query"]
+positive_cases = ["standalone-return-positive"]
+negative_cases = ["standalone-return-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "primitive statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:primitive query statement", "production:primitive data update statement", "production:call procedure statement"]
+positive_cases = ["match-positive", "unwind-positive", "with-positive", "create-pattern-positive", "merge-pattern-positive", "set-positive", "remove-positive", "delete-positive", "call-positive"]
+negative_cases = ["empty-program-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "primitive query statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:match statement", "production:unwind statement", "production:with statement"]
+positive_cases = ["match-positive", "unwind-positive", "with-positive"]
+negative_cases = ["match-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "match statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:optional match statement", "production:simple match statement"]
+positive_cases = ["match-positive"]
+negative_cases = ["match-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "optional match statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MatchClause"]
+positive_cases = ["match-positive"]
+negative_cases = ["match-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "optional match operand"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:simple match statement"]
+positive_cases = ["match-positive"]
+negative_cases = ["match-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "simple match statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MatchClause"]
+positive_cases = ["match-positive"]
+negative_cases = ["match-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unwind statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:UnwindClause"]
+positive_cases = ["unwind-positive"]
+negative_cases = ["unwind-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "with statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:WithClause"]
+positive_cases = ["with-positive", "with-all-identifier-positive", "with-distinct-identifier-positive"]
+negative_cases = ["with-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "primitive data update statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:create statement", "production:merge statement", "production:set statement", "production:remove statement", "production:delete statement"]
+positive_cases = ["create-pattern-positive", "merge-pattern-positive", "set-positive", "remove-positive", "delete-positive"]
+negative_cases = ["update-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CreateClause"]
+positive_cases = ["create-pattern-positive", "create-left-relationship-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = ["OC2024-CREATE-PATTERN-SEMANTIC-BOUNDARY"]
+note = ""
 
 [[production]]
 name = "merge statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MergeClause"]
+positive_cases = ["merge-pattern-positive", "merge-left-relationship-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = ["OC2024-MERGE-PATTERN-SEMANTIC-BOUNDARY", "OC2024-REPEATED-MERGE-ACTIONS"]
+note = ""
 
 [[production]]
 name = "merge action"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MergeAction"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = ["OC2024-REPEATED-MERGE-ACTIONS"]
+note = ""
 
 [[production]]
 name = "set statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:SetBody"]
+positive_cases = ["set-positive"]
+negative_cases = ["set-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "set item list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:SetBody"]
+positive_cases = ["set-positive"]
+negative_cases = ["set-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "set item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:set all properties item", "production:add all properties item", "production:set labels item", "production:set property item"]
+positive_cases = ["set-positive"]
+negative_cases = ["set-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "set all properties item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable reference", "production:equals operator", "production:value expression"]
+positive_cases = ["set-positive"]
+negative_cases = ["set-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "add all properties item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable reference", "production:plus equals", "production:value expression"]
+positive_cases = ["set-positive"]
+negative_cases = ["set-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "set labels item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable reference", "production:node label set specification for set and remove"]
+positive_cases = ["set-positive"]
+negative_cases = ["set-negative"]
+deviations = ["OC2024-MODERN-UPDATE-LABEL-EXPRESSIONS"]
+note = ""
 
 [[production]]
 name = "set property item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:postfix expression", "production:equals operator", "production:value expression"]
+positive_cases = ["set-positive"]
+negative_cases = ["set-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "remove statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RemoveClause"]
+positive_cases = ["remove-positive"]
+negative_cases = ["remove-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "remove item list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RemoveClause"]
+positive_cases = ["remove-positive"]
+negative_cases = ["remove-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "remove item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:remove labels item", "production:remove property item"]
+positive_cases = ["remove-positive"]
+negative_cases = ["remove-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "remove labels item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable reference", "production:node label set specification for set and remove"]
+positive_cases = ["remove-positive"]
+negative_cases = ["remove-negative"]
+deviations = ["OC2024-MODERN-UPDATE-LABEL-EXPRESSIONS"]
+note = ""
 
 [[production]]
 name = "remove property item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:postfix expression"]
+positive_cases = ["remove-positive"]
+negative_cases = ["remove-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "delete statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:DeleteClause"]
+positive_cases = ["delete-positive"]
+negative_cases = ["delete-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "delete item list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:DeleteClause"]
+positive_cases = ["delete-positive"]
+negative_cases = ["delete-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "delete item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["delete-positive"]
+negative_cases = ["delete-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "call procedure statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CallClause"]
+positive_cases = ["call-positive", "call-union-explicit-positive", "nested-call-explicit-positive"]
+negative_cases = ["call-negative", "standalone-call-union-negative", "nested-standalone-call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "standalone procedure call"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:StandaloneCallRoot", "rust:parser::parse_program"]
+positive_cases = ["standalone-call-positive", "standalone-yield-all-positive"]
+negative_cases = ["standalone-call-negative", "standalone-call-union-negative", "nested-standalone-call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "named procedure call"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CallClause"]
+positive_cases = ["call-positive", "call-union-explicit-positive", "nested-call-explicit-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "explicit procedure arguments"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ArgumentList"]
+positive_cases = ["call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "procedure argument list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ArgumentList"]
+positive_cases = ["call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "procedure argument"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "yield clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NamedYieldClause"]
+positive_cases = ["call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "standalone procedure call yield clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:StandaloneYieldClause"]
+positive_cases = ["standalone-call-positive", "standalone-yield-all-positive"]
+negative_cases = ["standalone-call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "yield item list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NamedYieldClause", "lalrpop:StandaloneYieldClause"]
+positive_cases = ["call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "yield item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:YieldItem"]
+positive_cases = ["call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "yield item name"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:field name"]
+positive_cases = ["call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "yield item alias"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:YieldItem"]
+positive_cases = ["call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "primitive result statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:return statement"]
+positive_cases = ["projection-positive"]
+negative_cases = ["projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "return statement"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ReturnClause"]
+positive_cases = ["projection-positive"]
+negative_cases = ["projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "return statement body"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ProjectionBody"]
+positive_cases = ["projection-positive"]
+negative_cases = ["projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "return item list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ProjectionItems"]
+positive_cases = ["projection-positive"]
+negative_cases = ["projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "return item"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ProjectionExpressionItem"]
+positive_cases = ["projection-positive"]
+negative_cases = ["projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "return item alias"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ProjectionExpressionItem"]
+positive_cases = ["projection-positive"]
+negative_cases = ["projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "order by and page clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ProjectionBody"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "order by clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:OrderByClause"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "sort specification list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:OrderByClause"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "sort specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:SortItem"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "sort key"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "ordering specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:ascending order", "production:descending order"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "ascending order"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:SortDirectionNode"]
+positive_cases = ["ascending-order-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "descending order"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:SortDirectionNode"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "offset clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:offset synonym", "production:value expression"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "offset synonym"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PageClause"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "limit clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LimitClause"]
+positive_cases = ["order-page-positive"]
+negative_cases = ["order-page-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "graph pattern binding table"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:graph pattern"]
+positive_cases = ["match-positive"]
+negative_cases = ["match-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "where clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:WhereClause"]
+positive_cases = ["where-positive"]
+negative_cases = ["where-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "set quantifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:SetQuantifierNode"]
+positive_cases = ["projection-positive"]
+negative_cases = ["projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "graph pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Pattern", "lalrpop:WhereClause"]
+positive_cases = ["pattern-positive"]
+negative_cases = ["pattern-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "path pattern list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Pattern"]
+positive_cases = ["pattern-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "graph pattern where clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:where clause"]
+positive_cases = ["match-positive"]
+negative_cases = ["where-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "path pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PatternPart"]
+positive_cases = ["pattern-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "path variable declaration"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable", "production:equals operator"]
+positive_cases = ["pattern-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "path pattern prefix"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PathSelectorNode", "lalrpop:PathModeNode"]
+positive_cases = ["path-prefix-positive"]
+negative_cases = ["path-mode-negative"]
+deviations = ["OC2024-GQL-PATH-MODE-EXTENSIONS"]
+note = ""
 
 [[production]]
 name = "path search prefix"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:all path search", "production:any path search", "production:shortest path search"]
+positive_cases = ["all-path-selector-positive", "any-counted-path-selector-positive", "all-shortest-selector-positive", "any-shortest-selector-positive", "counted-shortest-selector-positive", "counted-shortest-group-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "all path search"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PathSelectorNode"]
+positive_cases = ["all-path-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "any path search"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PathSelectorNode"]
+positive_cases = ["any-counted-path-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "shortest path search"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:all shortest path search", "production:any shortest path search", "production:counted shortest path search", "production:counted shortest group search"]
+positive_cases = ["all-shortest-selector-positive", "any-shortest-selector-positive", "counted-shortest-selector-positive", "counted-shortest-group-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "all shortest path search"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PathSelectorNode"]
+positive_cases = ["all-shortest-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "any shortest path search"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PathSelectorNode"]
+positive_cases = ["any-shortest-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "counted shortest path search"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PathSelectorNode"]
+positive_cases = ["counted-shortest-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "counted shortest group search"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PathSelectorNode"]
+positive_cases = ["counted-shortest-group-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "number of paths"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal integer specification"]
+positive_cases = ["any-counted-path-selector-positive", "counted-shortest-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "number of groups"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal integer specification"]
+positive_cases = ["counted-shortest-group-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "simple path pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:SimplePathPattern"]
+positive_cases = ["pattern-expression-positive", "pattern-comprehension-positive"]
+negative_cases = ["pattern-expression-negative", "pattern-comprehension-negative", "pattern-expression-relationship-graph-quantifier-negative", "pattern-expression-node-graph-quantifier-negative", "pattern-comprehension-graph-quantifier-negative", "pattern-expression-node-parameter-properties-negative", "pattern-expression-relationship-parameter-properties-negative", "pattern-comprehension-node-parameter-properties-negative", "pattern-comprehension-relationship-parameter-properties-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "path pattern expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:path term", "production:legacy shortest path pattern"]
+positive_cases = ["pattern-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "legacy shortest path pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LegacyShortestPathFactor", "lalrpop:LegacyShortestPathExpr"]
+positive_cases = ["legacy-shortest-pattern-positive", "legacy-shortest-length-positive"]
+negative_cases = ["legacy-shortest-pattern-negative", "legacy-shortest-multihop-pattern-negative", "legacy-shortest-multihop-expression-negative", "legacy-shortest-pattern-graph-quantifier-negative", "legacy-shortest-expression-graph-quantifier-negative", "legacy-shortest-node-parameter-properties-negative", "legacy-shortest-relationship-parameter-properties-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "path term"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:path factor"]
+positive_cases = ["path-term-positive"]
+negative_cases = ["path-term-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "path factor"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:path primary", "production:quantified path primary"]
+positive_cases = ["path-term-positive"]
+negative_cases = ["path-term-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "quantified path primary"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:path primary", "production:graph pattern quantifier"]
+positive_cases = ["path-term-positive"]
+negative_cases = ["path-term-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "path primary"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:element pattern", "production:parenthesized path pattern expression"]
+positive_cases = ["path-term-positive", "relationship-element-positive"]
+negative_cases = ["path-term-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "parenthesized path pattern expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ParenthesizedPathFactor"]
+positive_cases = ["subpath-binding-positive", "path-term-positive"]
+negative_cases = ["subpath-binding-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "subpath variable declaration"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable", "production:equals operator"]
+positive_cases = ["subpath-binding-positive"]
+negative_cases = ["subpath-binding-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "parenthesized path pattern where clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ParenthesizedPathFactor"]
+positive_cases = ["parenthesized-pattern-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "element pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:node pattern", "production:relationship pattern"]
+positive_cases = ["pattern-positive", "relationship-element-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "node pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NodeFactor"]
+positive_cases = ["pattern-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "node pattern filler"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NodeFiller"]
+positive_cases = ["pattern-positive"]
+negative_cases = ["pattern-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "element pattern predicate"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:element pattern where clause", "production:element property specification"]
+positive_cases = ["properties-positive", "element-where-positive"]
+negative_cases = ["element-where-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "element pattern where clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ElementPredicate"]
+positive_cases = ["element-where-positive"]
+negative_cases = ["element-where-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "element property specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left brace", "production:property key value pair list", "production:right brace"]
+positive_cases = ["properties-positive"]
+negative_cases = ["properties-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "property key value pair list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NonemptyMapValue", "lalrpop:MapEntry"]
+positive_cases = ["properties-positive"]
+negative_cases = ["properties-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "property key value pair"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:property name", "production:colon", "production:value expression"]
+positive_cases = ["properties-positive"]
+negative_cases = ["properties-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "relationship pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:full relationship pattern"]
+positive_cases = ["relationship-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "full relationship pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:full relationship pointing left", "production:full relationship pointing right", "production:full relationship left or right", "production:full relationship any direction"]
+positive_cases = ["relationship-positive", "split-left-arrow-positive", "split-right-arrow-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "full relationship pointing left"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFactor"]
+positive_cases = ["relationship-positive", "split-left-arrow-positive", "arrow-token-normalization-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "full relationship pointing right"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFactor"]
+positive_cases = ["pattern-positive", "split-right-arrow-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "full relationship left or right"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFactor"]
+positive_cases = ["relationship-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "full relationship any direction"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFactor"]
+positive_cases = ["relationship-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "left arrowhead"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left angle bracket"]
+positive_cases = ["relationship-positive", "split-left-arrow-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "arrow line"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:minus sign"]
+positive_cases = ["relationship-positive", "split-left-arrow-positive", "split-right-arrow-positive", "arrow-token-normalization-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "right arrowhead"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:right angle bracket"]
+positive_cases = ["relationship-positive", "split-right-arrow-positive", "arrow-token-normalization-positive"]
+negative_cases = ["pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "relationship pattern filler"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFiller"]
+positive_cases = ["relationship-positive"]
+negative_cases = ["pattern-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "path length"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LegacyQuantifier"]
+positive_cases = ["legacy-length-positive"]
+negative_cases = ["legacy-length-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "lower and upper bound path length"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LegacyBounds"]
+positive_cases = ["legacy-length-positive"]
+negative_cases = ["legacy-length-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "graph pattern quantifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:GraphQuantifier"]
+positive_cases = ["graph-quantifier-positive"]
+negative_cases = ["optional-quantifier-negative"]
+deviations = ["OC2024-OPTIONAL-GRAPH-QUANTIFIER"]
+note = ""
 
 [[production]]
 name = "fixed quantifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left brace", "production:unsigned decimal integer", "production:right brace"]
+positive_cases = ["fixed-graph-quantifier-positive"]
+negative_cases = ["graph-quantifier-range-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "general quantifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:GraphQuantifier"]
+positive_cases = ["graph-quantifier-range-positive"]
+negative_cases = ["graph-quantifier-range-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "lower bound path length"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal integer"]
+positive_cases = ["legacy-length-positive"]
+negative_cases = ["legacy-length-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "upper bound path length"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal integer"]
+positive_cases = ["legacy-length-positive"]
+negative_cases = ["legacy-length-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "fixed path length"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal integer"]
+positive_cases = ["fixed-path-length-positive"]
+negative_cases = ["legacy-length-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create graph pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:create path pattern list"]
+positive_cases = ["create-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create path pattern list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Pattern"]
+positive_cases = ["create-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create path pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PatternPart"]
+positive_cases = ["create-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create node pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NodeFactor"]
+positive_cases = ["create-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create relationship pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:create relationship pointing left", "production:create relationship pointing right"]
+positive_cases = ["create-pattern-positive", "create-left-relationship-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create relationship pointing left"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left arrowhead", "production:arrow line", "production:left bracket", "production:create relationship pattern filler", "production:right bracket"]
+positive_cases = ["create-left-relationship-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create relationship pointing right"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:arrow line", "production:left bracket", "production:create relationship pattern filler", "production:right bracket", "production:right arrowhead"]
+positive_cases = ["create-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create node pattern filler"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NodeFiller"]
+positive_cases = ["create-pattern-positive", "create-parameter-properties-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "create relationship pattern filler"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFiller"]
+positive_cases = ["create-pattern-positive", "create-parameter-properties-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "create node label and property set specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NodeFiller"]
+positive_cases = ["create-pattern-positive", "create-parameter-properties-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "create relationship label and property set specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFiller"]
+positive_cases = ["create-pattern-positive", "create-parameter-properties-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "create node label set specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:node label set specification for create and merge"]
+positive_cases = ["create-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create relationship label specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:relationship label specification for create and merge"]
+positive_cases = ["create-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "create element property specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:element property specification", "production:general parameter reference"]
+positive_cases = ["create-pattern-positive", "create-parameter-properties-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "merge graph pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:merge path pattern"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "merge path pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PatternPart"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "merge node pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NodeFactor"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "merge relationship pattern"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:merge relationship pointing left", "production:merge relationship pointing right"]
+positive_cases = ["merge-pattern-positive", "merge-left-relationship-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "merge relationship pointing left"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left arrowhead", "production:arrow line", "production:left bracket", "production:merge relationship pattern filler", "production:right bracket"]
+positive_cases = ["merge-left-relationship-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "merge relationship pointing right"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:arrow line", "production:left bracket", "production:merge relationship pattern filler", "production:right bracket", "production:right arrowhead"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "merge node pattern filler"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NodeFiller"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "merge relationship pattern filler"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFiller"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "merge node label and property set specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NodeFiller"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "merge relationship label and property set specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipFiller"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "merge node label set specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:node label set specification for create and merge"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "merge relationship label specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:relationship label specification for create and merge"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "merge element property specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:element property specification"]
+positive_cases = ["merge-pattern-positive"]
+negative_cases = ["merge-pattern-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "is node label expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:colon", "production:node label expression legacy", "production:is label expression"]
+positive_cases = ["node-label-expression-positive", "legacy-node-label-positive", "boolean-node-label-positive"]
+negative_cases = ["label-expression-negative", "is-colon-label-negative", "mixed-node-label-negative", "mixed-node-label-malformed-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "is relationship label expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:colon", "production:relationship label expression legacy", "production:is label expression"]
+positive_cases = ["relationship-label-legacy-positive", "relationship-label-boolean-positive"]
+negative_cases = ["hybrid-label-negative", "is-colon-label-negative", "relationship-label-mixed-legacy-boolean-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "is label expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PrefixedLabelExpression", "lalrpop:LabelPredicateFragment"]
+positive_cases = ["label-expression-positive", "relationship-label-boolean-positive", "label-predicate-boolean-positive"]
+negative_cases = ["label-expression-negative", "label-predicate-legacy-boundary-negative"]
+deviations = ["OC2024-LEGACY-COLON-LABEL-PREDICATES"]
+note = ""
 
 [[production]]
 name = "node label expression legacy"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ColonPrefixedLabelExpression"]
+positive_cases = ["legacy-node-label-positive"]
+negative_cases = ["legacy-node-label-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "relationship label expression legacy"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:RelationshipLabels"]
+positive_cases = ["relationship-label-legacy-positive"]
+negative_cases = ["relationship-label-legacy-negative", "relationship-label-mixed-legacy-boolean-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "wildcard label"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:percent"]
+positive_cases = ["wildcard-label-positive"]
+negative_cases = ["wildcard-label-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "label expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LabelOr"]
+positive_cases = ["label-expression-positive"]
+negative_cases = ["label-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "label term"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LabelAnd"]
+positive_cases = ["label-expression-positive"]
+negative_cases = ["label-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "label factor"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LabelNot"]
+positive_cases = ["label-expression-positive"]
+negative_cases = ["label-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "label negation"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LabelNot"]
+positive_cases = ["label-expression-positive"]
+negative_cases = ["label-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "label primary"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LabelPrimary"]
+positive_cases = ["label-expression-positive"]
+negative_cases = ["label-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "parenthesized label expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:LabelPrimary"]
+positive_cases = ["label-expression-positive"]
+negative_cases = ["label-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "node label set specification for create and merge"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PrefixedLabelExpression"]
+positive_cases = ["create-pattern-positive", "merge-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "node label set specification for set and remove"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PrefixedLabelExpression"]
+positive_cases = ["set-positive", "remove-positive"]
+negative_cases = ["set-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "relationship label specification for create and merge"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:colon", "production:label name"]
+positive_cases = ["create-pattern-positive", "merge-pattern-positive"]
+negative_cases = ["create-pattern-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "procedure reference"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:QualifiedName"]
+positive_cases = ["call-positive", "standalone-call-positive"]
+negative_cases = ["call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "function reference"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:QualifiedName"]
+positive_cases = ["function-positive"]
+negative_cases = ["function-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "catalog object parent reference"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:QualifiedName"]
+positive_cases = ["function-positive"]
+negative_cases = ["function-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "value expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:boolean value expression"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = ["OC2024-DOUBLE-PIPE-CONCATENATION"]
+note = ""
 
 [[production]]
 name = "search condition"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:boolean value expression"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "boolean value expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Expr"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "boolean term xor"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Expr"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "boolean term"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Expr"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "boolean factor"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Expr"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "boolean primary"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:pattern expression", "production:predicate"]
+positive_cases = ["expression-positive", "pattern-expression-boolean-control-positive"]
+negative_cases = ["expression-negative", "pattern-expression-comparison-negative", "pattern-expression-arithmetic-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "predicate"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:comparison predicate"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "comparison predicate"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ComparisonExpr"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "simple comparison predicand"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ComparisonExpr"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "simple comparison predicate part 2"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:simple comp op", "production:advanced comparison predicand"]
+positive_cases = ["expression-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "simple comp op"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:equals operator", "production:not equals operator", "production:less than operator", "production:greater than operator", "production:less than or equals operator", "production:greater than or equals operator"]
+positive_cases = ["expression-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "advanced comparison predicand"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:arithmetic value expression"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "advanced comparison predicate part 2"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:advanced comp op", "production:advanced comparison predicand", "production:null predicate part 2", "production:is labeled predicate part 2"]
+positive_cases = ["comparison-positive", "label-predicate-boolean-positive"]
+negative_cases = ["comparison-negative", "label-predicate-legacy-boundary-negative"]
+deviations = ["OC2024-LEGACY-COLON-LABEL-PREDICATES"]
+note = ""
 
 [[production]]
 name = "advanced comp op"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:contains operator", "production:in operator", "production:regex equals operator", "production:start with operator", "production:end with operator"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "null predicate part 2"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ComparisonExpr"]
+positive_cases = ["null-predicate-positive"]
+negative_cases = ["null-predicate-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "start with operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:AdvancedComparisonOperator"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "end with operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:AdvancedComparisonOperator"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "contains operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:AdvancedComparisonOperator"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "in operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:AdvancedComparisonOperator"]
+positive_cases = ["comparison-positive"]
+negative_cases = ["comparison-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "is labeled predicate part 2"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:is label expression"]
+positive_cases = ["label-predicate-boolean-positive"]
+negative_cases = ["label-expression-negative", "label-predicate-legacy-boundary-negative"]
+deviations = ["OC2024-LEGACY-COLON-LABEL-PREDICATES"]
+note = ""
 
 [[production]]
 name = "arithmetic value expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:arithmetic term", "production:plus sign", "production:minus sign"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "arithmetic term"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:arithmetic factor", "production:asterisk", "production:solidus", "production:percent"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "arithmetic factor"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:arithmetic unary", "production:circumflex"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "arithmetic unary"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:UnaryExpr"]
+positive_cases = ["unary-sign-positive"]
+negative_cases = ["unary-sign-negative"]
+deviations = ["OC2024-NESTED-UNARY-SIGNS"]
+note = ""
 
 [[production]]
 name = "postfix expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression primary", "production:postfix operator"]
+positive_cases = ["postfix-positive"]
+negative_cases = ["postfix-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "postfix operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:static property reference", "production:dynamic element reference", "production:slicing"]
+positive_cases = ["postfix-positive"]
+negative_cases = ["postfix-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "static property reference"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:period", "production:property name"]
+positive_cases = ["postfix-positive"]
+negative_cases = ["postfix-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "dynamic element reference"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left bracket", "production:value expression", "production:right bracket"]
+positive_cases = ["postfix-positive"]
+negative_cases = ["postfix-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "slicing"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PostfixSuffixNode"]
+positive_cases = ["postfix-positive"]
+negative_cases = ["postfix-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "slicing from"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["postfix-positive"]
+negative_cases = ["postfix-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "slicing to"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["postfix-positive"]
+negative_cases = ["postfix-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "value expression primary"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:parenthesized value expression", "production:non-parenthesized value expression primary"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "parenthesized value expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left paren", "production:value expression", "production:right paren"]
+positive_cases = ["parenthesized-expression-positive", "parenthesized-pattern-arithmetic-control-positive"]
+negative_cases = ["parenthesized-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "non-parenthesized value expression primary"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:general parameter reference", "production:case expression", "production:count star", "production:exists expression", "production:map projection", "production:list comprehension", "production:pattern comprehension", "production:reduce expression", "production:quantifier expression", "production:trim function", "production:shortest path expression", "production:function invocation", "production:value specification", "production:binding variable reference"]
+positive_cases = ["expression-positive"]
+negative_cases = ["expression-negative"]
+deviations = ["OC2024-COUNT-COLLECT-SUBQUERIES"]
+note = ""
 
 [[production]]
 name = "case expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:simple case", "production:search case"]
+positive_cases = ["case-positive"]
+negative_cases = ["case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "simple case"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CaseExpr"]
+positive_cases = ["case-positive"]
+negative_cases = ["case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "search case"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CaseExpr"]
+positive_cases = ["searched-case-positive"]
+negative_cases = ["searched-case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "simple when clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CaseExpr"]
+positive_cases = ["case-positive"]
+negative_cases = ["case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "searched when clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CaseExpr"]
+positive_cases = ["searched-case-positive"]
+negative_cases = ["searched-case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "case operand"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["case-positive"]
+negative_cases = ["case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "when operand list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CaseExpr"]
+positive_cases = ["case-positive"]
+negative_cases = ["case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "when operand"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["case-positive"]
+negative_cases = ["case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "else clause"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CaseExpr"]
+positive_cases = ["case-positive"]
+negative_cases = ["case-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "exists expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:SubqueryExpr"]
+positive_cases = ["exists-positive", "nested-call-explicit-positive"]
+negative_cases = ["exists-negative", "nested-standalone-call-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "subquery expression argument"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:procedure specification", "production:graph pattern"]
+positive_cases = ["exists-positive", "nested-call-explicit-positive"]
+negative_cases = ["exists-negative", "nested-standalone-call-negative"]
+deviations = ["OC2024-PATTERN-PARAMETER-PROPERTIES", "OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "map projection"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PostfixSuffixNode"]
+positive_cases = ["map-projection-positive"]
+negative_cases = ["map-projection-negative"]
+deviations = ["OC2024-EXPRESSION-MAP-PROJECTION-BASE"]
+note = ""
 
 [[production]]
 name = "map projection element list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MapProjectionItemList"]
+positive_cases = ["map-projection-positive"]
+negative_cases = ["map-projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "map projection element"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:literal map field", "production:field selector", "production:variable selector", "production:all fields selector"]
+positive_cases = ["map-projection-positive"]
+negative_cases = ["map-projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list comprehension"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ListValue"]
+positive_cases = ["list-comprehension-positive"]
+negative_cases = ["list-comprehension-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list element filter and projection"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ListValue"]
+positive_cases = ["list-comprehension-positive"]
+negative_cases = ["list-comprehension-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list element source"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ListValue"]
+positive_cases = ["list-comprehension-positive"]
+negative_cases = ["list-comprehension-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list element filter"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ListValue"]
+positive_cases = ["list-comprehension-positive"]
+negative_cases = ["list-comprehension-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list element projection"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:vertical bar", "production:value expression"]
+positive_cases = ["list-comprehension-positive"]
+negative_cases = ["list-comprehension-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "pattern comprehension"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left bracket", "production:pattern source", "production:pattern filter and projection", "production:right bracket"]
+positive_cases = ["pattern-comprehension-positive"]
+negative_cases = ["pattern-comprehension-negative", "pattern-comprehension-graph-quantifier-negative", "pattern-comprehension-node-parameter-properties-negative", "pattern-comprehension-relationship-parameter-properties-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "pattern source"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PatternComprehensionExpr"]
+positive_cases = ["pattern-comprehension-positive"]
+negative_cases = ["pattern-comprehension-negative", "pattern-comprehension-graph-quantifier-negative", "pattern-comprehension-node-parameter-properties-negative", "pattern-comprehension-relationship-parameter-properties-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "pattern filter and projection"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PatternComprehensionExpr"]
+positive_cases = ["pattern-comprehension-positive"]
+negative_cases = ["pattern-comprehension-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "pattern filter"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:PatternComprehensionExpr"]
+positive_cases = ["pattern-comprehension-positive"]
+negative_cases = ["pattern-comprehension-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "pattern projection"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:vertical bar", "production:value expression"]
+positive_cases = ["pattern-comprehension-positive"]
+negative_cases = ["pattern-comprehension-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "reduce expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ReduceExpr"]
+positive_cases = ["reduce-positive"]
+negative_cases = ["reduce-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "reduce accumulator initialization"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable", "production:equals operator", "production:value expression"]
+positive_cases = ["reduce-positive"]
+negative_cases = ["reduce-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "reduce element source"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ReduceExpr"]
+positive_cases = ["reduce-positive"]
+negative_cases = ["reduce-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "reduce step"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:vertical bar", "production:value expression"]
+positive_cases = ["reduce-positive"]
+negative_cases = ["reduce-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "literal map field"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:property name", "production:colon", "production:value expression"]
+positive_cases = ["map-projection-positive"]
+negative_cases = ["map-projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "field selector"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:static property reference"]
+positive_cases = ["map-projection-positive"]
+negative_cases = ["map-projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "variable selector"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable"]
+positive_cases = ["map-projection-positive"]
+negative_cases = ["map-projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "all fields selector"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:period", "production:asterisk"]
+positive_cases = ["map-projection-positive"]
+negative_cases = ["map-projection-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "quantifier expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:quantifier", "production:left paren", "production:quantifier element source", "production:quantifier element predicate", "production:right paren"]
+positive_cases = ["quantifier-expression-positive"]
+negative_cases = ["quantifier-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "quantifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:QuantifiedPredicateExpr"]
+positive_cases = ["quantifier-expression-positive"]
+negative_cases = ["quantifier-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "quantifier element source"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:QuantifiedPredicateExpr"]
+positive_cases = ["quantifier-expression-positive"]
+negative_cases = ["quantifier-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "quantifier element predicate"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:QuantifiedPredicateExpr"]
+positive_cases = ["quantifier-expression-positive"]
+negative_cases = ["quantifier-expression-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "trim function"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:single-character trim function"]
+positive_cases = ["trim-positive"]
+negative_cases = ["trim-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "single-character trim function"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:TrimExpr"]
+positive_cases = ["trim-positive"]
+negative_cases = ["trim-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "trim source"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["trim-positive"]
+negative_cases = ["trim-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "function invocation"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:FunctionCall"]
+positive_cases = ["function-positive"]
+negative_cases = ["function-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "function argument list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:FunctionCall"]
+positive_cases = ["function-positive"]
+negative_cases = ["function-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "function argument"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:value expression"]
+positive_cases = ["function-positive"]
+negative_cases = ["function-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "count star"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:CountStarExpr"]
+positive_cases = ["count-star-positive"]
+negative_cases = ["function-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "pattern expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:simple path pattern"]
+positive_cases = ["pattern-expression-positive", "pattern-expression-boolean-control-positive", "parenthesized-pattern-arithmetic-control-positive"]
+negative_cases = ["pattern-expression-negative", "pattern-expression-comparison-negative", "pattern-expression-arithmetic-negative", "pattern-expression-relationship-graph-quantifier-negative", "pattern-expression-node-graph-quantifier-negative", "pattern-expression-node-parameter-properties-negative", "pattern-expression-relationship-parameter-properties-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "shortest path expression"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:legacy shortest path pattern"]
+positive_cases = ["shortest-path-expression-positive", "legacy-shortest-length-positive"]
+negative_cases = ["shortest-path-expression-negative", "legacy-shortest-multihop-expression-negative", "legacy-shortest-expression-graph-quantifier-negative", "legacy-shortest-node-parameter-properties-negative", "legacy-shortest-relationship-parameter-properties-negative"]
+deviations = ["OC2024-EMPTY-PATTERN-PROPERTY-MAPS"]
+note = ""
 
 [[production]]
 name = "value specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:literal", "production:general parameter reference", "production:list value constructor", "production:map value constructor"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list value constructor"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ListValue"]
+positive_cases = ["list-constructor-positive"]
+negative_cases = ["list-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list element list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ListValue"]
+positive_cases = ["list-constructor-positive"]
+negative_cases = ["list-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "map value constructor"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:record value constructor"]
+positive_cases = ["map-constructor-positive"]
+negative_cases = ["map-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "record value constructor"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:fields specification"]
+positive_cases = ["map-constructor-positive"]
+negative_cases = ["map-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "fields specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MapValue"]
+positive_cases = ["map-constructor-positive"]
+negative_cases = ["map-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "field list"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MapValue"]
+positive_cases = ["map-constructor-positive"]
+negative_cases = ["map-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "field"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:field name", "production:colon", "production:value expression"]
+positive_cases = ["map-constructor-positive"]
+negative_cases = ["map-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned decimal integer specification"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal integer", "production:general parameter reference"]
+positive_cases = ["any-counted-path-selector-positive", "counted-shortest-selector-positive", "counted-shortest-group-selector-positive"]
+negative_cases = ["path-selector-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "parameter name"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:separated identifier"]
+positive_cases = ["parameter-extended-positive", "parameter-delimited-positive", "parameter-continuation-start-positive"]
+negative_cases = ["parameter-negative", "parameter-invalid-start-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "label name"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:identifier"]
+positive_cases = ["regular-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "property name"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:identifier"]
+positive_cases = ["regular-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "field name"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:identifier"]
+positive_cases = ["regular-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "binding variable reference"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:binding variable"]
+positive_cases = ["regular-identifier-positive", "contextual-identifier-expressions-positive", "with-all-identifier-positive", "with-distinct-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "binding variable"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:identifier"]
+positive_cases = ["regular-identifier-positive", "contextual-identifier-expressions-positive", "with-all-identifier-positive", "with-distinct-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "procedure name"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:identifier"]
+positive_cases = ["regular-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "function name"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:identifier"]
+positive_cases = ["regular-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "object name"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:identifier"]
+positive_cases = ["regular-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:signed numeric literal", "production:general literal"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned numeric literal", "production:general literal"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "general literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:boolean literal", "production:character string literal", "production:null literal", "production:list literal", "production:map literal"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "boolean literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Literal"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "character string literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:single quoted character sequence", "production:double quoted character sequence"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "single quoted character sequence"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unbroken single quoted character sequence"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "double quoted character sequence"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unbroken double quoted character sequence"]
+positive_cases = ["double-quoted-string-positive"]
+negative_cases = ["double-quoted-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "accent quoted character sequence"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unbroken accent quoted character sequence"]
+positive_cases = ["escaped-identifier-positive"]
+negative_cases = ["escaped-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unbroken single quoted character sequence"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unbroken double quoted character sequence"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["double-quoted-string-positive"]
+negative_cases = ["double-quoted-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unbroken accent quoted character sequence"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-identifier-positive"]
+negative_cases = ["escaped-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "single quoted character representation"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "double quoted character representation"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["double-quoted-string-positive"]
+negative_cases = ["double-quoted-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "accent quoted character representation"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-identifier-positive"]
+negative_cases = ["escaped-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "double single quote"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:quote"]
+positive_cases = ["doubled-quote-positive"]
+negative_cases = ["doubled-quote-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "double double quote"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:double quote"]
+positive_cases = ["doubled-quote-positive"]
+negative_cases = ["doubled-quote-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "double grave accent"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:grave accent"]
+positive_cases = ["escaped-identifier-positive"]
+negative_cases = ["escaped-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped character"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:escaped reverse solidus", "production:escaped quote", "production:escaped double quote", "production:escaped grave accent", "production:escaped tab", "production:escaped backspace", "production:escaped newline", "production:escaped carriage return", "production:escaped form feed", "production:unicode escape value"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = ["OC2024-UNICODE-SCALAR-SAFETY"]
+note = ""
 
 [[production]]
 name = "escaped reverse solidus"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:reverse solidus"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped quote"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:reverse solidus", "production:quote"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped double quote"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:reverse solidus", "production:double quote"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped grave accent"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:reverse solidus", "production:grave accent"]
+positive_cases = ["escaped-identifier-positive"]
+negative_cases = ["escaped-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped tab"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped backspace"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped newline"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped carriage return"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "escaped form feed"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unicode escape value"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unicode 4 digit escape value", "production:unicode 6 digit escape value"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = ["OC2024-UNICODE-SCALAR-SAFETY"]
+note = ""
 
 [[production]]
 name = "unicode 4 digit escape value"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive", "unicode-scalar-boundaries-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = ["OC2024-UNICODE-SCALAR-SAFETY"]
+note = ""
 
 [[production]]
 name = "unicode 6 digit escape value"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive", "unicode-scalar-boundaries-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = ["OC2024-UNICODE-SCALAR-SAFETY"]
+note = ""
 
 [[production]]
 name = "signed numeric literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:UnaryExpr"]
+positive_cases = ["numeric-family-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "sign"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:plus sign", "production:minus sign"]
+positive_cases = ["unary-sign-positive"]
+negative_cases = ["unary-sign-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned numeric literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:exact numeric literal", "production:approximate numeric literal"]
+positive_cases = ["numeric-family-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "exact numeric literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned integer"]
+positive_cases = ["numeric-family-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned decimal in scientific notation"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:mantissa", "production:exponent indicator", "production:exponent"]
+positive_cases = ["float-token-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "exponent indicator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::lex"]
+positive_cases = ["float-token-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "mantissa"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal in common notation", "production:unsigned decimal integer"]
+positive_cases = ["numeric-family-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "exponent"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:signed decimal integer"]
+positive_cases = ["numeric-family-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned decimal in common notation"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal integer", "production:period"]
+positive_cases = ["numeric-family-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned integer"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:unsigned decimal integer", "production:unsigned hexadecimal integer", "production:unsigned octal integer"]
+positive_cases = ["numeric-family-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "signed decimal integer"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:UnaryExpr"]
+positive_cases = ["numeric-family-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned decimal integer"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Integer"]
+positive_cases = ["integer-token-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned hexadecimal integer"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::HexInteger"]
+positive_cases = ["hex-token-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "unsigned octal integer"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::OctalInteger"]
+positive_cases = ["octal-token-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = ["OC2024-UPPERCASE-OCTAL-PREFIX"]
+note = ""
 
 [[production]]
 name = "approximate numeric literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Literal"]
+positive_cases = ["float-token-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "approximate number suffix"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Float"]
+positive_cases = ["float-token-positive"]
+negative_cases = ["numeric-family-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "null literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:Literal"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ListValue"]
+positive_cases = ["list-constructor-positive"]
+negative_cases = ["list-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "list element list literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:ListValue"]
+positive_cases = ["list-constructor-positive"]
+negative_cases = ["list-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "map literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:record literal"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "record literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:fields literal"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "fields literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MapValue"]
+positive_cases = ["map-constructor-positive"]
+negative_cases = ["map-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "field list literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:MapValue"]
+positive_cases = ["map-constructor-positive"]
+negative_cases = ["map-constructor-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "field literal"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:field name", "production:colon", "production:literal"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "path keywords"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:Keyword::Path", "token:Keyword::Paths"]
+positive_cases = ["path-keywords-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "token"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:delimiter token", "production:non-delimiter token"]
+positive_cases = ["regular-identifier-positive", "parameter-positive", "keyword-positive", "integer-token-positive", "multi-operator-tokens-positive", "punctuation-tokens-positive", "escaped-string-positive", "escaped-identifier-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "non-delimiter token"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:regular identifier", "production:general parameter reference", "production:keyword", "production:unsigned numeric literal"]
+positive_cases = ["regular-identifier-positive", "parameter-positive", "keyword-positive", "integer-token-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "identifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:regular identifier", "production:delimited identifier", "production:non-reserved word"]
+positive_cases = ["contextual-identifiers-positive", "contextual-identifier-expressions-positive", "with-all-identifier-positive", "with-distinct-identifier-positive", "escaped-identifier-positive"]
+negative_cases = ["contextual-identifiers-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "separated identifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:extended identifier", "production:delimited identifier"]
+positive_cases = ["parameter-extended-positive", "parameter-delimited-positive", "parameter-continuation-start-positive"]
+negative_cases = ["parameter-negative", "parameter-invalid-start-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "non-delimited identifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:regular identifier", "production:extended identifier"]
+positive_cases = ["regular-identifier-positive", "parameter-extended-positive", "parameter-continuation-start-positive"]
+negative_cases = ["escaped-identifier-negative", "parameter-invalid-start-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "regular identifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["logos:RawToken::Word", "token:TokenKind::Identifier"]
+positive_cases = ["regular-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = ["OC2024-UNDERSCORE-IDENTIFIER-START"]
+note = ""
 
 [[production]]
 name = "extended identifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["logos:RawToken::Parameter", "token:TokenKind::Parameter"]
+positive_cases = ["parameter-extended-positive", "parameter-continuation-start-positive"]
+negative_cases = ["parameter-negative", "parameter-invalid-start-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "general parameter reference"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:dollar sign", "production:parameter name"]
+positive_cases = ["parameter-positive", "parameter-extended-positive", "parameter-delimited-positive", "parameter-continuation-start-positive"]
+negative_cases = ["parameter-negative", "parameter-invalid-start-negative", "parameter-delimited-whitespace-gap-negative", "parameter-delimited-comment-gap-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "delimited identifier"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:accent quoted character sequence"]
+positive_cases = ["escaped-identifier-positive", "parameter-delimited-positive"]
+negative_cases = ["escaped-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "identifier start"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["logos:RawToken::Word"]
+positive_cases = ["regular-identifier-positive"]
+negative_cases = ["underscore-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "identifier extend"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["logos:RawToken::Word", "logos:RawToken::Parameter"]
+positive_cases = ["regular-identifier-positive", "parameter-continuation-start-positive"]
+negative_cases = ["parameter-invalid-start-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "keyword"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:non-reserved word"]
+positive_cases = ["keyword-positive", "baseline-keyword-family-positive"]
+negative_cases = ["syntax-neutral-keyword-superset-negative", "syntax-neutral-write-keyword-negative", "invalid-token-negative"]
+deviations = ["OC2024-COUNT-COLLECT-SUBQUERIES", "OC2024-GQL-PATH-MODE-EXTENSIONS"]
+note = ""
 
 [[production]]
 name = "non-reserved word"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["lalrpop:NameToken", "rust:parser::parse_tokens_with_contextual_names"]
+positive_cases = ["contextual-identifiers-positive", "contextual-identifier-expressions-positive", "with-all-identifier-positive", "with-distinct-identifier-positive"]
+negative_cases = ["contextual-identifiers-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "delimiter token"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:special character", "production:character string literal", "production:concatenation operator", "production:delimited identifier", "production:double colon", "production:double period", "production:greater than operator", "production:greater than or equals operator", "production:less than operator", "production:less than or equals operator", "production:not equals operator", "production:plus equals", "production:right double arrow", "production:regex equals operator"]
+positive_cases = ["multi-operator-tokens-positive", "punctuation-tokens-positive", "escaped-string-positive", "escaped-identifier-positive"]
+negative_cases = ["invalid-token-negative", "tilde-invalid-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "concatenation operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["logos:RawToken::DoublePipe", "token:TokenKind::DoublePipe"]
+positive_cases = ["concatenation-token-positive"]
+negative_cases = ["concatenation-token-negative"]
+deviations = ["OC2024-DOUBLE-PIPE-CONCATENATION"]
+note = ""
 
 [[production]]
 name = "double colon"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::DoubleColon"]
+positive_cases = ["multi-operator-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "double period"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::DotDot"]
+positive_cases = ["multi-operator-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "regex equals operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::RegexMatch"]
+positive_cases = ["multi-operator-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "greater than operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:right angle bracket"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "greater than or equals operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::GreaterEqual"]
+positive_cases = ["multi-operator-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "less than operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:left angle bracket"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "less than or equals operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::LessEqual"]
+positive_cases = ["multi-operator-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "not equals operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["logos:RawToken::NotEqual", "token:TokenKind::NotEqual", "lalrpop:SimpleComparisonOperator"]
+positive_cases = ["not-equals-positive"]
+negative_cases = ["bang-not-equals-negative"]
+deviations = ["OC2024-BANG-NOT-EQUALS-ALIAS"]
+note = ""
 
 [[production]]
 name = "plus equals"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::PlusEqual"]
+positive_cases = ["multi-operator-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "right double arrow"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::FatArrow"]
+positive_cases = ["operator-token-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "separator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["logos:RawToken::Whitespace", "logos:RawToken::LineComment", "logos:RawToken::BlockComment"]
+positive_cases = ["separator-positive"]
+negative_cases = ["comments-negative"]
+deviations = ["OC2024-COMMENTS-AS-SEPARATORS"]
+note = ""
 
 [[production]]
 name = "special character"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:ampersand", "production:asterisk", "production:colon", "production:equals operator", "production:comma", "production:dollar sign", "production:double quote", "production:exclamation mark", "production:grave accent", "production:right angle bracket", "production:left brace", "production:left bracket", "production:left paren", "production:left angle bracket", "production:minus sign", "production:period", "production:plus sign", "production:question mark", "production:quote", "production:reverse solidus", "production:right brace", "production:right bracket", "production:right paren", "production:semicolon", "production:solidus", "production:underscore", "production:vertical bar", "production:circumflex", "production:percent"]
+positive_cases = ["punctuation-tokens-positive", "escaped-string-positive", "escaped-identifier-positive"]
+negative_cases = ["invalid-token-negative", "tilde-invalid-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "ampersand"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Ampersand"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "asterisk"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Star"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "colon"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Colon"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "comma"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Comma"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "dollar sign"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Dollar"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "double quote"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["double-quoted-string-positive"]
+negative_cases = ["double-quoted-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "equals operator"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Equal"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "exclamation mark"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Bang"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "right angle bracket"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Greater"]
+positive_cases = ["punctuation-tokens-positive", "arrow-token-normalization-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "grave accent"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-identifier-positive"]
+negative_cases = ["escaped-identifier-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "left brace"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::LeftBrace"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "left bracket"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::LeftBracket"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "left paren"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::LeftParen"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "left angle bracket"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Less"]
+positive_cases = ["punctuation-tokens-positive", "arrow-token-normalization-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "minus sign"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Minus"]
+positive_cases = ["punctuation-tokens-positive", "arrow-token-normalization-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "percent"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Percent"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "period"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Dot"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "plus sign"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Plus"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "question mark"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Question"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "quote"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "reverse solidus"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::consume_quoted"]
+positive_cases = ["escaped-string-positive"]
+negative_cases = ["escaped-string-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "right brace"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::RightBrace"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "right bracket"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::RightBracket"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "right paren"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::RightParen"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "semicolon"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Semicolon"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "solidus"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Slash"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "underscore"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::lex"]
+positive_cases = ["underscore-token-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "vertical bar"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Pipe"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "circumflex"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["token:TokenKind::Caret"]
+positive_cases = ["punctuation-tokens-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "hex digit"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::lex"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "digit"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "alias"
+targets = ["production:standard digit"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "standard digit"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::lex"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "octal digit"
-disposition = "unassessed"
-target = ""
-witness = ""
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::lex"]
+positive_cases = ["literal-positive"]
+negative_cases = ["literal-negative"]
+deviations = []
+note = ""
 
 [[production]]
 name = "binary digit"
-disposition = "unassessed"
-target = ""
-witness = ""
-
-
+support = "full"
+mapping = "direct"
+targets = ["rust:lexer::lex"]
+positive_cases = ["binary-digit-positive"]
+negative_cases = ["invalid-token-negative"]
+deviations = []
+note = ""
