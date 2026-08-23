@@ -1,0 +1,932 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Reviewed file inventory for the pristine upstream snapshot.
+
+schema_version = 1
+project = "openCypher"
+release = "2024.3"
+tag = "2024.3"
+commit = "677cbafabb8c3c5eed458fd3b1ec0daec8d67d23"
+imported_at = "2026-08-22"
+repository_url = "https://github.com/opencypher/openCypher"
+release_url = "https://github.com/opencypher/openCypher/releases/tag/2024.3"
+archive_url = "https://github.com/opencypher/openCypher/archive/677cbafabb8c3c5eed458fd3b1ec0daec8d67d23.tar.gz"
+archive_sha256 = "59d38a92502de8281b28697fc41dc58ed6403081ec7a159983ed425943dd1e16"
+vendor_root = "vendor/openCypher-2024.3"
+upstream_license = "Apache-2.0"
+grammar_sha256 = "ea0b36b29d80a615e9f16ae00d90a279edcae1a126c37cf1c0004f1970f1fcc1"
+production_count = 377
+feature_file_count = 220
+graph_file_count = 5
+file_count = 228
+
+[[file]]
+path = "vendor/openCypher-2024.3/grammar/openCypher.bnf"
+sha256 = "ea0b36b29d80a615e9f16ae00d90a279edcae1a126c37cf1c0004f1970f1fcc1"
+
+[[file]]
+path = "vendor/openCypher-2024.3/LICENSE"
+sha256 = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+
+[[file]]
+path = "vendor/openCypher-2024.3/NOTICE"
+sha256 = "31e925892196a078ed5bf9ec2b243f3dce1c71ee4489af0cfc4ecd88e62d518b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/call/Call1.feature"
+sha256 = "1fa791412ba64bfa6d01cae679e9f634677e83e642752da9c6ce5c817ac55078"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/call/Call2.feature"
+sha256 = "4a5ee8af1d112a772fd4f7b45d9b4e01512ff013c6267004b2b55eb7d0634b88"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/call/Call3.feature"
+sha256 = "11ebf030c97a142617bdb66e6e24f45aeb8b754b07ee3298c579caa06ed09cda"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/call/Call4.feature"
+sha256 = "af62f193a38905930f5eeb784b2bb9aab02dbe63a14fb164b5af4106658ca801"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/call/Call5.feature"
+sha256 = "cbadd4e1adb5ce8b63065b293e213d3139df3e0edd4efb8516f64a6100326330"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/call/Call6.feature"
+sha256 = "35e639ac4d42f078333ab44e2e534c2d6f79a6a21ca7addc1d5e4aae034b90b4"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+sha256 = "62050a86ac3272ee9a48b677fadc7d3a79069072e62ce520479521351235420a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/create/Create2.feature"
+sha256 = "ca71c78cc6171000eca0440271cc0e5ea9e4d1fa5f05e6a192c562e7dac606ae"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/create/Create3.feature"
+sha256 = "e944e7af50f346513372fd47f25ef7cc33b6df7c0cc12977c9b56fcb4c3216a4"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/create/Create4.feature"
+sha256 = "7a87f98e01bdaf09840aec1499877b595d3f4b40f821f7dd175cccc4eca45c4d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/create/Create5.feature"
+sha256 = "9e89391ec1bcafaa7c0f2ad250c15300bd7715ff3ec5df32b307f0e2861f29c4"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/create/Create6.feature"
+sha256 = "68a798108cee43626f984db698c51742b8b1f51a989603694aff2e90c79be41f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete1.feature"
+sha256 = "2df1664ca397b365a672437dd7294ee2054c3fb396eba70218259911c3296560"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete2.feature"
+sha256 = "ee54307a78bb7d52cd3b07384a268fb6221aaed0322d4f42793130d2a9f30145"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete3.feature"
+sha256 = "438ed9ce6377b48206742bd93ff3afe400e4b6713189912484336659478aed2a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete4.feature"
+sha256 = "712b1d2ca095f1d8f7d25fec4487542974e5d1dc38e0c8194b82df1a9884b6da"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete5.feature"
+sha256 = "9ffbd81bb891d90a0d0c89e5c1a47a91c0a1df5ebd276633e1c89c6a17f2c548"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete6.feature"
+sha256 = "574e27eb038b1a209a6396a17895138576f4bc2f994246cf841893e1e43968cc"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match-where/MatchWhere1.feature"
+sha256 = "c19bacbd707a6ba27d2f7fc01aabd96431ccd60674f1f63c96f1b8a28a812514"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match-where/MatchWhere2.feature"
+sha256 = "0477fbdfa99b37c622a09fa5d1fb910b31e77fb60cb657ecc8d41200777a773d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match-where/MatchWhere3.feature"
+sha256 = "53549aea7be1d76bca035d03906e3b6b5d59e6f9bbb7c6e8466b8458f7d5b464"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match-where/MatchWhere4.feature"
+sha256 = "30e1ed9448627cd1b79da53436a0e7f56f6bba6cf0f36ae310e3a59a135bb9d6"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match-where/MatchWhere5.feature"
+sha256 = "f0d6c20ac867a2e4150bc89acbba1ed21a88f564ab635604a703234f650c41b4"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match-where/MatchWhere6.feature"
+sha256 = "a8863d65dd759801ccdd5a5096aeb9df1831c833dc3b7e79444cf35a1bfa37ee"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match1.feature"
+sha256 = "c28b19d77891617c9c4968d3745da19a5e3850382ecfa13d43259829fa7e8646"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match2.feature"
+sha256 = "0fd679ad2ed5587e1691c38316cfefbfb59828b1a4016165d532915b1c00052f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match3.feature"
+sha256 = "27a608ea4bf5ca89afff540ebbb01dde26f2ae94168cd48cb47de5a8396d991f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match4.feature"
+sha256 = "af171d5b84c6afdf9af7bf5d2abc29c1df6a620be8e7453b733d18b4a9e8b18f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match5.feature"
+sha256 = "3c59754aaee2d7bdb48ec5cf291fafde13fc54d5fedfde1662d4cadaf76acd1b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match6.feature"
+sha256 = "30e855b2cfed9b19e6b37304a2eca257dfbd56906ab263ed6cac3bb475cfecdc"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match7.feature"
+sha256 = "3810a05d94b27d5f77b0e6d94b217bd01809c3a098b2660e9d7b6c5860e5d045"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match8.feature"
+sha256 = "f32c9133759c47bc174bfb887772aa830981a279acab1c931ad9dbd970b64744"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/match/Match9.feature"
+sha256 = "4cfb195cfd497d31d181743d53539718bc4ee44186c207f9c8afb51160a44f79"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge1.feature"
+sha256 = "181767037979031698bfb2047f9b554918b99019e012c27395e4146e2628f231"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge2.feature"
+sha256 = "d47a8eda765437dd0c50df84bbd59a6f942e86425eff8862ebe3493263ec2f6a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge3.feature"
+sha256 = "9e96ff991a45b9b062639c8139dd43613b2c5d553adb8e7d5ce21a2529da6be5"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge4.feature"
+sha256 = "1c197fc45d4c1f9b2e3e8fa53a86e63a045763d65cf8ed4631ab99673feb16c0"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge5.feature"
+sha256 = "a14c44b716d9200655f02bb0f6619abd4c9eec4d84e65fef6cc9fe47a6663f3b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge6.feature"
+sha256 = "2699f8ca3640a8fb01f4f5f05042ea97e69fe3389af713c7ee4b2146dd086708"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge7.feature"
+sha256 = "3c2dded754e6b15c30bd8a73b5bd334b0edfd457b1e7ee15ac7fc7010fd600ba"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge8.feature"
+sha256 = "0c3c5b167d575556a1d42ae9125e6b9b89af8952d09a923d5486a22427d68844"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge9.feature"
+sha256 = "3853e72763986cfde498a29d91a25fa310503364ed15fe39ecd593b1afa145be"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/remove/Remove1.feature"
+sha256 = "eb5e75c0fae60fb40a814488ad2c297a1153ebca7d487be48ad680d5e98a34e5"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/remove/Remove2.feature"
+sha256 = "5c3ca9bc9b9722bfd3e3ebb18a97d3721ee21e86892a83c65c40dd7dd0f8cfb8"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/remove/Remove3.feature"
+sha256 = "21ae62120e2749ae920163c046fdfae89f4e106c4fe00615624ccb4790cc31ca"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy1.feature"
+sha256 = "1b50be1e4c45863afe02842249e0f5d88e36d1194e28471d84d2f8f012f11e9b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy2.feature"
+sha256 = "b7807dc2d1837d4fbe05e07e1c3726cb5be08694604f5e4f3712122db0534503"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy3.feature"
+sha256 = "a456d0a34f915947cf84df7fb5147985b2faa7cd7fa738fa3774b0566029d2e2"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy4.feature"
+sha256 = "8b0972536db7571c4eda6a08091cbea430dee79e6e318acb3ecfa26ecde6e626"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy5.feature"
+sha256 = "73168247adbc2e333522e8ec612521964b08fc2fb763becb55117e0b58e1da34"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy6.feature"
+sha256 = "00f71858c607c878dcb8c3780151f30c127bc051702ade7e81ee61f9757b5e7f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit1.feature"
+sha256 = "9f708a152cb0d992ec2c4a1c8ed2657535eaa8991fdce1fa6906f87f902ca6de"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit2.feature"
+sha256 = "02a8f53d6bff4a57ac00de0fb5f822f45e6976ac5088310f453bcf78ef9a1770"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit3.feature"
+sha256 = "95183c7245b1a8ed0f17d82b1439cae2826c79d0f5c02b81bac873029f79196b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return/Return1.feature"
+sha256 = "cbc4d8785e369b32bfec21b87aceb383d21537735144363baffbbaca32ef9951"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return/Return2.feature"
+sha256 = "f12101b23bdd1d0ca662f5587cce6efde14f76838c3fe30b8706780d10ab68f8"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return/Return3.feature"
+sha256 = "c3bbe858a5e7ef813e61c02cfb251c93d7ef640779e837ea4c3ee6a6bcab7a87"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return/Return4.feature"
+sha256 = "892f234f2bc86d886fe1a9f1e29a85885f8e0e6c3fcc421b26a04b2945a6a496"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return/Return5.feature"
+sha256 = "f723c5bbb1c93509608ac2f1b14032660494f1e6f3de071c9bd39f80df6e30f6"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return/Return6.feature"
+sha256 = "f5848e39db9a93a491ea07ef5fd9dfde27ed5877d033b75f143c234cea9e850e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return/Return7.feature"
+sha256 = "274b68ff0ebd643e42750564179cefb8f4ff939d923c8e9ab35761f2989e2500"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/return/Return8.feature"
+sha256 = "c605e0d6226af2b4f822c48071ec88a38f5ed1b5904a1470fb73bff9b59f3c57"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/set/Set1.feature"
+sha256 = "377c0b5e5617deb0b8ae9be3e2a60c2a7593c3895fbf3713f39537d3f8364078"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/set/Set2.feature"
+sha256 = "f8fdaf0bf63fa722748d3210b07a9fd4f8a7621d49efd6ad6316a6e7fad27c27"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/set/Set3.feature"
+sha256 = "c0e1e0d9cdc5919e1f0b307f4ac7c4d1ad8b6bc757c4a1b23b2376cc36ae5427"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/set/Set4.feature"
+sha256 = "7fd23fd2d0722ef2d2f885d8157a8a4904a860d3233d4607a51f1d01c4107fe6"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/set/Set5.feature"
+sha256 = "ae37f09604c44a848a19fbaed108db8d73998c3f7e7646df8ddb85212f5c2c9e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/set/Set6.feature"
+sha256 = "e6d2072ab8e01eef5a01bc2da43a7fe3267f9e089d5aeed3faf8c4146d1cce8e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/union/Union1.feature"
+sha256 = "bdeb646a251d99763142b4c13f6cbc37768690a5eb3f2f0cca6a6c575bdc8423"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/union/Union2.feature"
+sha256 = "0727882d00d06a8cc73a1cecadeed28534236adcaf98693859d4eea62f0ad561"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/union/Union3.feature"
+sha256 = "3ee0bdc7ed4c222e47a6a7174a78f51066e4d3ef960359600ab1a97c45ccd3d2"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/unwind/Unwind1.feature"
+sha256 = "a77fd39cd9b3430c1cafe52f267d757fea0ce5891a09e3e443f1429df9f4a114"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy1.feature"
+sha256 = "b7ae551a0af42b754e1c87e67a7577669efd594d0b942d73e8e5db0ad583005f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy2.feature"
+sha256 = "6458cc928427c505fb7f02a9c458afd3da98359cc0b4743f53885b4fa45e2b67"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy3.feature"
+sha256 = "3ed25befab2792fbb81037ce7fc096927dbff250288c6fbb4c595c2823078141"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy4.feature"
+sha256 = "5a40eb7f176d5ee0d2e56de158067b2987cae106e27fd4f924be186b6dcbdceb"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-skip-limit/WithSkipLimit1.feature"
+sha256 = "e38c149a8b3df231d7547690d861fb3442d59fc88df2a5f90d910723a1f30f03"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-skip-limit/WithSkipLimit2.feature"
+sha256 = "de903b85efac67bfe614b7c2162ade9812e0fbba3d1db27f4039fb78da044327"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-skip-limit/WithSkipLimit3.feature"
+sha256 = "c6a0e75e4a165861a11a61209e7102a5efe9279345a2a12f8cfb726c274e03d0"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-where/WithWhere1.feature"
+sha256 = "18f1f417bede33aee1a83c4203c774759dbca9eb0721b1e6ac5f22c9d8f89672"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-where/WithWhere2.feature"
+sha256 = "faa34b7ccba5fb77bbd5e1fd627d1d3ee33c390d9d2a06573e8e59533f554314"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-where/WithWhere3.feature"
+sha256 = "66f50d4bb137cc5ca119cb1b7962768e3c26e5966188704af461248fbb44b89a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-where/WithWhere4.feature"
+sha256 = "79aeef3d610dbc5a4eb3df411b3aba1539f968d26e5f28b7d4d35575c641b090"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-where/WithWhere5.feature"
+sha256 = "4d3bdd428a559c5afc7e7cbfa6b57a5220a49813875d3ea8a7955ebc31c42565"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-where/WithWhere6.feature"
+sha256 = "008deca5e8251cefb4e35e828c3b0d91bffde8236e84df723cae4c86edd2023e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with-where/WithWhere7.feature"
+sha256 = "171b7d1433de110442424440b042023071c620ccfb4de3778661168f9110d81d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with/With1.feature"
+sha256 = "50c9b3311f79d61aa2c3582a105c6210d29762e91bede7c7b9ed5044f601aabb"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with/With2.feature"
+sha256 = "1bf2021bb376b02a756c7b8a06916eacd5701b941baea919a56f2ceb8c91867b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with/With3.feature"
+sha256 = "a8a31814d590ac229caefbf0c8c722d8de1071fd6dd3965b02e1b13f4805a2ea"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with/With4.feature"
+sha256 = "39f7d71e1fc7af8df834dac0a787e9edd2d891899c5105b4a2bf15af4f7b3528"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with/With5.feature"
+sha256 = "4bd72ab7da091494c8959057ae49bbd5c00a7b5b1290a55a58b1c71bfec37e5e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with/With6.feature"
+sha256 = "c7d238b4c4c4ebac96ca686f90be8f6c343971c56f04d1cf92d65904e6c5fbd5"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/clauses/with/With7.feature"
+sha256 = "9e7312881d0d0e762f9c506b9a4cf0d0ec899db6d5094a52adcc8e7d99355f95"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/aggregation/Aggregation1.feature"
+sha256 = "c21f0a94b64f97f64f58d0441c9c824d9617cfe656b5f17ef1fc91718da59bce"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/aggregation/Aggregation2.feature"
+sha256 = "e25f1c7f3a781ec977524b0ec0f8285b6f73346517b150a77672db57f7200fba"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/aggregation/Aggregation3.feature"
+sha256 = "e2ed0ae6ba9e8c5ca0f03065af4c6151bb2dba09bd18ece91a265a89141ab369"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/aggregation/Aggregation4.feature"
+sha256 = "71648c5f790c4d11d3c92ba8477dbfc39ca4df80c62413776f529f08db7d8455"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/aggregation/Aggregation5.feature"
+sha256 = "f928d6abfb1160381d77399be5f1586b66b365f36c598bab9760b128487cb78d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/aggregation/Aggregation6.feature"
+sha256 = "f9c205175d6b7a21b6036f02ce2cc306309a2d31669a9a6fb3a534c2ef90c0d1"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/aggregation/Aggregation7.feature"
+sha256 = "874ba8acfdbee609a190e8ecc68f2991acee947c260acf50b8be1642f935ee01"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/aggregation/Aggregation8.feature"
+sha256 = "fe12f0bab25361cf0c8dac585a935c7593ee2bf34d6ab180ad1e3ed40fde06b9"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean1.feature"
+sha256 = "842b014cb181b98a55c3190940f88e5357850e71495a97e34c00821d6ad2e091"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean2.feature"
+sha256 = "19edae355dea05d0e2fa713bed7bc1600bd73a59e4aebbcb75502f53ebf18fe3"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean3.feature"
+sha256 = "7a00a1b261620d3fa4334c923fa3e66835e53fd43d08dbe1875d199e6b3a2a39"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean4.feature"
+sha256 = "956b1a7337214ba40076d95aa80a45811a867eb3f30b741a8cf835795043586b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean5.feature"
+sha256 = "f4c8bb7f5f5f6fab772e7be8be6e9603a0f04e0950c8accb14508c1634183770"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/comparison/Comparison1.feature"
+sha256 = "cd218e3142d39f12eec3342de02252da4697bf671828ffe819712eee84e0bcee"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/comparison/Comparison2.feature"
+sha256 = "caeb88c62318d13884584783336f3913c34d5ad43cd31d5cf01323937fda4a59"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/comparison/Comparison3.feature"
+sha256 = "e26ae67c58f908ac21ed4e856f89ca8b7cefee0d8e670cc47c6a0381af7928e8"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/comparison/Comparison4.feature"
+sha256 = "be8e2434c76ac4f7c1f34ea74311a6101d865b922fcc559f27fe07a4c758a146"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/conditional/Conditional1.feature"
+sha256 = "abd6785dca9459ae911bbe4bfa6db28a5edbd06a033fd1154930e15a038e7c4f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/conditional/Conditional2.feature"
+sha256 = "4bff5bcd9ed4e59590096517c049ed32505a7a53052540e6589857fcda9b362d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/existentialSubqueries/ExistentialSubquery1.feature"
+sha256 = "2b994726cd0b5ce476f7870f384a2a319945bd31962dbdc591f32aa9fca6b613"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/existentialSubqueries/ExistentialSubquery2.feature"
+sha256 = "4eb0ae279a5ee92caadc707ddb7e644db5068bdf01096244cdfdd70b9925525f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/existentialSubqueries/ExistentialSubquery3.feature"
+sha256 = "1940add34804727f6798ae7d94073a512f3bb0b45a84d2a435b8e20dc27b8a07"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph1.feature"
+sha256 = "8c1e12f732adb2d7a5062b3f3ba323476f23ea769c1f229c32fbc10545e97dea"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph2.feature"
+sha256 = "d0048ea5f3aefab4ffc7c4e6454ad77d93eaaf3a0f5206df45c5042dd6e89311"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph3.feature"
+sha256 = "f4e2c89711d17f1c9fa53e320a57c50c75fb5cda7fe010b531c9c0bac1e90ae9"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph4.feature"
+sha256 = "24f5e8f08816aa55bff294872551ae7f2cac003c7b2b1c43dc9ad593bcf85d68"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph5.feature"
+sha256 = "9e361c62860976a9e26a59cd0205223e1e46e2fa912abe66e13d9a5b53b9f21e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph6.feature"
+sha256 = "f051527f3ec407cf178382ee82f06770c402b9eb9db0627f426366667cb321a3"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph7.feature"
+sha256 = "ea856b7eea2422cf89a8e740b898b0d5c6403fd6a9cf71b31440571cb79f0422"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph8.feature"
+sha256 = "2aac7f54fc48fa71b2e0921e79263a2619722403baceabef6988d2e345d89a7d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph9.feature"
+sha256 = "7e0f83ff1f7ed9aeb2c5baddcb38b3a06bf1f27bf15e11f3c6e6ceb5608b76c3"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List1.feature"
+sha256 = "da1274192b32fb539f4d2e2bf23dfc449f0dce174e1533037ea63c387f46b022"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List10.feature"
+sha256 = "5fc5690d85057bf7faa0334fb13fea3bbe23868bf18f37e9934a7708a2243fc8"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List11.feature"
+sha256 = "4624467e4c333f413252da1f11de25776a700b88680420de1642c42d58743653"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List12.feature"
+sha256 = "e76406df8c85ebb54824ef436b19894b066e4ec7fcb38807bbe251e3a2e2132e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List2.feature"
+sha256 = "1100b9fcaf3096d3758f68d869318d2956a39535480a778255f4ff3bc2a62e67"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List3.feature"
+sha256 = "7600c890e10e40d30285427ab653fd7e79c92e36448deb2960af74b9d545779b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List4.feature"
+sha256 = "d37f91bd49e45cb7bf1b498fc382bc3d0223951040239090fd2882f963345c18"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List5.feature"
+sha256 = "21f7d94355025696e3f6a92fc8b4ef41239ced7a7f1933373c421099cc208536"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List6.feature"
+sha256 = "398fc6d0a52210fc3c0794841830539e7e83f1e16e5c933202d488e1a199b0d8"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List7.feature"
+sha256 = "1d88dd6e2f30b9088f9dadc05dc65464337f2b9dcb672984eb333364538b4239"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List8.feature"
+sha256 = "1c791be0556cfaf2806dee41b4bba3dcc71246f65e688a02c5ad3e3c9814f433"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/list/List9.feature"
+sha256 = "0cd0842c48ec90a9e120b9e7fb61d7350f34ac65aebb06e02826677dd010172f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals1.feature"
+sha256 = "e82c6a1b28444e69e7a9a25406b3779da1eae35e2f8cab9dda3dafac6ff76ddc"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals2.feature"
+sha256 = "1b33cac5e2bb55ec451937bdb929274daf91d91370549f310aca13d3709c0d03"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals3.feature"
+sha256 = "58f27c35933df9b471782599392b8896c40b9f147136573fb9f7ac088776de36"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals4.feature"
+sha256 = "69544b4501e72efc5fc92c6b149b4500100004725931161db20759d461503896"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals5.feature"
+sha256 = "10c29ad1746a16f0f55326f48b65124e7dcf1e08d3d497403778aeea30d35332"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals6.feature"
+sha256 = "d387a9c62e8f509d1a9480dd7c93042425b7448f9b7f531a3cd9c4fe7f487947"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals7.feature"
+sha256 = "8671479e7d02e5dd022d963063a41426a1f813316a274d4af1d7f97db74433ee"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+sha256 = "d9f3877b5f51a4bd59c8738a229644a6afb6a07c61a02173b9e91f435a1d587a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/map/Map1.feature"
+sha256 = "5229d69a4b1113b755efd284ee0fcafd30df438994f084463c6dda0384586e99"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/map/Map2.feature"
+sha256 = "4df135fedfad3036455e4a44cd54a13d874ebd0c0d5d4e6b00dabcdd2bec265a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/map/Map3.feature"
+sha256 = "8abee3612542711a72775525c2f8176493b70924f17cee22f15f14f0ba47d058"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical1.feature"
+sha256 = "bee2ef2036c6309ddc1830516757662b602c46875906437b511b281855bc73d8"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical10.feature"
+sha256 = "007c9431f7db6ff73a0e884355c4e489fe7eb3c233379156302765b306698199"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical11.feature"
+sha256 = "512a5e534a789609c4d79dd51fb1286cc2d3d966b7d7ab8712b12656ee6579df"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical12.feature"
+sha256 = "937272cc1c9284ce33d7e4b5431ac02ffb849db57ea038041bb5ac8a68742722"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical13.feature"
+sha256 = "84949e5863ecda3e57073af29639b10411e6274f47fc420eb686c108db05086e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical14.feature"
+sha256 = "d46bbac99a03a9a0c4de2f9332fb3d70999d1c6dfc19eb3176d4ade13acf8d57"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical15.feature"
+sha256 = "8ccf138edd4e6d3b19951167a3dd780cd1efdda8b98babb4cddccd5e056c21ac"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical16.feature"
+sha256 = "83f23ea7f17de7c7cdf12d26046071a98230eee462011b0028e6beb682aca23e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical17.feature"
+sha256 = "030e4a6359eff4b41d6c60b1c3d50ce465ead1c03cd6478308e72844af9e3534"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical2.feature"
+sha256 = "d07b6225c6dc5d001ab7bd25c9de908a01643332710ad8228d554af807416a43"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical3.feature"
+sha256 = "066cedd1367d6533b8a905297a2f2aaba2993e05f9ad5cd4cac00cc0503f6161"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical4.feature"
+sha256 = "b2a0ed103c0af449c53bc1d5a8d0b2b719dcf80ecb5c71741832e4a0b7e234ce"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical5.feature"
+sha256 = "6a2a93ce68c014b79109e9a0ec5737108d487ca99f5ddf2841da9db15be7c7eb"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical6.feature"
+sha256 = "baf4ecc1c92a3cba35c1e19f8dc9f59080e48128f887e74cfb59b6a4d8ddf3bf"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical7.feature"
+sha256 = "f92624d5158244f1979fca42993a6ec818b5393af54f1e155114d6852e05f228"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical8.feature"
+sha256 = "18803be1e5f1e8d16e7231f889de3236dd674de0edeb0af8142093d0f011f0d8"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical9.feature"
+sha256 = "ba3d9ad021f296b42be8f81fee8dd0648935358f648e04ca7eea27b8fcfc9201"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/null/Null1.feature"
+sha256 = "1fd89b18f8af0f2e529fca7d15c89601d718dc054ec85babddf9662bbdd8fe9d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/null/Null2.feature"
+sha256 = "fc1967e64b9521ee58972ee12c860e5a7318ffc8d908353664f9fb7a5f937538"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/null/Null3.feature"
+sha256 = "5e6ed6a490f9d6878593885a7a2fabf4c556594e47ff37c61d98ae92957a2273"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/path/Path1.feature"
+sha256 = "d8dcf0b98d38fca73fd50216f5201bcd772d580ce6257773527f080d840608c4"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/path/Path2.feature"
+sha256 = "7f9a374a3f0090760a939194f5e6083ebf52966a562bf8e9e179c02e4d2bbd9f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/path/Path3.feature"
+sha256 = "05f71c684dc941de8dfb6588dd864899313b5c4c3a1cb80cc8060d5da51ac99b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/pattern/Pattern1.feature"
+sha256 = "cd59a71292114308c2f832be10f983282020cf2a6d8a439fe195e7ce6d229dfc"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/pattern/Pattern2.feature"
+sha256 = "d33d7efa9e6b99c68460bd9ebc14d3231524ee51116cee3e68688900401b1f53"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/precedence/Precedence1.feature"
+sha256 = "d1ce9a62a0d8e683851f59688f9d2d5d0e9bcd43b99d0b9d921e62345a21dd26"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/precedence/Precedence2.feature"
+sha256 = "cac2bfedbd2cd890b5af4055e11b34942578385964323a21651cb67a345400e4"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/precedence/Precedence3.feature"
+sha256 = "daf1df0ccd99a2a72529e0c1c6a1d7915a52c220dd7ad2e669f7263ac6f26fa5"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/precedence/Precedence4.feature"
+sha256 = "16e54018d2334eb1c23d38948ed1cdc52855c92b2511a7df5e5c759004f74111"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier1.feature"
+sha256 = "65badee28a37737893f4c561e4540c0ac5165beb7a9fe5dfbad4d43371ad8fb6"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier10.feature"
+sha256 = "82a8d11ae2742d8c4c08e378354798d91819a8ec613b48384921c63231ad1847"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier11.feature"
+sha256 = "6364b4782a1638e7d1289c536d9c47e9ca1c17340c46d1e8b2ae1be088e3782b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier12.feature"
+sha256 = "c84c4090b42763a053f177bc6ad9a525912e1703d4ea26583733580af37c4329"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier2.feature"
+sha256 = "9b6cfc64528d398183c22515aceeeac12b5448fbdf27edcd02c42bde6eeaa8d9"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier3.feature"
+sha256 = "e113b59e3373157737743b66c51e91aa471ee55082f53ae170b62bacefa9c7f4"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier4.feature"
+sha256 = "bf83c435e7a78ce84022b2a3a2057fac659f815fe1bb46839c0671a5557ac5e9"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier5.feature"
+sha256 = "a64d0d6891b421e4598d1cd8039fbb283dd6f322518ee38dc40f97521f10311d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier6.feature"
+sha256 = "3af506f4bd1158e84633377aee80d511a4e15d5c1779924631f597a0824d2951"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier7.feature"
+sha256 = "86caad859c2ebf042913085338bad2e74e750cbed58265c56b550451f5427797"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier8.feature"
+sha256 = "16598782ee73f86bdd6ca18b02e4ea7d40015055d2fc4a036919806086f85f93"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier9.feature"
+sha256 = "e8b358a75e3e79360fcd0f1fc912943b516d7ab76eb1afb9d84f9cbcb013d24d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String1.feature"
+sha256 = "f93cb7abf0b823eae721230f69943a4cd753c78337c3415d2a0139d8c9d4dab6"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String10.feature"
+sha256 = "8f680acfa9e08ddfd7f2583467ba2ed58bfc3cd212565f45d70d27e7286ac633"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String11.feature"
+sha256 = "334adfe649d368b7c99c93f1f31f759aeda621fc6cceb9846b9496351eddbaf9"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String12.feature"
+sha256 = "9edd003bf5eee2d1e6a768b8eb22b952efdfbb5b2f64c5a1b581c0484a80f6a2"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String13.feature"
+sha256 = "f2453deb1cc524f6f5fd0afe4f316a48aef8d1f0d432420b54c9f8a3fc5d42ef"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String14.feature"
+sha256 = "dd94647ef9e699e1dda26cae42a0463ec0d3bf851bfc37960f4f7828821fdc7c"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String2.feature"
+sha256 = "8121191b289fc723d5875ec4008b56e8999534e4c0b8aca6118a4cc5d3a0fc07"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String3.feature"
+sha256 = "086d3df6320ca3e422f3e1f0ccf813f4508ebb4abad0f1b5db40eb76f1769607"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String4.feature"
+sha256 = "2c214420256015cd670ac9c4fb15178c5deaef6e5956afc2aed5f2751cef0f4f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String5.feature"
+sha256 = "d2875c2f921e831c5df6591963dc88f0df0f46ed1895666091bb7cac5f8dd23c"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String6.feature"
+sha256 = "a5680c138eac6605f91fd3c3f04d8ea474d9d659e4fdb4b4fefa682cfe2efaa5"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String7.feature"
+sha256 = "140e0899c3b4fa3debb078cc59a13aa38f61c31047e2987d9ed9debd28cc089e"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String8.feature"
+sha256 = "268246dab567ae92adb778bb9c38145e73b7bad7290b5309c6c76d65b786b2c5"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/string/String9.feature"
+sha256 = "93c61d4b393e81d0c7fe13551896eebbd54a8b1e875dc2ba1ccfe09525ac72e7"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal1.feature"
+sha256 = "dc23257189526ddec1677a912fa35bd4d8eb9e4882e62e847c6baffd43d7bd1d"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal10.feature"
+sha256 = "58342c54b1339f6c4a3117a942a9cd85d04af561952493692f4ed502572e75b0"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal2.feature"
+sha256 = "d53df756bcc4d96e800c6985d4d97509449545d67beec0f969957231b97ded4a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal3.feature"
+sha256 = "c366308dda17d3e962d5cf143483b4bf63fa1bedd64caa80814d54d737b0c8f5"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal4.feature"
+sha256 = "79b6e58a6777059e36e7999778c8da83974e638b8b94769b0d15a33d07ab599a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal5.feature"
+sha256 = "82b99a91f8c32796b04fb96f1eaf09ca3724efc76393ea010fac538a1fb7caa8"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal6.feature"
+sha256 = "53e0c2ca62a818dab4f596ca029c1d6694908e52f8b3008d55e642f22c3b40aa"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal7.feature"
+sha256 = "5ef112bd6bb277a3c0563a2d2232e4cb75f2704fb7ff588eee672dd23abdaf97"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal8.feature"
+sha256 = "a2274a3eba86e2d95b4d14d76976619cf938a5bdf932e31f4dd724310e2c86e0"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/temporal/Temporal9.feature"
+sha256 = "3d9ec7718d64cec9a93f2a42a02d2187a682c31da362094cf401e080e6f3ef63"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/typeConversion/TypeConversion1.feature"
+sha256 = "c98fbe7e0b6fd18432fa50863722a72358dd9539309d257486bbbec2a42bf2b2"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/typeConversion/TypeConversion2.feature"
+sha256 = "998ddc6a8fa79d831b60c73080ad72f64ce06fbf4a8ff6bf7e625d31a8ccd2f7"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/typeConversion/TypeConversion3.feature"
+sha256 = "95a82ec968733769b9cd19f6e6e64c6d65e4bda6c5fc5bef0466f917a924822b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/typeConversion/TypeConversion4.feature"
+sha256 = "1c6e877cdd5f11de6fdb1c598c4937a5a6264ddef2bc9751b91a25a6b02d8f2a"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/typeConversion/TypeConversion5.feature"
+sha256 = "cd8d0279b6a6e3968a0eaef86c3428d97f4d577cc60a764aac621e188f49a10b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/expressions/typeConversion/TypeConversion6.feature"
+sha256 = "7f2a1d0f6a5869abb387366ce82991b23113acf74199e287daf69dd0971b031b"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/useCases/countingSubgraphMatches/CountingSubgraphMatches1.feature"
+sha256 = "e891f3fdb9ec4ad588d83d5e444879cd52c081b7f8fefd639e3bd03751fbae81"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/features/useCases/triadicSelection/TriadicSelection1.feature"
+sha256 = "528847d95ac16e13d41e6aa8135c7ab9da800c27c7e2ce65a24f4795e663f55c"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/graphs/binary-tree-1/binary-tree-1.cypher"
+sha256 = "fbcada6966edb9e2d66b1a11a4f8a4c906a9da6afd622640ab08c686962d42da"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/graphs/binary-tree-1/binary-tree-1.json"
+sha256 = "27968b64f800e74ab677df09e69709daae2f9b40f4171278660f8339f3ba921f"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/graphs/binary-tree-2/binary-tree-2.cypher"
+sha256 = "923bcaf5686ea9051f46ad5c440a286381fd111daad5dbd6377aa3edd7dbfc4c"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/graphs/binary-tree-2/binary-tree-2.json"
+sha256 = "22886ca2296c3d81374afbe81f58fb430ed48c4113684b2209c0352f4349cc2c"
+
+[[file]]
+path = "vendor/openCypher-2024.3/tck/graphs/named-graphs.adoc"
+sha256 = "87cb4b2fb23672d2dff6cd823a956633cbf0e8bc704323f2b1ea63cfb9583267"

@@ -1,0 +1,2276 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# This inventory is generated from the pristine 2024.3 BNF.
+#
+# `unassessed` is deliberately conservative: it does not claim that the
+# handwritten lexer or LALRPOP grammar implements the production. Change a record
+# to `lexer`, `parser`, `alias`, or `deviation` only with a concrete target and
+# positive witness. Release conformance requires zero `unassessed` records.
+
+schema_version = 1
+grammar = "vendor/openCypher-2024.3/grammar/openCypher.bnf"
+grammar_sha256 = "ea0b36b29d80a615e9f16ae00d90a279edcae1a126c37cf1c0004f1970f1fcc1"
+production_count = 377
+
+[[production]]
+name = "program"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "procedure specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "statement block"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "composite statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "composite conjunction"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "linear statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "primitive statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "primitive query statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "match statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "optional match statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "optional match operand"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "simple match statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unwind statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "with statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "primitive data update statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge action"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "set statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "set item list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "set item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "set all properties item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "add all properties item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "set labels item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "set property item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "remove statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "remove item list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "remove item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "remove labels item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "remove property item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "delete statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "delete item list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "delete item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "call procedure statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "standalone procedure call"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "named procedure call"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "explicit procedure arguments"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "procedure argument list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "procedure argument"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "yield clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "standalone procedure call yield clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "yield item list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "yield item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "yield item name"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "yield item alias"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "primitive result statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "return statement"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "return statement body"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "return item list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "return item"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "return item alias"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "order by and page clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "order by clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "sort specification list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "sort specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "sort key"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "ordering specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "ascending order"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "descending order"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "offset clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "offset synonym"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "limit clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "graph pattern binding table"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "where clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "set quantifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "graph pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path pattern list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "graph pattern where clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path variable declaration"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path pattern prefix"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path search prefix"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "all path search"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "any path search"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "shortest path search"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "all shortest path search"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "any shortest path search"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "counted shortest path search"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "counted shortest group search"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "number of paths"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "number of groups"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "simple path pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path pattern expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "legacy shortest path pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path term"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path factor"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "quantified path primary"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path primary"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "parenthesized path pattern expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "subpath variable declaration"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "parenthesized path pattern where clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "element pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "node pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "node pattern filler"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "element pattern predicate"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "element pattern where clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "element property specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "property key value pair list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "property key value pair"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "relationship pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "full relationship pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "full relationship pointing left"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "full relationship pointing right"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "full relationship left or right"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "full relationship any direction"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "left arrowhead"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "arrow line"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "right arrowhead"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "relationship pattern filler"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path length"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "lower and upper bound path length"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "graph pattern quantifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "fixed quantifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "general quantifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "lower bound path length"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "upper bound path length"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "fixed path length"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create graph pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create path pattern list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create path pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create node pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create relationship pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create relationship pointing left"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create relationship pointing right"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create node pattern filler"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create relationship pattern filler"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create node label and property set specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create relationship label and property set specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create node label set specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create relationship label specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "create element property specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge graph pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge path pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge node pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge relationship pattern"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge relationship pointing left"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge relationship pointing right"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge node pattern filler"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge relationship pattern filler"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge node label and property set specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge relationship label and property set specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge node label set specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge relationship label specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "merge element property specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "is node label expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "is relationship label expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "is label expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "node label expression legacy"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "relationship label expression legacy"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "wildcard label"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "label expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "label term"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "label factor"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "label negation"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "label primary"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "parenthesized label expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "node label set specification for create and merge"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "node label set specification for set and remove"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "relationship label specification for create and merge"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "procedure reference"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "function reference"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "catalog object parent reference"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "value expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "search condition"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "boolean value expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "boolean term xor"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "boolean term"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "boolean factor"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "boolean primary"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "predicate"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "comparison predicate"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "simple comparison predicand"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "simple comparison predicate part 2"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "simple comp op"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "advanced comparison predicand"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "advanced comparison predicate part 2"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "advanced comp op"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "null predicate part 2"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "start with operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "end with operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "contains operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "in operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "is labeled predicate part 2"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "arithmetic value expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "arithmetic term"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "arithmetic factor"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "arithmetic unary"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "postfix expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "postfix operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "static property reference"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "dynamic element reference"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "slicing"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "slicing from"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "slicing to"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "value expression primary"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "parenthesized value expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "non-parenthesized value expression primary"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "case expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "simple case"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "search case"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "simple when clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "searched when clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "case operand"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "when operand list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "when operand"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "else clause"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "exists expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "subquery expression argument"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "map projection"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "map projection element list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "map projection element"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list comprehension"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list element filter and projection"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list element source"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list element filter"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list element projection"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "pattern comprehension"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "pattern source"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "pattern filter and projection"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "pattern filter"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "pattern projection"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "reduce expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "reduce accumulator initialization"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "reduce element source"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "reduce step"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "literal map field"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "field selector"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "variable selector"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "all fields selector"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "quantifier expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "quantifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "quantifier element source"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "quantifier element predicate"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "trim function"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "single-character trim function"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "trim source"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "function invocation"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "function argument list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "function argument"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "count star"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "pattern expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "shortest path expression"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "value specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list value constructor"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list element list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "map value constructor"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "record value constructor"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "fields specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "field list"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "field"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned decimal integer specification"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "parameter name"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "label name"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "property name"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "field name"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "binding variable reference"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "binding variable"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "procedure name"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "function name"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "object name"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "general literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "boolean literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "character string literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "single quoted character sequence"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "double quoted character sequence"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "accent quoted character sequence"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unbroken single quoted character sequence"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unbroken double quoted character sequence"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unbroken accent quoted character sequence"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "single quoted character representation"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "double quoted character representation"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "accent quoted character representation"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "double single quote"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "double double quote"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "double grave accent"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped character"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped reverse solidus"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped quote"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped double quote"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped grave accent"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped tab"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped backspace"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped newline"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped carriage return"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "escaped form feed"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unicode escape value"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unicode 4 digit escape value"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unicode 6 digit escape value"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "signed numeric literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "sign"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned numeric literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "exact numeric literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned decimal in scientific notation"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "exponent indicator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "mantissa"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "exponent"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned decimal in common notation"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned integer"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "signed decimal integer"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned decimal integer"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned hexadecimal integer"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "unsigned octal integer"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "approximate numeric literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "approximate number suffix"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "null literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "list element list literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "map literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "record literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "fields literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "field list literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "field literal"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "path keywords"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "token"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "non-delimiter token"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "identifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "separated identifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "non-delimited identifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "regular identifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "extended identifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "general parameter reference"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "delimited identifier"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "identifier start"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "identifier extend"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "keyword"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "non-reserved word"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "delimiter token"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "concatenation operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "double colon"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "double period"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "regex equals operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "greater than operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "greater than or equals operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "less than operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "less than or equals operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "not equals operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "plus equals"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "right double arrow"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "separator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "special character"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "ampersand"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "asterisk"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "colon"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "comma"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "dollar sign"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "double quote"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "equals operator"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "exclamation mark"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "right angle bracket"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "grave accent"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "left brace"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "left bracket"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "left paren"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "left angle bracket"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "minus sign"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "percent"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "period"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "plus sign"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "question mark"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "quote"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "reverse solidus"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "right brace"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "right bracket"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "right paren"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "semicolon"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "solidus"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "underscore"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "vertical bar"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "circumflex"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "hex digit"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "digit"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "standard digit"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "octal digit"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+[[production]]
+name = "binary digit"
+disposition = "unassessed"
+target = ""
+witness = ""
+
+

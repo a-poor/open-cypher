@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  quality:
+    name: Format, lint, and test (stable Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify generated parser is current
+        run: cargo run --locked --package open-cypher-xtask -- grammar verify
+      - name: Verify pinned openCypher snapshot
+        run: cargo run --locked --package open-cypher-xtask -- spec verify
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Check fuzz-target formatting
+        run: cargo fmt --manifest-path fuzz/Cargo.toml -- --check
+      - name: Check locked fuzz workspace
+        run: cargo check --manifest-path fuzz/Cargo.toml --bins --locked
+      - name: Lint all targets and features
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+      - name: Test workspace with default features
+        run: cargo test --workspace --locked
+      - name: Test workspace and all features
+        run: cargo test --workspace --all-features --locked
+      - name: Build documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --workspace --all-features --no-deps --locked
+
+  compatibility:
+    name: Test (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: MSRV 1.86 / Linux
+            os: ubuntu-latest
+            toolchain: "1.86"
+          - name: stable / macOS
+            os: macos-latest
+            toolchain: stable
+          - name: stable / Windows
+            os: windows-latest
+            toolchain: stable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace --all-features --locked
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: Swatinem/rust-cache@v2
+      - name: Enforce handwritten-source line coverage
+        run: >-
+          cargo llvm-cov
+          --package open-cypher
+          --all-features
+          --locked
+          --ignore-filename-regex '(/target/|/tests/|/benches/|/fuzz/|/src/generated/)'
+          --fail-under-lines 85
+
+  fuzz-smoke:
+    name: Fuzz smoke (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [lex_str, parse_strict, parse_recovering, parse_generated_valid]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: taiki-e/install-action@cargo-fuzz
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz -> fuzz/target
+      - name: Build fuzz target
+        run: cargo +nightly fuzz build ${{ matrix.target }}
+      - name: Replay seed and regression corpus
+        run: >-
+          cargo +nightly fuzz run ${{ matrix.target }}
+          fuzz/corpus/${{ matrix.target }} --
+          -dict=fuzz/cypher.dict
+          -runs=0
+          -max_len=65536
+          -timeout=5
+          -rss_limit_mb=2048
+
+  benchmark-build:
+    name: Build benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo bench --workspace --all-features --no-run --locked

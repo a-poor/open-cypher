@@ -1,0 +1,3 @@
+# The checked-in LALRPOP output is verified separately and is not handwritten
+# behavior. Mutating it would dominate the scheduled mutation-testing budget.
+exclude_globs = ["src/generated/*.rs"]

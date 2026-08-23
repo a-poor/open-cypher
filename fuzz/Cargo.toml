@@ -1,0 +1,45 @@
+[package]
+name = "open-cypher-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+rust-version = "1.86"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+open-cypher = { path = ".." }
+
+[[bin]]
+name = "lex_str"
+path = "fuzz_targets/lex_str.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_strict"
+path = "fuzz_targets/parse_strict.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_recovering"
+path = "fuzz_targets/parse_recovering.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_generated_valid"
+path = "fuzz_targets/parse_generated_valid.rs"
+test = false
+doc = false
+bench = false
+
+# Keep the fuzz harness out of the library workspace and its normal lockfile.
+[workspace]
+members = ["."]

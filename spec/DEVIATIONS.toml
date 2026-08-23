@@ -1,0 +1,130 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+schema_version = 1
+baseline = "openCypher 2024.3 BNF"
+
+# This is a policy ledger, not a conformance claim. `accepted` means the syntax is
+# intentionally in scope. `open` records an observed difference whose disposition
+# still needs review. Actual implementation coverage is recorded separately in
+# PRODUCTION_MAP.toml and tests.
+
+[[deviation]]
+id = "OC2024-TCK-STANDALONE-RETURN"
+status = "accepted"
+kind = "tck-over-bnf-clarification"
+summary = "Accept a RETURN result statement without a preceding primitive statement."
+baseline = "The BNF writes <linear statement> as <primitive statement>... followed by an optional <primitive result statement>; the repetition notation is easy to read inconsistently."
+rationale = "The official 2024.3 TCK repeatedly executes standalone RETURN queries."
+positive_witness = "RETURN 1 AS value"
+negative_witness = "RETURN"
+evidence = "vendor/openCypher-2024.3/tck/features/expressions/null/Null3.feature"
+
+[[deviation]]
+id = "OC2024-COMMENTS-AS-SEPARATORS"
+status = "accepted"
+kind = "practical-compatibility-extension"
+summary = "Treat // line comments and nested /* block comments */ as trivia/separators."
+baseline = "The 2024.3 BNF defines <separator> only as unicode: WHITESPACE and has no comment production."
+rationale = "Comments are lexical trivia required by existing Cypher source compatibility and the lossless-token API; nested block comments are deliberately preserved by the lexer."
+positive_witness = "RETURN /* outer /* nested */ outer */ 1 // trailing comment\n"
+negative_witness = "RETURN /* unterminated"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#separator"
+
+[[deviation]]
+id = "OC2024-GQL-PATH-MODE-EXTENSIONS"
+status = "accepted"
+kind = "explicit-syntax-extension"
+summary = "Accept WALK, TRAIL, SIMPLE, and ACYCLIC before a graph pattern."
+baseline = "The openCypher 2024.3 BNF defines path selectors and PATH/PATHS keywords but does not define these four path-mode spellings."
+rationale = "They are useful GQL-style compatibility extensions and are represented explicitly in the AST rather than being confused with baseline syntax."
+positive_witness = "MATCH TRAIL p = (a)-[]->{1,3}(b) RETURN p"
+negative_witness = "MATCH UNKNOWN p = (a)-[]->{1,3}(b) RETURN p"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#path-pattern-prefix"
+
+[[deviation]]
+id = "OC2024-OPTIONAL-GRAPH-QUANTIFIER"
+status = "accepted"
+kind = "explicit-syntax-extension"
+summary = "Accept ? as the optional graph-pattern quantifier."
+baseline = "The 2024.3 BNF graph-pattern quantifier permits *, +, and braced fixed/general quantifiers, but not ?."
+rationale = "The parser and AST deliberately model the familiar optional quantifier alongside the other GQL-style graph quantifiers."
+positive_witness = "MATCH (a)-[]->?(b) RETURN a"
+negative_witness = "MATCH (a)-[]->??(b) RETURN a"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#graph-pattern-quantifier"
+
+[[deviation]]
+id = "OC2024-BANG-NOT-EQUALS-ALIAS"
+status = "accepted"
+kind = "operator-alias"
+summary = "Accept != as an alias for the BNF <> not-equals operator."
+baseline = "The 2024.3 BNF spells the not-equals operator only as <>."
+rationale = "The alias is widely understood, is losslessly tokenized, and maps to the same explicit AST operator."
+positive_witness = "RETURN 1 != 2 AS different"
+negative_witness = "RETURN 1 ! 2"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#not-equals-operator"
+
+[[deviation]]
+id = "OC2024-DOUBLE-PIPE-CONCATENATION"
+status = "accepted"
+kind = "bnf-token-placement-extension"
+summary = "Accept || as a value-expression concatenation operator."
+baseline = "The 2024.3 BNF defines a <concatenation operator> token but does not place it in the value-expression precedence hierarchy."
+rationale = "The parser gives the upstream token an explicit binary concatenation AST node and stable precedence."
+positive_witness = "RETURN 'a' || 'b' AS joined"
+negative_witness = "RETURN 'a' | 'b'"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#concatenation-operator"
+
+[[deviation]]
+id = "OC2024-EMPTY-PROGRAM"
+status = "accepted"
+kind = "parser-input-envelope"
+summary = "Accept empty or trivia-only source as a program with no statements."
+baseline = "The 2024.3 BNF <program> requires a statement and has no empty alternative."
+rationale = "An empty program is useful for incremental editor input and is represented without inventing a query node."
+positive_witness = " \n"
+negative_witness = ";"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#program"
+
+[[deviation]]
+id = "OC2024-TRAILING-SEMICOLON"
+status = "accepted"
+kind = "parser-input-envelope"
+summary = "Accept one optional semicolon after a query."
+baseline = "The 2024.3 BNF <program> does not include a statement terminator."
+rationale = "A single trailing terminator is common in query tools and is preserved in the syntax tree."
+positive_witness = "RETURN 1;"
+negative_witness = "RETURN 1;;"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#program"
+
+[[deviation]]
+id = "OC2024-UNDERSCORE-IDENTIFIER-START"
+status = "open"
+kind = "alignment-review"
+summary = "Review whether an underscore may begin an unquoted regular identifier."
+baseline = "The 2024.3 BNF requires unicode XID_START for the first character; underscore is not XID_START."
+rationale = "The lexer currently includes underscore explicitly in its word-start class. This entry records the mismatch without accepting it as policy."
+positive_witness = "RETURN _value"
+negative_witness = "RETURN 1 AS"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#regular-identifier"
+
+[[deviation]]
+id = "OC2024-HYBRID-LABEL-EXPRESSIONS"
+status = "open"
+kind = "alignment-review"
+summary = "Review the shared boolean label grammar used after both : and IS."
+baseline = "The BNF restricts legacy colon-prefixed node labels to colon-separated names and reserves the full boolean label expression for IS/: label-expression forms with distinct node and relationship rules."
+rationale = "The parser currently shares one recursive boolean rule across node, relationship, colon, and IS contexts. The resulting extra combinations require an explicit compatibility decision."
+positive_witness = "MATCH (n:A|B) RETURN n"
+negative_witness = "MATCH (n:) RETURN n"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#is-node-label-expression"
+
+[[deviation]]
+id = "OC2024-UPDATE-PATTERN-OVERACCEPTANCE"
+status = "open"
+kind = "alignment-review"
+summary = "Review CREATE and MERGE reuse of general query-pattern rules."
+baseline = "The BNF defines restricted create/merge graph-pattern families separately from general query graph patterns."
+rationale = "The parser currently reuses general Pattern/PatternPart rules, which may admit selectors, directions, predicates, or quantifiers that update-pattern productions exclude. This is not accepted policy."
+positive_witness = "CREATE ANY (n)"
+negative_witness = "CREATE"
+evidence = "vendor/openCypher-2024.3/grammar/openCypher.bnf#create-statement"

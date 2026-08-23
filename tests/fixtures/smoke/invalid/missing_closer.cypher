@@ -1,0 +1,2 @@
+MATCH (person
+RETURN person

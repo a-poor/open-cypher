@@ -1,0 +1,11 @@
+[package]
+name = "open-cypher-xtask"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.86"
+publish = false
+
+[dependencies]
+lalrpop = { version = "0.23.1", default-features = false }
+sha2 = "0.10"
+toml = "0.8"

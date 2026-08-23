@@ -1,0 +1,49 @@
+name: Mutation testing
+
+on:
+  schedule:
+    - cron: "29 8 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cargo-mutants:
+    name: Handwritten Rust mutants
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-mutants
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: false
+      - name: Run mutation analysis
+        id: mutants
+        continue-on-error: true
+        run: >-
+          cargo mutants
+          --package open-cypher
+          --all-features
+          --exclude 'src/generated/**'
+          --jobs 2
+          --timeout 180
+          --build-timeout 300
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutants-${{ github.sha }}
+          path: mutants.out
+          if-no-files-found: error
+          retention-days: 30
+      - name: Summarize nonzero result
+        if: steps.mutants.outcome == 'failure'
+        run: echo "Mutation analysis found surviving or timed-out mutants; inspect the artifact."
