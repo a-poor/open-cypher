@@ -1,0 +1,1 @@
+MATCH (n:Person {name: $name}) WHERE n.active = true RETURN n.name

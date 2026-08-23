@@ -1,0 +1,1392 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Hand-normalized parser grammar derived from openCypher 2024.3. The upstream
+// production map and intentional deviations are recorded under spec/.
+
+grammar<'input>(source: &'input str);
+
+use crate::ast::*;
+use crate::parser::{
+    ComparisonSuffix, ParserToken, PostfixSuffix, RelationshipDetail, fold_binary, fold_comparison, fold_postfix,
+    integer_literal, label_comparison_suffix, list_comprehension_expr,
+    list_singleton_or_comprehension, name, parameter, pattern_comprehension, pattern_expression,
+    qualified_function_name, query_from_pattern, relationship_factor,
+    relationship_label_expression, string_literal,
+};
+use crate::span::Span;
+
+Program: Program = {
+    => Program::new(Vec::new(), Span::empty(0)),
+    <l:@L> <query:Query> <terminator:Semicolon?> <r:@R> => {
+        let statement = Node::new(
+            StatementKind::Query(QueryStatement {
+                mode: None,
+                query,
+                terminator,
+            }),
+            Span::new(l, r),
+        );
+        Program::new(vec![statement], Span::new(l, r))
+    },
+};
+
+Semicolon: Span = <l:@L> ";" <r:@R> => Span::new(l, r);
+
+Query: Query = {
+    <l:@L> <head:SingleQuery> <tails:UnionTail*> <r:@R> => Node::new(
+        QueryKind::Regular(RegularQuery {
+            head,
+            unions: tails
+                .into_iter()
+                .map(|(operator, query)| UnionBranch { operator, query })
+                .collect(),
+        }),
+        Span::new(l, r),
+    ),
+};
+
+UnionTail: (Node<UnionOperator>, SingleQuery) = {
+    <l:@L> "UNION" <quantifier:UnionQuantifier?> <r:@R> <query:SingleQuery> => {
+        let operator = quantifier.unwrap_or(UnionOperator::Default);
+        (Node::new(operator, Span::new(l, r)), query)
+    },
+};
+
+UnionQuantifier: UnionOperator = {
+    "ALL" => UnionOperator::All,
+    "DISTINCT" => UnionOperator::Distinct,
+};
+
+SetQuantifierNode: Node<SetQuantifier> = {
+    <l:@L> "set ALL" <r:@R> => Node::new(SetQuantifier::All, Span::new(l, r)),
+    <l:@L> "DISTINCT" <r:@R> => Node::new(SetQuantifier::Distinct, Span::new(l, r)),
+};
+
+SingleQuery: SingleQuery = {
+    <l:@L> <head:NonResultClause> <tail:NonResultClause*> <result:ReturnClause?> <r:@R> => {
+        let mut clauses = Vec::with_capacity(1 + tail.len() + usize::from(result.is_some()));
+        clauses.push(head);
+        clauses.extend(tail);
+        clauses.extend(result);
+        Node::new(SingleQueryKind { clauses }, Span::new(l, r))
+    },
+    <l:@L> <result:ReturnClause> <r:@R> => Node::new(
+        SingleQueryKind { clauses: vec![result] },
+        Span::new(l, r),
+    ),
+};
+
+pub ClauseRoot: Clause = {
+    NonResultClause,
+    ReturnClause,
+};
+
+pub StandaloneCallRoot: Clause = {
+    <l:@L> "CALL" <procedure:QualifiedName> <arguments:ArgumentList?>
+    <yield_clause:StandaloneYieldClause?> <r:@R> => Node::new(
+        ClauseKind::Call(CallClause {
+            optional: false,
+            target: CallTarget::Procedure { name: procedure, arguments },
+            yield_clause,
+        }),
+        Span::new(l, r),
+    ),
+};
+
+NonResultClause: Clause = {
+    MatchClause,
+    UnwindClause,
+    WithClause,
+    CreateClause,
+    MergeClause,
+    SetClause,
+    RemoveClause,
+    DeleteClause,
+    CallClause,
+};
+
+MatchClause: Clause = {
+    <l:@L> <optional:"OPTIONAL"?> "MATCH" <mode:PathModeNode?> <pattern:Pattern>
+    <where_clause:WhereClause?> <r:@R> => Node::new(
+        ClauseKind::Match(MatchClause {
+            optional: optional.is_some(),
+            mode,
+            pattern,
+            hints: Vec::new(),
+            where_clause,
+        }),
+        Span::new(l, r),
+    ),
+};
+
+PathModeNode: Node<PathMode> = {
+    <l:@L> "WALK" <r:@R> => Node::new(PathMode::Walk, Span::new(l, r)),
+    <l:@L> "TRAIL" <r:@R> => Node::new(PathMode::Trail, Span::new(l, r)),
+    <l:@L> "SIMPLE" <r:@R> => Node::new(PathMode::Simple, Span::new(l, r)),
+    <l:@L> "ACYCLIC" <r:@R> => Node::new(PathMode::Acyclic, Span::new(l, r)),
+};
+
+WhereClause: Expr = "WHERE" <Expr>;
+
+UnwindClause: Clause = {
+    <l:@L> "UNWIND" <expression:Expr> "AS" <variable:Name> <r:@R> => Node::new(
+        ClauseKind::Unwind(UnwindClause { expression, variable }),
+        Span::new(l, r),
+    ),
+};
+
+WithClause: Clause = {
+    <l:@L> "WITH" <projection:ProjectionBody> <where_clause:WhereClause?> <r:@R> => Node::new(
+        ClauseKind::With(WithClause { projection, where_clause }),
+        Span::new(l, r),
+    ),
+};
+
+ReturnClause: Clause = {
+    <l:@L> "RETURN" <projection:ProjectionBody> <r:@R> => Node::new(
+        ClauseKind::Return(ReturnClause { projection }),
+        Span::new(l, r),
+    ),
+};
+
+ProjectionBody: ProjectionClause = {
+    <l:@L> <quantifier:SetQuantifierNode?> <items:ProjectionItems> <order_by:OrderByClause?>
+    <page:PageClause?> <limit:LimitClause?> <r:@R> => {
+        let (offset, skip) = match page {
+            Some((true, expression)) => (Some(expression), None),
+            Some((false, expression)) => (None, Some(expression)),
+            None => (None, None),
+        };
+        ProjectionClause {
+            quantifier,
+            items,
+            order_by,
+            offset,
+            skip,
+            limit,
+            span: Span::new(l, r),
+        }
+    },
+};
+
+ProjectionItems: Vec<ProjectionItem> = {
+    <head:ProjectionItem> <tail:("," <ProjectionExpressionItem>)*> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        items
+    },
+};
+
+ProjectionItem: ProjectionItem = {
+    <l:@L> "*" <r:@R> => Node::new(ProjectionItemKind::Wildcard, Span::new(l, r)),
+    ProjectionExpressionItem,
+};
+
+ProjectionExpressionItem: ProjectionItem = {
+    <l:@L> <expression:Expr> <alias:("AS" <Name>)?> <r:@R> => Node::new(
+        ProjectionItemKind::Expression { expression, alias },
+        Span::new(l, r),
+    ),
+};
+
+OrderByClause: OrderBy = {
+    <l:@L> "ORDER" "BY" <head:SortItem> <tail:("," <SortItem>)*> <r:@R> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        OrderBy { items, span: Span::new(l, r) }
+    },
+};
+
+SortItem: SortItem = {
+    <l:@L> <expression:Expr> <direction:SortDirectionNode?> <r:@R> => SortItem {
+        expression,
+        direction,
+        nulls: None,
+        span: Span::new(l, r),
+    },
+};
+
+SortDirectionNode: Node<SortDirection> = {
+    <l:@L> "ASC" <r:@R> => Node::new(SortDirection::Ascending, Span::new(l, r)),
+    <l:@L> "ASCENDING" <r:@R> => Node::new(SortDirection::Ascending, Span::new(l, r)),
+    <l:@L> "DESC" <r:@R> => Node::new(SortDirection::Descending, Span::new(l, r)),
+    <l:@L> "DESCENDING" <r:@R> => Node::new(SortDirection::Descending, Span::new(l, r)),
+};
+
+PageClause: (bool, Expr) = {
+    "OFFSET" <expression:Expr> => (true, expression),
+    "SKIP" <expression:Expr> => (false, expression),
+};
+
+LimitClause: Expr = "LIMIT" <Expr>;
+
+CreateClause: Clause = {
+    <l:@L> "CREATE" <pattern:Pattern> <r:@R> => Node::new(
+        ClauseKind::Create(CreateClause { pattern }),
+        Span::new(l, r),
+    ),
+};
+
+MergeClause: Clause = {
+    <l:@L> "MERGE" <pattern:PatternPart> <actions:MergeAction*> <r:@R> => Node::new(
+        ClauseKind::Merge(MergeClause { pattern, actions }),
+        Span::new(l, r),
+    ),
+};
+
+MergeAction: MergeAction = {
+    <l:@L> "ON" <trigger:MergeTriggerNode> <set:SetBody> <r:@R> => MergeAction {
+        trigger,
+        set,
+        span: Span::new(l, r),
+    },
+};
+
+MergeTriggerNode: Node<MergeTrigger> = {
+    <l:@L> "MATCH" <r:@R> => Node::new(MergeTrigger::Match, Span::new(l, r)),
+    <l:@L> "CREATE" <r:@R> => Node::new(MergeTrigger::Create, Span::new(l, r)),
+};
+
+SetClause: Clause = {
+    <l:@L> <set:SetBody> <r:@R> => Node::new(ClauseKind::Set(set), Span::new(l, r)),
+};
+
+SetBody: SetClause = {
+    "SET" <head:SetItem> <tail:("," <SetItem>)*> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        SetClause { items }
+    },
+};
+
+SetItem: SetItem = {
+    <l:@L> <target:Name> "+=" <value:Expr> <r:@R> => Node::new(
+        SetItemKind::MergeProperties { target, value },
+        Span::new(l, r),
+    ),
+    <l:@L> <target:Name> <labels:PrefixedLabelExpression> <r:@R> => Node::new(
+        SetItemKind::Labels { target, labels },
+        Span::new(l, r),
+    ),
+    <l:@L> <target:PostfixExpr> "=" <value:Expr> <r:@R> => {
+        let kind = match &target.kind {
+            ExprKind::Variable(variable) => SetItemKind::ReplaceProperties {
+                target: variable.clone(),
+                value,
+            },
+            _ => SetItemKind::Property { target, value },
+        };
+        Node::new(kind, Span::new(l, r))
+    },
+};
+
+RemoveClause: Clause = {
+    <l:@L> "REMOVE" <head:RemoveItem> <tail:("," <RemoveItem>)*> <r:@R> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        Node::new(ClauseKind::Remove(RemoveClause { items }), Span::new(l, r))
+    },
+};
+
+RemoveItem: RemoveItem = {
+    <l:@L> <target:Name> <labels:PrefixedLabelExpression> <r:@R> => Node::new(
+        RemoveItemKind::Labels { target, labels },
+        Span::new(l, r),
+    ),
+    <l:@L> <expression:PostfixExpr> <r:@R> => Node::new(
+        RemoveItemKind::Property(expression),
+        Span::new(l, r),
+    ),
+};
+
+DeleteClause: Clause = {
+    <l:@L> <detach:"DETACH"?> "DELETE" <head:Expr> <tail:("," <Expr>)*> <r:@R> => {
+        let mut expressions = Vec::with_capacity(1 + tail.len());
+        expressions.push(head);
+        expressions.extend(tail);
+        let mode = if detach.is_some() { DeleteMode::Detach } else { DeleteMode::Normal };
+        Node::new(
+            ClauseKind::Delete(DeleteClause {
+                mode: Node::new(mode, Span::new(l, r)),
+                expressions,
+            }),
+            Span::new(l, r),
+        )
+    },
+};
+
+CallClause: Clause = {
+    <l:@L> "CALL" <procedure:QualifiedName> <arguments:ArgumentList> <yield_clause:NamedYieldClause?> <r:@R> => Node::new(
+        ClauseKind::Call(CallClause {
+            optional: false,
+            target: CallTarget::Procedure { name: procedure, arguments: Some(arguments) },
+            yield_clause,
+        }),
+        Span::new(l, r),
+    ),
+};
+
+StandaloneYieldClause: YieldClause = {
+    <l:@L> "YIELD" "*" <r:@R> => YieldClause {
+        all: true,
+        items: Vec::new(),
+        where_clause: None,
+        span: Span::new(l, r),
+    },
+    <l:@L> "YIELD" <head:YieldItem> <tail:("," <YieldItem>)*> <r:@R> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        YieldClause { all: false, items, where_clause: None, span: Span::new(l, r) }
+    },
+};
+
+ArgumentList: Vec<Expr> = {
+    "(" ")" => Vec::new(),
+    "(" <head:Expr> <tail:("," <Expr>)*> ")" => {
+        let mut arguments = Vec::with_capacity(1 + tail.len());
+        arguments.push(head);
+        arguments.extend(tail);
+        arguments
+    },
+};
+
+NamedYieldClause: YieldClause = {
+    <l:@L> "YIELD" <head:YieldItem> <tail:("," <YieldItem>)*> <where_clause:WhereClause?> <r:@R> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        YieldClause { all: false, items, where_clause, span: Span::new(l, r) }
+    },
+};
+
+YieldItem: ProjectionItem = {
+    <l:@L> <field:Name> <alias:("AS" <Name>)?> <r:@R> => {
+        let expression_span = field.span;
+        let expression = Node::new(ExprKind::Variable(field), expression_span);
+        Node::new(
+            ProjectionItemKind::Expression { expression, alias },
+            Span::new(l, r),
+        )
+    },
+};
+
+Pattern: Pattern = {
+    <l:@L> <head:PatternPart> <tail:("," <PatternPart>)*> <r:@R> => {
+        let mut parts = Vec::with_capacity(1 + tail.len());
+        parts.push(head);
+        parts.extend(tail);
+        Pattern { parts, span: Span::new(l, r) }
+    },
+};
+
+PatternPart: PatternPart = {
+    <l:@L> <binding:(<Name> "=")?> <selector:PathSelectorNode?> <path:PathPattern> <r:@R> => Node::new(
+        PatternPartKind { binding, selector, path },
+        Span::new(l, r),
+    ),
+};
+
+PathSelectorNode: Node<PathSelector> = {
+    <l:@L> "ALL" <_path:PathKeyword?> <r:@R> => Node::new(PathSelector::All, Span::new(l, r)),
+    <l:@L> "ANY" <count:PathCount?> <_path:PathKeyword?> <r:@R> => Node::new(
+        PathSelector::Any { count },
+        Span::new(l, r),
+    ),
+    <l:@L> "ANY" "SHORTEST" <_path:PathKeyword?> <r:@R> => Node::new(
+        PathSelector::AnyShortest,
+        Span::new(l, r),
+    ),
+    <l:@L> "ALL" "SHORTEST" <_path:PathKeyword?> <r:@R> => Node::new(
+        PathSelector::AllShortest,
+        Span::new(l, r),
+    ),
+    <l:@L> "SHORTEST" <count:PathCount> <_path:PathKeyword?> <r:@R> => Node::new(
+        PathSelector::Shortest { count: Some(count), groups: false },
+        Span::new(l, r),
+    ),
+    <l:@L> "SHORTEST" <count:PathCount?> <_path:PathKeyword?> <_groups:GroupKeyword> <r:@R> => Node::new(
+        PathSelector::Shortest { count, groups: true },
+        Span::new(l, r),
+    ),
+};
+
+PathCount: String = {
+    <l:@L> "integer" <r:@R> => source[l..r].to_owned(),
+    <l:@L> "parameter" <r:@R> => source[l..r].to_owned(),
+};
+
+PathKeyword: () = { "PATH" => (), "PATHS" => () };
+GroupKeyword: () = { "GROUP" => (), "GROUPS" => () };
+
+PathPattern: PathPattern = {
+    <factor:LegacyShortestPathFactor> => {
+        let span = factor.span;
+        Node::new(PathPatternKind { factors: vec![factor] }, span)
+    },
+    <l:@L> <head:PathFactor> <tail:PathFactor*> <r:@R> => {
+        let mut factors = Vec::with_capacity(1 + tail.len());
+        factors.push(head);
+        factors.extend(tail);
+        Node::new(PathPatternKind { factors }, Span::new(l, r))
+    },
+};
+
+PathFactor: PathFactor = {
+    NodeFactor,
+    RelationshipFactor,
+    ParenthesizedPathFactor,
+};
+
+NodeFactor: PathFactor = {
+    <l:@L> "(" <filler:NodeFiller> ")" <quantifier:GraphQuantifier?> <r:@R> => {
+        let (variable, labels, properties, where_clause) = filler;
+        let pattern = NodePattern {
+            variable,
+            labels,
+            properties: properties.map(Box::new),
+            where_clause: where_clause.map(Box::new),
+        };
+        let kind = if let Some(quantifier) = quantifier {
+            PathFactorKind::QuantifiedNode { pattern, quantifier }
+        } else {
+            PathFactorKind::Node(pattern)
+        };
+        Node::new(kind, Span::new(l, r))
+    },
+};
+
+SimpleNodeFactor: PathFactor = {
+    <l:@L> "(" <filler:SimpleNodeFiller> ")" <r:@R> => {
+        let (variable, labels, properties, where_clause) = filler;
+        Node::new(
+            PathFactorKind::Node(NodePattern {
+                variable,
+                labels,
+                properties: properties.map(Box::new),
+                where_clause: where_clause.map(Box::new),
+            }),
+            Span::new(l, r),
+        )
+    },
+};
+
+SimpleNodeFiller: (Option<Name>, Option<LabelExpression>, Option<Expr>, Option<Expr>) = {
+    <variable:Name?> <labels:PrefixedLabelExpression?> <predicate:SimpleElementPredicate?> => {
+        let (properties, where_clause) = predicate.unwrap_or((None, None));
+        (variable, labels, properties, where_clause)
+    },
+};
+
+NodeFiller: (Option<Name>, Option<LabelExpression>, Option<Expr>, Option<Expr>) = {
+    <variable:Name?> <labels:PrefixedLabelExpression?> <predicate:ElementPredicate?> => {
+        let (properties, where_clause) = predicate.unwrap_or((None, None));
+        (variable, labels, properties, where_clause)
+    },
+};
+
+ElementPredicate: (Option<Expr>, Option<Expr>) = {
+    <properties:Properties> => (Some(properties), None),
+    <where_clause:WhereClause> => (None, Some(where_clause)),
+};
+
+Properties: Expr = {
+    MapValue,
+    <l:@L> "parameter" <r:@R> => Node::new(
+        ExprKind::Parameter(parameter(source, l, r)),
+        Span::new(l, r),
+    ),
+};
+
+SimpleElementPredicate: (Option<Expr>, Option<Expr>) = {
+    <properties:MapValue> => (Some(properties), None),
+    <where_clause:WhereClause> => (None, Some(where_clause)),
+};
+
+RelationshipFactor: PathFactor = {
+    <primary:RelationshipPrimary> <quantifier:GraphQuantifier?> => {
+        let (l, base_r, direction, detail) = primary;
+        let r = quantifier.as_ref().map_or(base_r, |value| value.span.end);
+        relationship_factor(l, r, direction, detail, quantifier)
+    },
+};
+
+SimpleRelationshipFactor: PathFactor = {
+    <primary:SimpleRelationshipPrimary> => {
+        let (l, r, direction, detail) = primary;
+        relationship_factor(l, r, direction, detail, None)
+    },
+};
+
+SimpleRelationshipPrimary: (usize, usize, RelationshipDirection, Option<RelationshipDetail>) = {
+    <l:@L> "-" <detail:SimpleRelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Undirected, detail),
+    <l:@L> "-" <detail:SimpleRelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Right, detail),
+    <l:@L> "-" <detail:SimpleRelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Right, detail),
+    <l:@L> "<-" <detail:SimpleRelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Left, detail),
+    <l:@L> "<" "-" <detail:SimpleRelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Left, detail),
+    <l:@L> "<-" <detail:SimpleRelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<-" <detail:SimpleRelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<" "-" <detail:SimpleRelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<" "-" <detail:SimpleRelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+};
+
+RelationshipPrimary: (usize, usize, RelationshipDirection, Option<RelationshipDetail>) = {
+    <l:@L> "-" <detail:RelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Undirected, detail),
+    <l:@L> "-" <detail:RelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Right, detail),
+    <l:@L> "-" <detail:RelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Right, detail),
+    <l:@L> "<-" <detail:RelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Left, detail),
+    <l:@L> "<" "-" <detail:RelationshipDetail?> "-" <r:@R> =>
+        (l, r, RelationshipDirection::Left, detail),
+    <l:@L> "<-" <detail:RelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<-" <detail:RelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<" "-" <detail:RelationshipDetail?> "->" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+    <l:@L> "<" "-" <detail:RelationshipDetail?> "-" ">" <r:@R> =>
+        (l, r, RelationshipDirection::Both, detail),
+};
+
+RelationshipDetail: (Option<Name>, Option<LabelExpression>, Option<Quantifier>, Option<Expr>, Option<Expr>) = {
+    "[" <filler:RelationshipFiller> "]" => filler,
+};
+
+SimpleRelationshipDetail: (Option<Name>, Option<LabelExpression>, Option<Quantifier>, Option<Expr>, Option<Expr>) = {
+    "[" <filler:SimpleRelationshipFiller> "]" => filler,
+};
+
+RelationshipFiller: (Option<Name>, Option<LabelExpression>, Option<Quantifier>, Option<Expr>, Option<Expr>) = {
+    <variable:Name?> <labels:RelationshipLabels?> <quantifier:LegacyQuantifier?>
+    <predicate:ElementPredicate?> => {
+        let (properties, where_clause) = predicate.unwrap_or((None, None));
+        (variable, labels, quantifier, properties, where_clause)
+    },
+};
+
+SimpleRelationshipFiller: (Option<Name>, Option<LabelExpression>, Option<Quantifier>, Option<Expr>, Option<Expr>) = {
+    <variable:Name?> <labels:RelationshipLabels?> <quantifier:LegacyQuantifier?>
+    <predicate:SimpleElementPredicate?> => {
+        let (properties, where_clause) = predicate.unwrap_or((None, None));
+        (variable, labels, quantifier, properties, where_clause)
+    },
+};
+
+RelationshipLabels: LabelExpression = {
+    "IS" <expression:LabelOr> => expression,
+    <l:@L> "relationship label expression" <r:@R> =>?
+        relationship_label_expression(source, l, r),
+};
+
+ParenthesizedPathFactor: PathFactor = {
+    <l:@L> "(" <binding:(<Name> "=")?> <pattern:PathPattern> <where_clause:WhereClause?> ")"
+    <quantifier:GraphQuantifier?> <r:@R> => {
+        let where_clause = where_clause.map(Box::new);
+        let kind = if let Some(binding) = binding {
+            PathFactorKind::Subpath {
+                binding,
+                pattern: Box::new(pattern),
+                where_clause,
+                quantifier,
+            }
+        } else {
+            PathFactorKind::Parenthesized {
+                pattern: Box::new(pattern),
+                where_clause,
+                quantifier,
+            }
+        };
+        Node::new(kind, Span::new(l, r))
+    },
+};
+
+LegacyShortestPathFactor: PathFactor = {
+    <l:@L> <all:LegacyShortestPathKind> "(" <pattern:LegacyShortestPathInner> ")" <r:@R> => {
+        Node::new(
+            PathFactorKind::LegacyShortest { all, pattern: Box::new(pattern) },
+            Span::new(l, r),
+        )
+    },
+};
+
+LegacyShortestPathInner: PathPattern = {
+    <l:@L> <head:SimpleNodeFactor> <tail:SimplePathTail> <r:@R> => {
+        let (relationship, node) = tail;
+        Node::new(
+            PathPatternKind { factors: vec![head, relationship, node] },
+            Span::new(l, r),
+        )
+    },
+};
+
+LegacyShortestPathKind: bool = {
+    "SHORTESTPATH" => false,
+    "ALLSHORTESTPATHS" => true,
+};
+
+LegacyQuantifier: Quantifier = {
+    <l:@L> "*" <bounds:LegacyBounds?> <r:@R> => Quantifier {
+        kind: bounds.unwrap_or(QuantifierKind::ZeroOrMore),
+        span: Span::new(l, r),
+    },
+};
+
+LegacyBounds: QuantifierKind = {
+    <value:DecimalText> => QuantifierKind::Fixed(value),
+    <lower:DecimalText?> ".." <upper:DecimalText?> => QuantifierKind::Range { lower, upper },
+};
+
+GraphQuantifier: Quantifier = {
+    <l:@L> "*" <r:@R> => Quantifier { kind: QuantifierKind::ZeroOrMore, span: Span::new(l, r) },
+    <l:@L> "+" <r:@R> => Quantifier { kind: QuantifierKind::OneOrMore, span: Span::new(l, r) },
+    <l:@L> "?" <r:@R> => Quantifier { kind: QuantifierKind::Optional, span: Span::new(l, r) },
+    <l:@L> "{" <value:DecimalText> "}" <r:@R> => Quantifier {
+        kind: QuantifierKind::Fixed(value),
+        span: Span::new(l, r),
+    },
+    <l:@L> "{" <lower:DecimalText?> "," <upper:DecimalText?> "}" <r:@R> => Quantifier {
+        kind: QuantifierKind::Range { lower, upper },
+        span: Span::new(l, r),
+    },
+};
+
+DecimalText: String = <l:@L> "integer" <r:@R> => source[l..r].to_owned();
+
+PrefixedLabelExpression: LabelExpression = {
+    ":" <ColonPrefixedLabelExpression>,
+    "IS" <LabelOr>,
+};
+
+ColonPrefixedLabelExpression: LabelExpression = {
+    LabelOr,
+    <l:@L> <head:Name> <tail:(":" <Name>)+> <r:@R> => {
+        let head_span = head.span;
+        let mut labels = Vec::with_capacity(1 + tail.len());
+        labels.push(Node::new(LabelExpressionKind::Name(head), head_span));
+        labels.extend(tail.into_iter().map(|label| {
+            let span = label.span;
+            Node::new(LabelExpressionKind::Name(label), span)
+        }));
+        Node::new(LabelExpressionKind::And(labels), Span::new(l, r))
+    },
+};
+
+LabelOr: LabelExpression = {
+    LabelAnd,
+    <l:@L> <left:LabelOr> "|" <right:LabelAnd> <r:@R> => Node::new(
+        LabelExpressionKind::Or(vec![left, right]),
+        Span::new(l, r),
+    ),
+};
+
+LabelAnd: LabelExpression = {
+    LabelNot,
+    <l:@L> <left:LabelAnd> "&" <right:LabelNot> <r:@R> => Node::new(
+        LabelExpressionKind::And(vec![left, right]),
+        Span::new(l, r),
+    ),
+};
+
+LabelNot: LabelExpression = {
+    LabelPrimary,
+    <l:@L> "!" <primary:LabelPrimary> <r:@R> => Node::new(
+        LabelExpressionKind::Not(Box::new(primary)),
+        Span::new(l, r),
+    ),
+};
+
+LabelPrimary: LabelExpression = {
+    <label:Name> => {
+        let span = label.span;
+        Node::new(LabelExpressionKind::Name(label), span)
+    },
+    <l:@L> "%" <r:@R> => Node::new(LabelExpressionKind::Wildcard, Span::new(l, r)),
+    <l:@L> "(" <expression:LabelOr> ")" <r:@R> => Node::new(
+        LabelExpressionKind::Parenthesized(Box::new(expression)),
+        Span::new(l, r),
+    ),
+};
+
+Expr: Expr = OrExpr;
+
+OrExpr: Expr = {
+    <head:XorExpr> <tail:OrTail*> => fold_binary(head, tail),
+};
+
+OrTail: (Node<BinaryOperator>, Expr) = {
+    <op_l:@L> "OR" <op_r:@R> <right:XorExpr> =>
+        (Node::new(BinaryOperator::Or, Span::new(op_l, op_r)), right),
+};
+
+XorExpr: Expr = {
+    <head:AndExpr> <tail:XorTail*> => fold_binary(head, tail),
+};
+
+XorTail: (Node<BinaryOperator>, Expr) = {
+    <op_l:@L> "XOR" <op_r:@R> <right:AndExpr> =>
+        (Node::new(BinaryOperator::Xor, Span::new(op_l, op_r)), right),
+};
+
+AndExpr: Expr = {
+    <head:NotExpr> <tail:AndTail*> => fold_binary(head, tail),
+};
+
+AndTail: (Node<BinaryOperator>, Expr) = {
+    <op_l:@L> "AND" <op_r:@R> <right:NotExpr> =>
+        (Node::new(BinaryOperator::And, Span::new(op_l, op_r)), right),
+};
+
+NotExpr: Expr = {
+    ComparisonExpr,
+    PatternExpressionExpr,
+    <l:@L> <op_l:@L> "NOT" <op_r:@R> <operand:NotExpr> <r:@R> => Node::new(
+        ExprKind::Unary {
+            operator: Node::new(UnaryOperator::Not, Span::new(op_l, op_r)),
+            operand: Box::new(operand),
+        },
+        Span::new(l, r),
+    ),
+};
+
+ComparisonExpr: Expr = {
+    <head:AdvancedComparisonExpr> <simple:SimpleComparisonSuffix*> =>
+        fold_comparison(head, simple),
+};
+
+AdvancedComparisonExpr: Expr = {
+    <head:ConcatExpr> <advanced:AdvancedComparisonSuffix?> => {
+        let mut tail = Vec::with_capacity(usize::from(advanced.is_some()));
+        tail.extend(advanced);
+        fold_comparison(head, tail)
+    },
+};
+
+SimpleComparisonSuffix: ComparisonSuffix = {
+    <operator:SimpleComparisonOperator> <right:AdvancedComparisonExpr> =>
+        ComparisonSuffix::Binary(operator, right),
+};
+
+AdvancedComparisonSuffix: ComparisonSuffix = {
+    <operator:AdvancedComparisonOperator> <right:ConcatExpr> => ComparisonSuffix::Binary(operator, right),
+    "IS" <negated:"NOT"?> "NULL" <end:@R> => ComparisonSuffix::Is {
+        negated: negated.is_some(),
+        predicate: IsPredicate::Null,
+        end,
+    },
+    <l:@L> "label predicate" <r:@R> =>? label_comparison_suffix(source, l, r),
+};
+
+SimpleComparisonOperator: Node<BinaryOperator> = {
+    <l:@L> "=" <r:@R> => Node::new(BinaryOperator::Equal, Span::new(l, r)),
+    <l:@L> "<>" <r:@R> => Node::new(BinaryOperator::NotEqual, Span::new(l, r)),
+    <l:@L> "<" <r:@R> => Node::new(BinaryOperator::Less, Span::new(l, r)),
+    <l:@L> "<=" <r:@R> => Node::new(BinaryOperator::LessEqual, Span::new(l, r)),
+    <l:@L> ">" <r:@R> => Node::new(BinaryOperator::Greater, Span::new(l, r)),
+    <l:@L> ">=" <r:@R> => Node::new(BinaryOperator::GreaterEqual, Span::new(l, r)),
+};
+
+AdvancedComparisonOperator: Node<BinaryOperator> = {
+    <l:@L> "=~" <r:@R> => Node::new(BinaryOperator::RegexMatch, Span::new(l, r)),
+    <l:@L> "IN" <r:@R> => Node::new(BinaryOperator::In, Span::new(l, r)),
+    <l:@L> "CONTAINS" <r:@R> => Node::new(BinaryOperator::Contains, Span::new(l, r)),
+    <l:@L> "STARTS" "WITH" <r:@R> => Node::new(BinaryOperator::StartsWith, Span::new(l, r)),
+    <l:@L> "ENDS" "WITH" <r:@R> => Node::new(BinaryOperator::EndsWith, Span::new(l, r)),
+};
+
+ConcatExpr: Expr = {
+    <head:AddExpr> <tail:ConcatTail*> => fold_binary(head, tail),
+};
+
+ConcatTail: (Node<BinaryOperator>, Expr) = {
+    <op_l:@L> "||" <op_r:@R> <right:AddExpr> =>
+        (Node::new(BinaryOperator::Concat, Span::new(op_l, op_r)), right),
+};
+
+AddExpr: Expr = {
+    <head:MultiplyExpr> <tail:AdditiveTail*> => fold_binary(head, tail),
+};
+
+AdditiveTail: (Node<BinaryOperator>, Expr) = {
+    <op_l:@L> "+" <op_r:@R> <right:MultiplyExpr> =>
+        (Node::new(BinaryOperator::Add, Span::new(op_l, op_r)), right),
+    <op_l:@L> "-" <op_r:@R> <right:MultiplyExpr> =>
+        (Node::new(BinaryOperator::Subtract, Span::new(op_l, op_r)), right),
+};
+
+MultiplyExpr: Expr = {
+    <head:PowerExpr> <tail:MultiplicativeTail*> => fold_binary(head, tail),
+};
+
+MultiplicativeTail: (Node<BinaryOperator>, Expr) = {
+    <op_l:@L> "*" <op_r:@R> <right:PowerExpr> =>
+        (Node::new(BinaryOperator::Multiply, Span::new(op_l, op_r)), right),
+    <op_l:@L> "/" <op_r:@R> <right:PowerExpr> =>
+        (Node::new(BinaryOperator::Divide, Span::new(op_l, op_r)), right),
+    <op_l:@L> "%" <op_r:@R> <right:PowerExpr> =>
+        (Node::new(BinaryOperator::Remainder, Span::new(op_l, op_r)), right),
+};
+
+PowerExpr: Expr = {
+    <head:UnaryExpr> <tail:PowerTail*> => fold_binary(head, tail),
+};
+
+PowerTail: (Node<BinaryOperator>, Expr) = {
+    <op_l:@L> "^" <op_r:@R> <right:UnaryExpr> =>
+        (Node::new(BinaryOperator::Power, Span::new(op_l, op_r)), right),
+};
+
+UnaryExpr: Expr = {
+    PostfixExpr,
+    <l:@L> <op_l:@L> "+" <op_r:@R> <operand:UnaryExpr> <r:@R> => Node::new(
+        ExprKind::Unary {
+            operator: Node::new(UnaryOperator::Plus, Span::new(op_l, op_r)),
+            operand: Box::new(operand),
+        },
+        Span::new(l, r),
+    ),
+    <l:@L> <op_l:@L> "-" <op_r:@R> <operand:UnaryExpr> <r:@R> => Node::new(
+        ExprKind::Unary {
+            operator: Node::new(UnaryOperator::Minus, Span::new(op_l, op_r)),
+            operand: Box::new(operand),
+        },
+        Span::new(l, r),
+    ),
+};
+
+PostfixExpr: Expr = {
+    <primary:PrimaryExpr> <suffixes:PostfixSuffixNode*> => fold_postfix(primary, suffixes),
+};
+
+PostfixSuffixNode: PostfixSuffix = {
+    "." <key:Name> => PostfixSuffix::Property(key),
+    "{" <items:MapProjectionItemList?> "}" <end:@R> => PostfixSuffix::MapProjection {
+        items: items.unwrap_or_default(),
+        end,
+    },
+    "[" <index:Expr> "]" <end:@R> => PostfixSuffix::Index { index, end },
+    "[" <lower:Expr?> ".." <upper:Expr?> "]" <end:@R> =>
+        PostfixSuffix::Slice { lower, upper, end },
+};
+
+MapProjectionItemList: Vec<MapProjectionItem> = {
+    <head:MapProjectionItemNode> <tail:("," <MapProjectionItemNode>)*> => {
+        let mut items = Vec::with_capacity(1 + tail.len());
+        items.push(head);
+        items.extend(tail);
+        items
+    },
+};
+
+MapProjectionItemNode: MapProjectionItem = {
+    <l:@L> "." <key:Name> <r:@R> => Node::new(
+        MapProjectionItemKind::Property(key),
+        Span::new(l, r),
+    ),
+    <l:@L> "." "*" <r:@R> => Node::new(
+        MapProjectionItemKind::AllProperties,
+        Span::new(l, r),
+    ),
+    <l:@L> <key:Name> ":" <value:Expr> <r:@R> => {
+        let entry = MapEntry { key, value, span: Span::new(l, r) };
+        Node::new(MapProjectionItemKind::Entry(entry), Span::new(l, r))
+    },
+    <variable:Name> => {
+        let span = variable.span;
+        Node::new(MapProjectionItemKind::Variable(variable), span)
+    },
+};
+
+PrimaryExpr: Expr = {
+    LiteralExpr,
+    ParameterExpr,
+    PatternComprehensionExpr,
+    ListValue,
+    MapValue,
+    CaseExpr,
+    ReduceExpr,
+    TrimExpr,
+    QuantifiedPredicateExpr,
+    CountFunctionExpr,
+    CountStarExpr,
+    SubqueryExpr,
+    LegacyShortestPathExpr,
+    QualifiedFunctionExpr,
+    NamedExpr,
+    ParenthesizedExpr,
+};
+
+PatternExpressionExpr: Expr = {
+    <l:@L> "pattern expression" <r:@R> =>? pattern_expression(source, l, r),
+};
+
+LegacyShortestPathExpr: Expr = {
+    <l:@L> <function:LegacyShortestPathName> "(" <path:LegacyShortestPathInner> ")" <r:@R> => {
+        let pattern_span = path.span;
+        let part = Node::new(
+            PatternPartKind { binding: None, selector: None, path },
+            pattern_span,
+        );
+        let pattern = Pattern { parts: vec![part], span: pattern_span };
+        let argument = Node::new(ExprKind::Pattern(pattern), pattern_span);
+        let name_span = function.span;
+        Node::new(
+            ExprKind::Function(FunctionInvocation {
+                name: QualifiedName { parts: vec![function], span: name_span },
+                quantifier: None,
+                arguments: vec![argument],
+            }),
+            Span::new(l, r),
+        )
+    },
+};
+
+LegacyShortestPathName: Name = {
+    <l:@L> "SHORTESTPATH" <r:@R> => name(source, l, r, false),
+    <l:@L> "ALLSHORTESTPATHS" <r:@R> => name(source, l, r, false),
+};
+
+SubqueryExpr: Expr = {
+    <l:@L> <kind:SubqueryExpressionKindNode> "{" <query:SubqueryArgument> "}" <r:@R> => Node::new(
+        ExprKind::Subquery(SubqueryExpression { kind, query: Box::new(query) }),
+        Span::new(l, r),
+    ),
+};
+
+SubqueryExpressionKindNode: Node<SubqueryExpressionKind> = {
+    <l:@L> "EXISTS" <r:@R> => Node::new(SubqueryExpressionKind::Exists, Span::new(l, r)),
+    <l:@L> "COUNT" <r:@R> => Node::new(SubqueryExpressionKind::Count, Span::new(l, r)),
+    <l:@L> "COLLECT" <r:@R> => Node::new(SubqueryExpressionKind::Collect, Span::new(l, r)),
+};
+
+SubqueryArgument: Query = {
+    Query,
+    <pattern:Pattern> <where_clause:WhereClause?> => query_from_pattern(pattern, where_clause),
+};
+
+LiteralExpr: Expr = {
+    <literal:Literal> => {
+        let span = literal.span;
+        Node::new(ExprKind::Literal(literal), span)
+    },
+};
+
+Literal: Literal = {
+    <l:@L> "NULL" <r:@R> => Node::new(LiteralKind::Null, Span::new(l, r)),
+    <l:@L> "TRUE" <r:@R> => Node::new(LiteralKind::Boolean(true), Span::new(l, r)),
+    <l:@L> "FALSE" <r:@R> => Node::new(LiteralKind::Boolean(false), Span::new(l, r)),
+    <l:@L> "integer" <r:@R> => integer_literal(source, l, r, IntegerRadix::Decimal),
+    <l:@L> "hex integer" <r:@R> => integer_literal(source, l, r, IntegerRadix::Hexadecimal),
+    <l:@L> "octal integer" <r:@R> => integer_literal(source, l, r, IntegerRadix::Octal),
+    <l:@L> "float" <r:@R> => Node::new(
+        LiteralKind::Float(FloatLiteral { text: source[l..r].to_owned() }),
+        Span::new(l, r),
+    ),
+    <l:@L> "string" <r:@R> => Node::new(
+        LiteralKind::String(string_literal(source, l, r)),
+        Span::new(l, r),
+    ),
+    <l:@L> "INF" <r:@R> => Node::new(
+        LiteralKind::Float(FloatLiteral { text: source[l..r].to_owned() }),
+        Span::new(l, r),
+    ),
+    <l:@L> "INFINITY" <r:@R> => Node::new(
+        LiteralKind::Float(FloatLiteral { text: source[l..r].to_owned() }),
+        Span::new(l, r),
+    ),
+    <l:@L> "NAN" <r:@R> => Node::new(
+        LiteralKind::Float(FloatLiteral { text: source[l..r].to_owned() }),
+        Span::new(l, r),
+    ),
+};
+
+ParameterExpr: Expr = {
+    <l:@L> "parameter" <r:@R> => Node::new(
+        ExprKind::Parameter(parameter(source, l, r)),
+        Span::new(l, r),
+    ),
+};
+
+NamedExpr: Expr = {
+    <l:@L> <value:Name> <call:FunctionCall> <r:@R> => {
+        let (quantifier, arguments) = call;
+        let name_span = value.span;
+        Node::new(
+            ExprKind::Function(FunctionInvocation {
+                name: QualifiedName { parts: vec![value], span: name_span },
+                quantifier,
+                arguments,
+            }),
+            Span::new(l, r),
+        )
+    },
+    <value:Name> => {
+        let span = value.span;
+        Node::new(ExprKind::Variable(value), span)
+    },
+};
+
+QualifiedFunctionExpr: Expr = {
+    <l:@L> "qualified function name" <name_r:@R> <call:FunctionCall> <r:@R> => {
+        let (quantifier, arguments) = call;
+        Node::new(
+            ExprKind::Function(FunctionInvocation {
+                name: qualified_function_name(source, l, name_r),
+                quantifier,
+                arguments,
+            }),
+            Span::new(l, r),
+        )
+    },
+};
+
+FunctionCall: (Option<Node<SetQuantifier>>, Vec<Expr>) = {
+    "(" <quantifier:SetQuantifierNode?> <arguments:FunctionArguments?> ")" =>
+        (quantifier, arguments.unwrap_or_default()),
+};
+
+ParenthesizedExpr: Expr = {
+    <l:@L> "(" <expression:Expr> ")" <r:@R> => Node::new(
+        ExprKind::Parenthesized(Box::new(expression)),
+        Span::new(l, r),
+    ),
+};
+
+ListValue: Expr = {
+    <l:@L> "[" "]" <r:@R> => Node::new(ExprKind::List(Vec::new()), Span::new(l, r)),
+    <l:@L> "[" <expression:Expr> "]" <r:@R> =>
+        list_singleton_or_comprehension(l, r, expression),
+    <l:@L> "[" <head:Expr> "," <second:Expr> <tail:("," <Expr>)*> "]" <r:@R> => {
+        let mut values = Vec::with_capacity(2 + tail.len());
+        values.push(head);
+        values.push(second);
+        values.extend(tail);
+        Node::new(ExprKind::List(values), Span::new(l, r))
+    },
+    <l:@L> "[" <source_expression:Expr> <predicate:WhereClause>
+    <projection:("|" <Expr>)?> "]" <r:@R> =>?
+        list_comprehension_expr(l, r, source_expression, Some(predicate), projection),
+    <l:@L> "[" <source_expression:Expr> "|" <projection:Expr> "]" <r:@R> =>?
+        list_comprehension_expr(l, r, source_expression, None, Some(projection)),
+};
+
+MapValue: Expr = {
+    <l:@L> "{" "}" <r:@R> => Node::new(ExprKind::Map(Vec::new()), Span::new(l, r)),
+    NonemptyMapValue,
+};
+
+NonemptyMapValue: Expr = {
+    <l:@L> "{" <head:MapEntry> <tail:("," <MapEntry>)*> "}" <r:@R> => {
+        let mut entries = Vec::with_capacity(1 + tail.len());
+        entries.push(head);
+        entries.extend(tail);
+        Node::new(ExprKind::Map(entries), Span::new(l, r))
+    },
+};
+
+MapEntry: MapEntry = {
+    <l:@L> <key:Name> ":" <value:Expr> <r:@R> => MapEntry {
+        key,
+        value,
+        span: Span::new(l, r),
+    },
+};
+
+CaseExpr: Expr = {
+    <l:@L> "CASE" <operand:Expr?> <alternatives:CaseAlternativeNode+>
+    <else_expression:("ELSE" <Expr>)?> "END" <r:@R> => Node::new(
+        ExprKind::Case(CaseExpression {
+            operand: operand.map(Box::new),
+            alternatives,
+            else_expression: else_expression.map(Box::new),
+        }),
+        Span::new(l, r),
+    ),
+};
+
+CaseAlternativeNode: CaseAlternative = {
+    <l:@L> "WHEN" <head:Expr> <tail:("," <Expr>)*> "THEN" <then:Expr> <r:@R> => {
+        let mut when = Vec::with_capacity(1 + tail.len());
+        when.push(head);
+        when.extend(tail);
+        CaseAlternative { when, then, span: Span::new(l, r) }
+    },
+};
+
+ReduceExpr: Expr = {
+    <l:@L> "REDUCE" "(" <accumulator:Name> "=" <initial:Expr> ","
+    <variable:Name> "IN" <list:Expr> "|" <expression:Expr> ")" <r:@R> => Node::new(
+        ExprKind::Reduce(ReduceExpression {
+            accumulator,
+            initial: Box::new(initial),
+            variable,
+            list: Box::new(list),
+            expression: Box::new(expression),
+        }),
+        Span::new(l, r),
+    ),
+};
+
+TrimExpr: Expr = {
+    <l:@L> <function:NameTrim> "(" <argument:Expr> ")" <r:@R> => Node::new(
+        ExprKind::Function(FunctionInvocation {
+            name: QualifiedName { span: function.span, parts: vec![function] },
+            quantifier: None,
+            arguments: vec![argument],
+        }),
+        Span::new(l, r),
+    ),
+};
+
+PatternComprehensionExpr: Expr = {
+    <l:@L> "pattern comprehension" <r:@R> =>? pattern_comprehension(source, l, r),
+};
+
+CountFunctionExpr: Expr = {
+    <l:@L> <function:NameCount> <call:FunctionCall> <r:@R> => {
+        let (quantifier, arguments) = call;
+        let name_span = function.span;
+        Node::new(
+            ExprKind::Function(FunctionInvocation {
+                name: QualifiedName { parts: vec![function], span: name_span },
+                quantifier,
+                arguments,
+            }),
+            Span::new(l, r),
+        )
+    },
+};
+
+pub PatternFragment: Pattern = SimplePathPattern;
+
+pub ExprFragment: Expr = Expr;
+
+pub LabelPredicateFragment: LabelExpression = {
+    PrefixedLabelExpression,
+};
+
+SimplePathPattern: Pattern = {
+    <l:@L> <head:SimpleNodeFactor> <tail:SimplePathTail+> <r:@R> => {
+        let mut factors = Vec::with_capacity(1 + tail.len() * 2);
+        factors.push(head);
+        for (relationship, node) in tail {
+            factors.push(relationship);
+            factors.push(node);
+        }
+        let path = Node::new(PathPatternKind { factors }, Span::new(l, r));
+        let part = Node::new(
+            PatternPartKind { binding: None, selector: None, path },
+            Span::new(l, r),
+        );
+        Pattern { parts: vec![part], span: Span::new(l, r) }
+    },
+};
+
+SimplePathTail: (PathFactor, PathFactor) = {
+    <relationship:SimpleRelationshipFactor> <node:SimpleNodeFactor> => (relationship, node),
+};
+
+QuantifiedPredicateExpr: Expr = {
+    <l:@L> <kind:QuantifiedPredicateKindNode> "(" <variable:Name> "IN" <list:Expr>
+    "WHERE" <predicate:Expr> ")" <r:@R> => Node::new(
+        ExprKind::QuantifiedPredicate(QuantifiedPredicate {
+            kind,
+            variable,
+            list: Box::new(list),
+            predicate: Box::new(predicate),
+        }),
+        Span::new(l, r),
+    ),
+};
+
+QuantifiedPredicateKindNode: Node<QuantifiedPredicateKind> = {
+    <l:@L> "ALL" <r:@R> => Node::new(QuantifiedPredicateKind::All, Span::new(l, r)),
+    <l:@L> "ANY" <r:@R> => Node::new(QuantifiedPredicateKind::Any, Span::new(l, r)),
+    <l:@L> "NONE" <r:@R> => Node::new(QuantifiedPredicateKind::None, Span::new(l, r)),
+    <l:@L> "SINGLE" <r:@R> => Node::new(QuantifiedPredicateKind::Single, Span::new(l, r)),
+};
+
+CountStarExpr: Expr = {
+    <l:@L> <function:NameCount> "(" <star_l:@L> "*" <star_r:@R> ")" <r:@R> => Node::new(
+        ExprKind::Function(FunctionInvocation {
+            name: QualifiedName { span: function.span, parts: vec![function] },
+            quantifier: None,
+            arguments: vec![Node::new(ExprKind::Wildcard, Span::new(star_l, star_r))],
+        }),
+        Span::new(l, r),
+    ),
+};
+
+NameCount: Name = <l:@L> "COUNT" <r:@R> => name(source, l, r, false);
+
+NameTrim: Name = <l:@L> "TRIM" <r:@R> => name(source, l, r, false);
+
+FunctionArguments: Vec<Expr> = {
+    <head:Expr> <tail:("," <Expr>)*> => {
+        let mut arguments = Vec::with_capacity(1 + tail.len());
+        arguments.push(head);
+        arguments.extend(tail);
+        arguments
+    },
+};
+
+QualifiedName: QualifiedName = {
+    <l:@L> <head:Name> <tail:("." <Name>)*> <r:@R> => {
+        let mut parts = Vec::with_capacity(1 + tail.len());
+        parts.push(head);
+        parts.extend(tail);
+        QualifiedName { parts, span: Span::new(l, r) }
+    },
+};
+
+Name: Name = {
+    <l:@L> <escaped:NameToken> <r:@R> => name(source, l, r, escaped),
+};
+
+NameToken: bool = {
+    "identifier" => false,
+    "escaped identifier" => true,
+    "MATCH" => false,
+    "PATH" => false,
+    "RETURN" => false,
+};
+
+extern {
+    type Location = usize;
+    type Error = ();
+
+    enum ParserToken {
+        "identifier" => ParserToken::Identifier,
+        "escaped identifier" => ParserToken::EscapedIdentifier,
+        "parameter" => ParserToken::Parameter,
+        "integer" => ParserToken::Integer,
+        "hex integer" => ParserToken::HexInteger,
+        "octal integer" => ParserToken::OctalInteger,
+        "float" => ParserToken::Float,
+        "string" => ParserToken::String,
+        "pattern comprehension" => ParserToken::PatternComprehension,
+        "pattern expression" => ParserToken::PatternExpression,
+        "label predicate" => ParserToken::LabelPredicate,
+        "relationship label expression" => ParserToken::RelationshipLabelExpression,
+        "qualified function name" => ParserToken::QualifiedFunctionName,
+        "ALL" => ParserToken::All,
+        "set ALL" => ParserToken::SetAll,
+        "ALLSHORTESTPATHS" => ParserToken::AllShortestPaths,
+        "AND" => ParserToken::And,
+        "ANY" => ParserToken::Any,
+        "AS" => ParserToken::As,
+        "ASC" => ParserToken::Asc,
+        "ASCENDING" => ParserToken::Ascending,
+        "BY" => ParserToken::By,
+        "CALL" => ParserToken::Call,
+        "CASE" => ParserToken::Case,
+        "CONTAINS" => ParserToken::Contains,
+        "COLLECT" => ParserToken::Collect,
+        "COUNT" => ParserToken::Count,
+        "CREATE" => ParserToken::Create,
+        "DELETE" => ParserToken::Delete,
+        "DESC" => ParserToken::Desc,
+        "DESCENDING" => ParserToken::Descending,
+        "DETACH" => ParserToken::Detach,
+        "DISTINCT" => ParserToken::Distinct,
+        "ELSE" => ParserToken::Else,
+        "END" => ParserToken::End,
+        "ENDS" => ParserToken::Ends,
+        "EXISTS" => ParserToken::Exists,
+        "FALSE" => ParserToken::False,
+        "GROUP" => ParserToken::Group,
+        "GROUPS" => ParserToken::Groups,
+        "IN" => ParserToken::In,
+        "INF" => ParserToken::Inf,
+        "INFINITY" => ParserToken::Infinity,
+        "IS" => ParserToken::Is,
+        "LIMIT" => ParserToken::Limit,
+        "MATCH" => ParserToken::Match,
+        "MERGE" => ParserToken::Merge,
+        "NAN" => ParserToken::Nan,
+        "NONE" => ParserToken::None,
+        "NOT" => ParserToken::Not,
+        "NULL" => ParserToken::Null,
+        "OFFSET" => ParserToken::Offset,
+        "ON" => ParserToken::On,
+        "OPTIONAL" => ParserToken::Optional,
+        "OR" => ParserToken::Or,
+        "ORDER" => ParserToken::Order,
+        "PATH" => ParserToken::Path,
+        "PATHS" => ParserToken::Paths,
+        "REDUCE" => ParserToken::Reduce,
+        "REMOVE" => ParserToken::Remove,
+        "RETURN" => ParserToken::Return,
+        "SET" => ParserToken::Set,
+        "SHORTEST" => ParserToken::Shortest,
+        "SHORTESTPATH" => ParserToken::ShortestPath,
+        "SIMPLE" => ParserToken::Simple,
+        "SINGLE" => ParserToken::Single,
+        "SKIP" => ParserToken::Skip,
+        "STARTS" => ParserToken::Starts,
+        "THEN" => ParserToken::Then,
+        "TRAIL" => ParserToken::Trail,
+        "TRIM" => ParserToken::Trim,
+        "TRUE" => ParserToken::True,
+        "UNION" => ParserToken::Union,
+        "UNWIND" => ParserToken::Unwind,
+        "WALK" => ParserToken::Walk,
+        "WHEN" => ParserToken::When,
+        "WHERE" => ParserToken::Where,
+        "WITH" => ParserToken::With,
+        "XOR" => ParserToken::Xor,
+        "YIELD" => ParserToken::Yield,
+        "ACYCLIC" => ParserToken::Acyclic,
+        "(" => ParserToken::LeftParen,
+        ")" => ParserToken::RightParen,
+        "[" => ParserToken::LeftBracket,
+        "]" => ParserToken::RightBracket,
+        "{" => ParserToken::LeftBrace,
+        "}" => ParserToken::RightBrace,
+        "," => ParserToken::Comma,
+        "." => ParserToken::Dot,
+        ".." => ParserToken::DotDot,
+        ":" => ParserToken::Colon,
+        "::" => ParserToken::DoubleColon,
+        ";" => ParserToken::Semicolon,
+        "|" => ParserToken::Pipe,
+        "||" => ParserToken::DoublePipe,
+        "&" => ParserToken::Ampersand,
+        "?" => ParserToken::Question,
+        "$" => ParserToken::Dollar,
+        "+" => ParserToken::Plus,
+        "-" => ParserToken::Minus,
+        "*" => ParserToken::Star,
+        "/" => ParserToken::Slash,
+        "%" => ParserToken::Percent,
+        "^" => ParserToken::Caret,
+        "!" => ParserToken::Bang,
+        "=" => ParserToken::Equal,
+        "<>" => ParserToken::NotEqual,
+        "<" => ParserToken::Less,
+        "<=" => ParserToken::LessEqual,
+        ">" => ParserToken::Greater,
+        ">=" => ParserToken::GreaterEqual,
+        "+=" => ParserToken::PlusEqual,
+        "=>" => ParserToken::FatArrow,
+        "=~" => ParserToken::RegexMatch,
+        "<-" => ParserToken::LeftArrow,
+        "->" => ParserToken::RightArrow,
+        "invalid token" => ParserToken::Invalid,
+    }
+}

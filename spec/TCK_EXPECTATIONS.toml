@@ -1,0 +1,1571 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Every compile-time SyntaxError template in the pinned TCK is reviewed here.
+# `accept` entries are static-semantic failures outside a syntax-only parser.
+# `reject` entries are true lexer/parser negatives.
+
+schema_version = 1
+release = "2024.3"
+commit = "677cbafabb8c3c5eed458fd3b1ec0daec8d67d23"
+entry_count = 156
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call1.feature"
+scenario_line = 129
+scenario = "[7] Standalone call to procedure should fail if explicit argument is missing"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidNumberOfArguments"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call1.feature"
+scenario_line = 139
+scenario = "[8] In-query call to procedure should fail if explicit argument is missing"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidNumberOfArguments"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call1.feature"
+scenario_line = 150
+scenario = "[9] Standalone call to procedure should fail if too many explicit argument are given"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidNumberOfArguments"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call1.feature"
+scenario_line = 160
+scenario = "[10] In-query call to procedure should fail if too many explicit argument are given"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidNumberOfArguments"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call1.feature"
+scenario_line = 183
+scenario = "[12] In-query call to procedure that has outputs fails if no outputs are yielded"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call1.feature"
+scenario_line = 211
+scenario = "[15] In-query procedure call should fail if shadowing an already bound variable"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call1.feature"
+scenario_line = 226
+scenario = "[16] In-query procedure call should fail if one of the argument expressions uses an aggregation function"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidAggregation"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call2.feature"
+scenario_line = 95
+scenario = "[4] In-query call to procedure that takes arguments fails when trying to pass them implicitly"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentPassingMode"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call2.feature"
+scenario_line = 106
+scenario = "[5] Standalone call to procedure should fail if input type is wrong"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call2.feature"
+scenario_line = 116
+scenario = "[6] In-query call to procedure should fail if input type is wrong"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call5.feature"
+scenario_line = 113
+scenario = "[5] Fail on renaming to an already bound variable name"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call5.feature"
+scenario_line = 125
+scenario = "[6] Fail on renaming all outputs to the same variable name"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/call/Call5.feature"
+scenario_line = 138
+scenario = "[7] Fail on in-query call to procedure with YIELD *"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+scenario_line = 176
+scenario = "[13] Fail when creating a node that is already bound"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+scenario_line = 185
+scenario = "[14] Fail when creating a node with properties that is already bound"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+scenario_line = 195
+scenario = "[15] Fail when adding a new label predicate on a node that is already bound 1"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+scenario_line = 205
+scenario = "[16] Fail when adding new label predicate on a node that is already bound 2"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+scenario_line = 214
+scenario = "[17] Fail when adding new label predicate on a node that is already bound 3"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+scenario_line = 223
+scenario = "[18] Fail when adding new label predicate on a node that is already bound 4"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+scenario_line = 232
+scenario = "[19] Fail when adding new label predicate on a node that is already bound 5"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create1.feature"
+scenario_line = 241
+scenario = "[20] Fail when creating a node using undefined variable in pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create2.feature"
+scenario_line = 298
+scenario = "[18] Fail when creating a relationship without a type"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NoSingleRelationshipType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create2.feature"
+scenario_line = 306
+scenario = "[19] Fail when creating a relationship without a direction"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "RequiresDirectedRelationship"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create2.feature"
+scenario_line = 314
+scenario = "[20] Fail when creating a relationship with two directions"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "RequiresDirectedRelationship"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create2.feature"
+scenario_line = 322
+scenario = "[21] Fail when creating a relationship with more than one type"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NoSingleRelationshipType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create2.feature"
+scenario_line = 330
+scenario = "[22] Fail when creating a variable-length relationship"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "CreatingVarLength"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create2.feature"
+scenario_line = 338
+scenario = "[23] Fail when creating a relationship that is already bound"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/create/Create2.feature"
+scenario_line = 347
+scenario = "[24] Fail when creating a relationship using undefined variable in pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete1.feature"
+scenario_line = 132
+scenario = "[8] Failing when deleting a label"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidDelete"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete2.feature"
+scenario_line = 96
+scenario = "[5] Failing when deleting a relationship type"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidDelete"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete5.feature"
+scenario_line = 170
+scenario = "[8] Failing when using undefined variable in DELETE"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/delete/Delete5.feature"
+scenario_line = 179
+scenario = "[9] Failing when deleting an integer expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match1.feature"
+scenario_line = 123
+scenario = "[6] Fail when using parameter as node predicate in MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidParameterUse"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match1.feature"
+scenario_line = 132
+scenario = "[7] Fail when a relationship has the same variable in a preceding MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match1.feature"
+scenario_line = 156
+scenario = "[8] Fail when a path has the same variable in a preceding MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match1.feature"
+scenario_line = 185
+scenario = "[9] Fail when a relationship has the same variable in the same pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match1.feature"
+scenario_line = 222
+scenario = "[10] Fail when a path has the same variable in the same pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match1.feature"
+scenario_line = 254
+scenario = "[11] Fail when matching a node variable bound to a value"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match2.feature"
+scenario_line = 152
+scenario = "[8] Fail when using parameter as relationship predicate in MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidParameterUse"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match2.feature"
+scenario_line = 161
+scenario = "[9] Fail when a node has the same variable in a preceding MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match2.feature"
+scenario_line = 200
+scenario = "[10] Fail when a path has the same variable in a preceding MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match2.feature"
+scenario_line = 232
+scenario = "[11] Fail when a node has the same variable in the same pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match2.feature"
+scenario_line = 261
+scenario = "[12] Fail when a path has the same variable in the same pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match2.feature"
+scenario_line = 281
+scenario = "[13] Fail when matching a relationship variable bound to a value"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match3.feature"
+scenario_line = 556
+scenario = "[29] Fail when re-using a relationship in the same pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "RelationshipUniquenessViolation"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match3.feature"
+scenario_line = 565
+scenario = "[30] Fail when using a list or nodes as a node"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableTypeConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match4.feature"
+scenario_line = 198
+scenario = "[9] Fail when asterisk operator is missing"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidRelationshipPattern"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match4.feature"
+scenario_line = 241
+scenario = "[10] Fail on negative bound"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidRelationshipPattern"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match6.feature"
+scenario_line = 390
+scenario = "[21] Fail when a node has the same variable in a preceding MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match6.feature"
+scenario_line = 417
+scenario = "[22] Fail when a relationship has the same variable in a preceding MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match6.feature"
+scenario_line = 445
+scenario = "[23] Fail when a node has the same variable in the same pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match6.feature"
+scenario_line = 477
+scenario = "[24] Fail when a relationship has the same variable in the same pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match/Match6.feature"
+scenario_line = 509
+scenario = "[25] Fail when matching a path variable bound to a value"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match-where/MatchWhere1.feature"
+scenario_line = 272
+scenario = "[14] Fail when filtering path with property predicate"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/match-where/MatchWhere1.feature"
+scenario_line = 283
+scenario = "[15] Fail on aggregation in WHERE"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidAggregation"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge1.feature"
+scenario_line = 282
+scenario = "[15] Fail when merge a node that is already bound"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge1.feature"
+scenario_line = 291
+scenario = "[16] Fail when using parameter as node predicate in MERGE"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidParameterUse"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge2.feature"
+scenario_line = 116
+scenario = "[6] Fail when using undefined variable in ON CREATE"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge3.feature"
+scenario_line = 107
+scenario = "[5] Fail when using undefined variable in ON MATCH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge5.feature"
+scenario_line = 446
+scenario = "[22] Fail when imposing new predicates on a variable that is already bound"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge5.feature"
+scenario_line = 455
+scenario = "[23] Fail when merging relationship without type"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NoSingleRelationshipType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge5.feature"
+scenario_line = 464
+scenario = "[24] Fail when merging relationship without type, no colon"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NoSingleRelationshipType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge5.feature"
+scenario_line = 473
+scenario = "[25] Fail when merging relationship with more than one type"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NoSingleRelationshipType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge5.feature"
+scenario_line = 482
+scenario = "[26] Fail when merging relationship that is already bound"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "VariableAlreadyBound"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge5.feature"
+scenario_line = 491
+scenario = "[27] Fail when using parameter as relationship predicate in MERGE"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidParameterUse"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/merge/Merge5.feature"
+scenario_line = 502
+scenario = "[28] Fail when using variable length relationship in MERGE"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "CreatingVarLength"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return/Return1.feature"
+scenario_line = 49
+scenario = "[2] Fail when returning an undefined variable"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return/Return2.feature"
+scenario_line = 294
+scenario = "[18] Fail on projecting a non-existent function"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnknownFunction"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return/Return4.feature"
+scenario_line = 181
+scenario = "[10] Fail when returning multiple columns with same name"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "ColumnNameConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return/Return6.feature"
+scenario_line = 251
+scenario = "[14] Aggregates in aggregates"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NestedAggregation"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return/Return6.feature"
+scenario_line = 259
+scenario = "[15] Using `rand()` in aggregations"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NonConstantExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return/Return6.feature"
+scenario_line = 337
+scenario = "[20] Fail if not returned variables are used inside an expression which contains an aggregation expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "AmbiguousAggregationExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return/Return6.feature"
+scenario_line = 346
+scenario = "[21] Fail if more complex expressions, even if returned, are used inside expression which contains an aggregation expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "AmbiguousAggregationExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return/Return7.feature"
+scenario_line = 49
+scenario = "[2] Fail when using RETURN * without variables in scope"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NoVariablesInScope"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy2.feature"
+scenario_line = 266
+scenario = "[13] Fail when sorting on variable removed by DISTINCT"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy2.feature"
+scenario_line = 280
+scenario = "[14] Fail on aggregation in ORDER BY after RETURN"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidAggregation"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy6.feature"
+scenario_line = 72
+scenario = "[4] Fail if not returned variables are used inside an order by item which contains an aggregation expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-orderby/ReturnOrderBy6.feature"
+scenario_line = 82
+scenario = "[5] Fail if more complex expressions, even if returned, are used inside an order by item which contains an aggregation expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "AmbiguousAggregationExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit1.feature"
+scenario_line = 114
+scenario = "[5] SKIP with an expression that depends on variables should fail"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NonConstantExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit1.feature"
+scenario_line = 139
+scenario = "[7] Negative SKIP should fail"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NegativeIntegerArgument"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit1.feature"
+scenario_line = 171
+scenario = "[9] Floating point SKIP should fail"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit1.feature"
+scenario_line = 186
+scenario = "[10] Fail when using non-constants in SKIP"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NonConstantExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit1.feature"
+scenario_line = 196
+scenario = "[11] Fail when using negative value in SKIP"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NegativeIntegerArgument"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit2.feature"
+scenario_line = 180
+scenario = "[9] Fail when using non-constants in LIMIT"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NonConstantExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit2.feature"
+scenario_line = 222
+scenario = "[12] Fail when using negative value in LIMIT 1"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NegativeIntegerArgument"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit2.feature"
+scenario_line = 232
+scenario = "[13] Fail when using negative value in LIMIT 2"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NegativeIntegerArgument"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit2.feature"
+scenario_line = 281
+scenario = "[16] Fail when using floating point in LIMIT 1"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/return-skip-limit/ReturnSkipLimit2.feature"
+scenario_line = 291
+scenario = "[17] Fail when using floating point in LIMIT 2"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/set/Set1.feature"
+scenario_line = 170
+scenario = "[9] Failing when using undefined variable in SET"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/union/Union1.feature"
+scenario_line = 101
+scenario = "[5] Failing when UNION has different columns"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "DifferentColumnsInUnion"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/union/Union2.feature"
+scenario_line = 104
+scenario = "[5] Failing when UNION ALL has different columns"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "DifferentColumnsInUnion"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/union/Union3.feature"
+scenario_line = 33
+scenario = "[1] Failing when mixing UNION and UNION ALL"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidClauseComposition"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/union/Union3.feature"
+scenario_line = 45
+scenario = "[2] Failing when mixing UNION ALL and UNION"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidClauseComposition"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with/With4.feature"
+scenario_line = 93
+scenario = "[4] Fail when forwarding multiple aliases with the same name"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "ColumnNameConflict"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with/With4.feature"
+scenario_line = 102
+scenario = "[5] Fail when not aliasing expressions in WITH"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "NoExpressionAlias"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with/With6.feature"
+scenario_line = 156
+scenario = "[8] Fail if not projected variables are used inside an expression which contains an aggregation expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "AmbiguousAggregationExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with/With6.feature"
+scenario_line = 166
+scenario = "[9] Fail if more complex expression, even if projected, are used inside expression which contains an aggregation expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "AmbiguousAggregationExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy1.feature"
+scenario_line = 1155
+scenario = "[46] Fail on sorting by an undefined variable #Example: <exampleName>"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy2.feature"
+scenario_line = 757
+scenario = "[25] Fail on sorting by an aggregation"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidAggregation"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy3.feature"
+scenario_line = 290
+scenario = "[8] Fail on sorting by any number of undefined variables in any position #Example: <exampleName>"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy4.feature"
+scenario_line = 337
+scenario = "[13] Fail on sorting by a non-projected aggregation on a variable"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy4.feature"
+scenario_line = 358
+scenario = "[14] Fail on sorting by a non-projected aggregation on an expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy4.feature"
+scenario_line = 443
+scenario = "[19] Fail if not projected variables are used inside an order by item which contains an aggregation expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/clauses/with-orderBy/WithOrderBy4.feature"
+scenario_line = 454
+scenario = "[20] Fail if more complex expressions, even if projected, are used inside an order by item which contains an aggregation expression"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "AmbiguousAggregationExpression"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean1.feature"
+scenario_line = 199
+scenario = "[8] Fail on conjunction of at least one non-booleans"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean2.feature"
+scenario_line = 199
+scenario = "[8] Fail on disjunction of at least one non-booleans"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean3.feature"
+scenario_line = 199
+scenario = "[8] Fail on exclusive disjunction of at least one non-booleans"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/boolean/Boolean4.feature"
+scenario_line = 72
+scenario = "[4] Fail when using NOT on a non-boolean literal"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/comparison/Comparison1.feature"
+scenario_line = 315
+scenario = "[17] Failing when comparing to an undefined variable"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/existentialSubqueries/ExistentialSubquery2.feature"
+scenario_line = 78
+scenario = "[3] Full existential subquery with update clause should fail"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidClauseComposition"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph3.feature"
+scenario_line = 140
+scenario = "[8] `labels()` failing on a path"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph4.feature"
+scenario_line = 138
+scenario = "[7] Failing when using `type()` on a node"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph9.feature"
+scenario_line = 89
+scenario = "[5] `properties()` failing on an integer literal"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph9.feature"
+scenario_line = 97
+scenario = "[6] `properties()` failing on a string literal"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/graph/Graph9.feature"
+scenario_line = 105
+scenario = "[7] `properties()` failing on a list of booleans"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/list/List12.feature"
+scenario_line = 146
+scenario = "[7] Fail when using aggregation in list comprehension"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidAggregation"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/list/List5.feature"
+scenario_line = 490
+scenario = "[42] Failing when using IN on a non-list literal"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/list/List6.feature"
+scenario_line = 85
+scenario = "[5] Fail for `size()` on paths"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/list/List6.feature"
+scenario_line = 94
+scenario = "[6] Fail for `size()` on pattern predicates"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals2.feature"
+scenario_line = 121
+scenario = "[9] Fail on a too large integer"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "IntegerOverflow"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals2.feature"
+scenario_line = 129
+scenario = "[10] Fail on a too small integer"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "IntegerOverflow"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals2.feature"
+scenario_line = 138
+scenario = "[11] Fail on an integer containing a alphabetic character"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidNumberLiteral"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals2.feature"
+scenario_line = 147
+scenario = "[12] Fail on an integer containing a invalid symbol character"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals3.feature"
+scenario_line = 155
+scenario = "[12] Fail on an incomplete hexadecimal integer"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidNumberLiteral"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals3.feature"
+scenario_line = 164
+scenario = "[13] Fail on an hexadecimal literal containing a lower case invalid alphanumeric character"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidNumberLiteral"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals3.feature"
+scenario_line = 173
+scenario = "[14] Fail on an hexadecimal literal containing a upper case invalid alphanumeric character"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidNumberLiteral"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals3.feature"
+scenario_line = 191
+scenario = "[16] Fail on a too large hexadecimal integer"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "IntegerOverflow"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals3.feature"
+scenario_line = 199
+scenario = "[17] Fail on a too small hexadecimal integer"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "IntegerOverflow"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals4.feature"
+scenario_line = 121
+scenario = "[9] Fail on a too large octal integer"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "IntegerOverflow"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals4.feature"
+scenario_line = 129
+scenario = "[10] Fail on a too small octal integer"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "IntegerOverflow"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals5.feature"
+scenario_line = 319
+scenario = "[27] Fail when float value is too large"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "FloatingPointOverflow"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals6.feature"
+scenario_line = 170
+scenario = "[13] Failing on incorrect unicode literal"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidUnicodeLiteral"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals7.feature"
+scenario_line = 301
+scenario = "[19] Fail on a list containing only a comma"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals7.feature"
+scenario_line = 310
+scenario = "[20] Fail on a nested list with non-matching brackets"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals7.feature"
+scenario_line = 319
+scenario = "[21] Fail on a nested list with missing commas"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 300
+scenario = "[19] Fail on a map containing key starting with a number"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 309
+scenario = "[20] Fail on a map containing key with symbol"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 318
+scenario = "[21] Fail on a map containing key with dot"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 326
+scenario = "[22] Fail on a map containing unquoted string"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 335
+scenario = "[23] Fail on a map containing only a comma"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 344
+scenario = "[24] Fail on a map containing a value without key"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 353
+scenario = "[25] Fail on a map containing a list without key"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 362
+scenario = "[26] Fail on a map containing a map without key"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/literals/Literals8.feature"
+scenario_line = 371
+scenario = "[27] Fail on a nested map with non-matching braces"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/mathematical/Mathematical3.feature"
+scenario_line = 34
+scenario = "[1] Fail for invalid Unicode hyphen in subtraction"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidUnicodeCharacter"
+expect = "reject"
+reason = "grammar_negative"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/path/Path3.feature"
+scenario_line = 51
+scenario = "[2] Failing when using `length()` on a node"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/path/Path3.feature"
+scenario_line = 60
+scenario = "[3] Failing when using `length()` on a relationship"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/pattern/Pattern1.feature"
+scenario_line = 197
+scenario = "[10] Fail on introducing unbounded variables in pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UndefinedVariable"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/pattern/Pattern1.feature"
+scenario_line = 223
+scenario = "[11] Fail on checking self pattern"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/pattern/Pattern1.feature"
+scenario_line = 404
+scenario = "[22] Fail on using pattern in RETURN projection"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/pattern/Pattern1.feature"
+scenario_line = 412
+scenario = "[23] Fail on using pattern in WITH projection"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/pattern/Pattern1.feature"
+scenario_line = 420
+scenario = "[24] Fail on using pattern in right-hand side of SET"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "UnexpectedSyntax"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier1.feature"
+scenario_line = 381
+scenario = "[15] Fail none quantifier on type mismatch between list elements and predicate"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier2.feature"
+scenario_line = 392
+scenario = "[16] Fail single quantifier on type mismatch between list elements and predicate"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier3.feature"
+scenario_line = 381
+scenario = "[15] Fail any quantifier on type mismatch between list elements and predicate"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+[[expectation]]
+feature = "vendor/openCypher-2024.3/tck/features/expressions/quantifier/Quantifier4.feature"
+scenario_line = 381
+scenario = "[15] Fail all quantifier on type mismatch between list elements and predicate"
+error_type = "SyntaxError"
+phase = "compile time"
+detail = "InvalidArgumentType"
+expect = "accept"
+reason = "static_semantic"
+
+

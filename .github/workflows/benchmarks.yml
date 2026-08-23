@@ -1,0 +1,30 @@
+name: Benchmarks
+
+on:
+  schedule:
+    - cron: "43 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  criterion:
+    name: Criterion report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run benchmarks
+        run: cargo bench --bench parser --all-features --locked -- --noplot
+      - name: Upload report
+        uses: actions/upload-artifact@v7
+        with:
+          name: criterion-report-${{ github.sha }}
+          path: target/criterion
+          if-no-files-found: error
+          retention-days: 30

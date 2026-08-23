@@ -1,0 +1,88 @@
+name: Scheduled fuzzing
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: Seconds to run each fuzz target
+        required: false
+        default: "600"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  expanded-properties:
+    name: Expanded property suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run property tests with an expanded case budget
+        env:
+          PROPTEST_CASES: 4096
+        run: cargo test --test properties --all-features --locked
+
+  fuzz:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [lex_str, parse_strict, parse_recovering, parse_generated_valid, parse_tck_mutations]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-fuzz@0.13.2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz -> fuzz/target
+      - name: Restore evolving corpus
+        uses: actions/cache@v6
+        with:
+          path: fuzz/corpus/${{ matrix.target }}
+          key: fuzz-${{ matrix.target }}-${{ github.run_id }}
+          restore-keys: fuzz-${{ matrix.target }}-
+      - name: Run libFuzzer
+        env:
+          FUZZ_TARGET: ${{ matrix.target }}
+          FUZZ_SECONDS: ${{ inputs.seconds || '600' }}
+        run: |
+          set -euo pipefail
+          corpora=("fuzz/corpus/$FUZZ_TARGET")
+          if [[ "$FUZZ_TARGET" == "parse_strict" ]]; then
+            corpora+=("tests/fixtures/regressions/parse_strict")
+          fi
+          cargo +nightly fuzz run \
+            --target x86_64-unknown-linux-gnu \
+            "$FUZZ_TARGET" "${corpora[@]}" -- \
+            -dict=fuzz/cypher.dict \
+            -max_total_time="$FUZZ_SECONDS" \
+            -max_len=65536 \
+            -timeout=5 \
+            -rss_limit_mb=2048
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-artifacts-${{ matrix.target }}
+          path: fuzz/artifacts/${{ matrix.target }}
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload evolved corpus
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-corpus-${{ matrix.target }}
+          path: fuzz/corpus/${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 7

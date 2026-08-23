@@ -1,40 +1,95 @@
 # open-cypher
 
-_created by Austin Poor_
+[![Crates.io](https://img.shields.io/crates/v/open-cypher.svg)](https://crates.io/crates/open-cypher)
+[![Documentation](https://docs.rs/open-cypher/badge.svg)](https://docs.rs/open-cypher)
+[![CI](https://github.com/a-poor/open-cypher/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/a-poor/open-cypher/actions/workflows/ci.yml)
+[![Scheduled fuzzing](https://github.com/a-poor/open-cypher/actions/workflows/fuzz.yml/badge.svg?branch=main)](https://github.com/a-poor/open-cypher/actions/workflows/fuzz.yml)
+[![Mutation testing](https://github.com/a-poor/open-cypher/actions/workflows/mutation.yml/badge.svg?branch=main)](https://github.com/a-poor/open-cypher/actions/workflows/mutation.yml)
+[![Benchmarks](https://github.com/a-poor/open-cypher/actions/workflows/benchmarks.yml/badge.svg?branch=main)](https://github.com/a-poor/open-cypher/actions/workflows/benchmarks.yml)
 
-Parse [openCypher](https://opencypher.org/) queries using Rust.
+`open-cypher` is an unofficial Rust lexer and parser for the
+[openCypher](https://opencypher.org/) query language.
 
-`open-cypher` uses the [pest](https://pest.rs/) library to parse cypher queries using the pestfile, `src/cypher.pest`, based on the openCypher EBNF file ([link](https://opencypher.org/resources/) or [file](assets/cypher.ebnf)).
+The `0.2` rewrite targets the openCypher 2024.3 grammar with a lossless Logos
+token stream, a LALRPOP parser, a typed and spanned AST, and structured
+diagnostics. The crate parses syntax only: it does not resolve names, perform
+type checking, execute queries, or claim official TCK certification.
 
+## Status
 
-## Project Status
+Version `0.2.0-alpha.1` is a clean break from the original Pest-based API. Its
+2024.3 syntax coverage is measured by a deterministic projection of every query
+occurrence in the pinned TCK and by executable traceability for all 377 BNF
+productions. This is parser evidence only, not semantic, runtime, or official
+TCK certification.
 
-This library is still in a very early stage. The repo includes a pest grammar file for defining the cyper language, based on the ebnf file from the openCypher site.
+The checked projection contains 4,131 unique queries and 4,882 materialized
+occurrences: 4,880 active occurrences plus two upstream `@ignore` scenarios
+retained as supplemental evidence. All cases remain part of the release gate.
 
-My goal is to finish the pest definition and possibly generate a cleaner AST based on what pest parses.
+The language snapshot is pinned independently of the crate version:
 
-For reference, the following other projects use pest: https://github.com/pest-parser/pest#projects-using-pest
+- openCypher release: `2024.3`
+- upstream commit: `677cbafabb8c3c5eed458fd3b1ec0daec8d67d23`
 
+The workspace minimum supported Rust version is 1.88.
 
-## Project Structure
+See `spec/UPSTREAM.toml`, the production map, and the deviation ledger for
+provenance and implementation coverage.
 
-- `src/`
-  - `cypher.pest`: The [pest](https://pest.rs/) grammar file for generating a rust parser and types, based on the [ebnf file](./assets/cypher.ebnf) from the [openCypher site](https://opencypher.org/).
-  - `main.rs`: Currently the main directory for quick tests (will be removed)
-  - `parser.rs`: Contains functions for parsing and viewing parsed cypher queries
-  - `ast.rs`: Will contain code for _potentially_ exposing a cleaner cypher AST, than is created by pest
-- `assets/`
-  - `cypher.ebnf`: Open cypher grammar definition from the openCypher site
+## Usage
 
-## Contributing
+```rust
+use open_cypher::parse;
 
-Contributions of any size are more than welcome! Please feel free to submit issues or PRs.
+let parsed = parse("MATCH (person:Person) RETURN person.name")?;
 
-I'm also open to any suggestions regarding overall project direction.
+println!("{:#?}", parsed.program);
+for token in parsed.tokens {
+    println!("{:?} at {:?}", token.kind, token.span);
+}
+# Ok::<(), open_cypher::ParseErrors>(())
+```
 
+For diagnostic-oriented use, `parse_recovering` always returns a root together
+with diagnostics collected during lexing and parsing. On a syntax error, the
+current recovery is whole-input recovery: the root contains an error statement,
+not a locally recovered clause or expression. `lex` exposes every token,
+including whitespace and comments.
 
-## To Do
+The current program entry point accepts empty input or one query with an
+optional trailing semicolon. It does not parse multi-statement scripts.
 
-- [ ] Add tests
-- [ ] Add examples
-- [ ] Add documentation
+The optional `serde` feature implements serialization for public syntax and
+diagnostic data types:
+
+```toml
+[dependencies]
+open-cypher = { version = "0.2.0-alpha.1", features = ["serde"] }
+```
+
+## Development
+
+The repository keeps generated LALRPOP Rust checked in so downstream builds do
+not need to run the parser generator. Maintenance and verification commands are
+provided through the workspace's `cargo xtask` alias.
+
+```console
+cargo test --workspace --all-features
+cargo xtask grammar verify
+cargo xtask spec verify
+cargo xtask tck verify
+cargo xtask tck check
+cargo xtask tck report
+cargo xtask spec release-check
+cargo bench --bench parser
+```
+
+Fuzz targets live in `fuzz/` and use `cargo-fuzz`.
+
+## Licensing
+
+Project-authored source is available under MIT or Apache-2.0. Vendored
+openCypher material and grammar-derived files are Apache-2.0; the packaged crate
+therefore carries Apache-2.0 metadata. See the license and notice files beside
+the relevant upstream snapshot for details.

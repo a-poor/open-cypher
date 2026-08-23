@@ -1,0 +1,1 @@
+MATCH (notable) WHERE notable.containsValue >= 1.25e+3 RETURN notable
