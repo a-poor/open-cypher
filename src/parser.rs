@@ -113,18 +113,25 @@ fn parse_tokens_with_contextual_names<T>(
     mut parse_tokens: impl FnMut(&[SpannedParserToken]) -> Result<T, LalrpopError>,
 ) -> Result<T, LalrpopError> {
     let mut contextual = tokens.to_vec();
-    let mut converted = vec![false; tokens.len()];
+    let mut resolved = vec![false; tokens.len()];
     for index in 0..tokens.len() {
         let follows_name_marker = index
             .checked_sub(1)
             .and_then(|previous| tokens.get(previous))
             .is_some_and(|token| matches!(token.1, ParserToken::As | ParserToken::Dot));
+        if is_aliased_bare_expression(tokens, index) && tokens[index].1.is_keyword_literal() {
+            // Preserve the native literal interpretation and keep later retry
+            // errors from reclassifying this already-valid projection item.
+            resolved[index] = true;
+            continue;
+        }
         if tokens[index].1.is_contextual_name_candidate()
             && ((follows_name_marker
                 && !(tokens[index].1 == ParserToken::As && tokens[index - 1].1 == ParserToken::As))
-                || is_solo_projection_keyword(tokens, index))
+                || is_solo_projection_keyword(tokens, index)
+                || is_aliased_bare_expression(tokens, index))
         {
-            converted[index] = true;
+            resolved[index] = true;
             contextual[index].1 = ParserToken::Identifier;
         }
     }
@@ -137,9 +144,11 @@ fn parse_tokens_with_contextual_names<T>(
     let mut best_error = initial_error.clone();
     let mut error = initial_error;
 
-    // LALRPOP reports the keyword that prevented a name production from
-    // reducing (or the following token/EOF when a keyword was interpreted as
-    // syntax). Reclassify the nearest remaining contextual keyword and retry.
+    // The generated state machines already reinterpret a keyword when its
+    // native action is an immediate error and the identifier action is valid.
+    // A smaller set of constructs has delayed ambiguity: the keyword shifts as
+    // syntax, then fails at a later token or EOF (for example a bare COUNT).
+    // Reclassify the nearest remaining candidate and retry those cases.
     // Each pass commits one lexical-context signature (the keyword and its two
     // neighboring tokens), so repeated non-reserved words in the same name
     // position are handled together without conflating distinct token kinds.
@@ -156,7 +165,7 @@ fn parse_tokens_with_contextual_names<T>(
             .iter()
             .enumerate()
             .filter(|(index, (_, token, _))| {
-                token.is_contextual_name_candidate() && !converted[*index]
+                token.is_contextual_name_candidate() && !resolved[*index]
             })
             .map(|(index, (start, _, end))| {
                 let distance = if location < *start {
@@ -186,11 +195,11 @@ fn parse_tokens_with_contextual_names<T>(
 
         let signature = contextual_name_signature(tokens, index);
         for peer in 0..tokens.len() {
-            if !converted[peer]
+            if !resolved[peer]
                 && tokens[peer].1.is_contextual_name_candidate()
                 && contextual_name_signature(tokens, peer) == signature
             {
-                converted[peer] = true;
+                resolved[peer] = true;
                 contextual[peer].1 = ParserToken::Identifier;
             }
         }
@@ -207,6 +216,25 @@ fn parse_tokens_with_contextual_names<T>(
     }
 
     Err(best_error)
+}
+
+fn is_aliased_bare_expression(tokens: &[SpannedParserToken], index: usize) -> bool {
+    // A one-token projection item followed by AS cannot be one of the keyword
+    // constructs with delayed ambiguity (CASE, COUNT, EXISTS, and so on).
+    // Resolve every such item in one scan. The caller separately preserves the
+    // established interpretation of the six keyword-backed literal spellings.
+    index
+        .checked_sub(1)
+        .and_then(|previous| tokens.get(previous))
+        .is_some_and(|token| {
+            matches!(
+                token.1,
+                ParserToken::Return | ParserToken::With | ParserToken::Yield | ParserToken::Comma
+            )
+        })
+        && tokens
+            .get(index + 1)
+            .is_some_and(|token| token.1 == ParserToken::As)
 }
 
 fn is_solo_projection_keyword(tokens: &[SpannedParserToken], index: usize) -> bool {
@@ -1416,6 +1444,13 @@ impl fmt::Display for ParserToken {
 }
 
 impl ParserToken {
+    const fn is_keyword_literal(self) -> bool {
+        matches!(
+            self,
+            Self::False | Self::Inf | Self::Infinity | Self::Nan | Self::Null | Self::True
+        )
+    }
+
     const fn is_contextual_name_candidate(self) -> bool {
         !matches!(
             self,

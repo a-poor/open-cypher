@@ -1,0 +1,1 @@
+MATCH (route = (start)-[hop]->(finish) WHERE hop.ready){2} RETURN route

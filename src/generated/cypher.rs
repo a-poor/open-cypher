@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // auto-generated: "lalrpop 0.23.1"
-// sha3: 18b39da6a673a4f70a480d660c535a48bf42bc87ca8a6d312ecc575217c80f9d
+// sha3: 97b5d41c74557c9a5e77b69b76536aa940d9c99f27c9b9ed7ba933bb943cc7ac
 use crate::ast::*;
 use crate::parser::{
     ComparisonSuffix, ParserToken, PostfixSuffix, RelationshipDetail, fold_binary, fold_comparison,
@@ -3650,12 +3650,30 @@ mod __parse__ClauseRoot {
 
         #[inline]
         fn token_to_index(&self, token: &Self::Token) -> Option<usize> {
-            __token_to_integer(token, core::marker::PhantomData::<(&())>)
+            __token_to_integer(token, core::marker::PhantomData::<(&())>).map(|integer| {
+                if token.is_contextual_name_candidate() {
+                    integer | (1usize << (usize::BITS - 1))
+                } else {
+                    integer
+                }
+            })
         }
 
         #[inline]
         fn action(&self, state: i16, integer: usize) -> i16 {
-            __action(state, integer)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            let raw_integer = integer & !contextual_mask;
+            let action = __action(state, raw_integer);
+            if integer & contextual_mask != 0 && action == 0 {
+                let identifier_integer = __token_to_integer(
+                    &ParserToken::Identifier,
+                    core::marker::PhantomData::<(&())>,
+                )
+                .expect("the grammar must declare the identifier terminal");
+                __action(state, identifier_integer)
+            } else {
+                action
+            }
         }
 
         #[inline]
@@ -3674,7 +3692,12 @@ mod __parse__ClauseRoot {
         }
 
         fn token_to_symbol(&self, token_index: usize, token: Self::Token) -> Self::Symbol {
-            __token_to_symbol(token_index, token, core::marker::PhantomData::<(&())>)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            __token_to_symbol(
+                token_index & !contextual_mask,
+                token,
+                core::marker::PhantomData::<(&())>,
+            )
         }
 
         fn expected_tokens(&self, state: i16) -> alloc::vec::Vec<alloc::string::String> {
@@ -26164,12 +26187,30 @@ mod __parse__ExprFragment {
 
         #[inline]
         fn token_to_index(&self, token: &Self::Token) -> Option<usize> {
-            __token_to_integer(token, core::marker::PhantomData::<(&())>)
+            __token_to_integer(token, core::marker::PhantomData::<(&())>).map(|integer| {
+                if token.is_contextual_name_candidate() {
+                    integer | (1usize << (usize::BITS - 1))
+                } else {
+                    integer
+                }
+            })
         }
 
         #[inline]
         fn action(&self, state: i16, integer: usize) -> i16 {
-            __action(state, integer)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            let raw_integer = integer & !contextual_mask;
+            let action = __action(state, raw_integer);
+            if integer & contextual_mask != 0 && action == 0 {
+                let identifier_integer = __token_to_integer(
+                    &ParserToken::Identifier,
+                    core::marker::PhantomData::<(&())>,
+                )
+                .expect("the grammar must declare the identifier terminal");
+                __action(state, identifier_integer)
+            } else {
+                action
+            }
         }
 
         #[inline]
@@ -26188,7 +26229,12 @@ mod __parse__ExprFragment {
         }
 
         fn token_to_symbol(&self, token_index: usize, token: Self::Token) -> Self::Symbol {
-            __token_to_symbol(token_index, token, core::marker::PhantomData::<(&())>)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            __token_to_symbol(
+                token_index & !contextual_mask,
+                token,
+                core::marker::PhantomData::<(&())>,
+            )
         }
 
         fn expected_tokens(&self, state: i16) -> alloc::vec::Vec<alloc::string::String> {
@@ -45525,12 +45571,30 @@ mod __parse__LabelPredicateFragment {
 
         #[inline]
         fn token_to_index(&self, token: &Self::Token) -> Option<usize> {
-            __token_to_integer(token, core::marker::PhantomData::<(&())>)
+            __token_to_integer(token, core::marker::PhantomData::<(&())>).map(|integer| {
+                if token.is_contextual_name_candidate() {
+                    integer | (1usize << (usize::BITS - 1))
+                } else {
+                    integer
+                }
+            })
         }
 
         #[inline]
         fn action(&self, state: i16, integer: usize) -> i16 {
-            __action(state, integer)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            let raw_integer = integer & !contextual_mask;
+            let action = __action(state, raw_integer);
+            if integer & contextual_mask != 0 && action == 0 {
+                let identifier_integer = __token_to_integer(
+                    &ParserToken::Identifier,
+                    core::marker::PhantomData::<(&())>,
+                )
+                .expect("the grammar must declare the identifier terminal");
+                __action(state, identifier_integer)
+            } else {
+                action
+            }
         }
 
         #[inline]
@@ -45549,7 +45613,12 @@ mod __parse__LabelPredicateFragment {
         }
 
         fn token_to_symbol(&self, token_index: usize, token: Self::Token) -> Self::Symbol {
-            __token_to_symbol(token_index, token, core::marker::PhantomData::<(&())>)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            __token_to_symbol(
+                token_index & !contextual_mask,
+                token,
+                core::marker::PhantomData::<(&())>,
+            )
         }
 
         fn expected_tokens(&self, state: i16) -> alloc::vec::Vec<alloc::string::String> {
@@ -68061,12 +68130,30 @@ mod __parse__PatternFragment {
 
         #[inline]
         fn token_to_index(&self, token: &Self::Token) -> Option<usize> {
-            __token_to_integer(token, core::marker::PhantomData::<(&())>)
+            __token_to_integer(token, core::marker::PhantomData::<(&())>).map(|integer| {
+                if token.is_contextual_name_candidate() {
+                    integer | (1usize << (usize::BITS - 1))
+                } else {
+                    integer
+                }
+            })
         }
 
         #[inline]
         fn action(&self, state: i16, integer: usize) -> i16 {
-            __action(state, integer)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            let raw_integer = integer & !contextual_mask;
+            let action = __action(state, raw_integer);
+            if integer & contextual_mask != 0 && action == 0 {
+                let identifier_integer = __token_to_integer(
+                    &ParserToken::Identifier,
+                    core::marker::PhantomData::<(&())>,
+                )
+                .expect("the grammar must declare the identifier terminal");
+                __action(state, identifier_integer)
+            } else {
+                action
+            }
         }
 
         #[inline]
@@ -68085,7 +68172,12 @@ mod __parse__PatternFragment {
         }
 
         fn token_to_symbol(&self, token_index: usize, token: Self::Token) -> Self::Symbol {
-            __token_to_symbol(token_index, token, core::marker::PhantomData::<(&())>)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            __token_to_symbol(
+                token_index & !contextual_mask,
+                token,
+                core::marker::PhantomData::<(&())>,
+            )
         }
 
         fn expected_tokens(&self, state: i16) -> alloc::vec::Vec<alloc::string::String> {
@@ -90620,12 +90712,30 @@ mod __parse__StandaloneCallRoot {
 
         #[inline]
         fn token_to_index(&self, token: &Self::Token) -> Option<usize> {
-            __token_to_integer(token, core::marker::PhantomData::<(&())>)
+            __token_to_integer(token, core::marker::PhantomData::<(&())>).map(|integer| {
+                if token.is_contextual_name_candidate() {
+                    integer | (1usize << (usize::BITS - 1))
+                } else {
+                    integer
+                }
+            })
         }
 
         #[inline]
         fn action(&self, state: i16, integer: usize) -> i16 {
-            __action(state, integer)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            let raw_integer = integer & !contextual_mask;
+            let action = __action(state, raw_integer);
+            if integer & contextual_mask != 0 && action == 0 {
+                let identifier_integer = __token_to_integer(
+                    &ParserToken::Identifier,
+                    core::marker::PhantomData::<(&())>,
+                )
+                .expect("the grammar must declare the identifier terminal");
+                __action(state, identifier_integer)
+            } else {
+                action
+            }
         }
 
         #[inline]
@@ -90644,7 +90754,12 @@ mod __parse__StandaloneCallRoot {
         }
 
         fn token_to_symbol(&self, token_index: usize, token: Self::Token) -> Self::Symbol {
-            __token_to_symbol(token_index, token, core::marker::PhantomData::<(&())>)
+            let contextual_mask = 1usize << (usize::BITS - 1);
+            __token_to_symbol(
+                token_index & !contextual_mask,
+                token,
+                core::marker::PhantomData::<(&())>,
+            )
         }
 
         fn expected_tokens(&self, state: i16) -> alloc::vec::Vec<alloc::string::String> {
@@ -110741,7 +110856,8 @@ fn __action71<'input>(
     (_, r, _): (usize, usize, usize),
 ) -> ProjectionItem {
     {
-        let expression = Node::new(ExprKind::Variable(field), Span::new(l, r));
+        let expression_span = field.span;
+        let expression = Node::new(ExprKind::Variable(field), expression_span);
         Node::new(
             ProjectionItemKind::Expression { expression, alias },
             Span::new(l, r),

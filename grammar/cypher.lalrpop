@@ -366,7 +366,8 @@ NamedYieldClause: YieldClause = {
 
 YieldItem: ProjectionItem = {
     <l:@L> <field:Name> <alias:("AS" <Name>)?> <r:@R> => {
-        let expression = Node::new(ExprKind::Variable(field), Span::new(l, r));
+        let expression_span = field.span;
+        let expression = Node::new(ExprKind::Variable(field), expression_span);
         Node::new(
             ProjectionItemKind::Expression { expression, alias },
             Span::new(l, r),

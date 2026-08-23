@@ -1,9 +1,9 @@
 use open_cypher::ast::{
-    BinaryOperator, ClauseKind, Expr, ExprKind, IntegerRadix, LabelExpressionKind, LiteralKind,
-    PathFactorKind, PathSelector, ProjectionItemKind, QuantifierKind, QueryKind,
-    RelationshipDirection, StatementKind,
+    BinaryOperator, CallClause, ClauseKind, Expr, ExprKind, IntegerRadix, LabelExpressionKind,
+    LiteralKind, PathFactorKind, PathSelector, ProjectionItem, ProjectionItemKind, QuantifierKind,
+    QueryKind, RelationshipDirection, StatementKind,
 };
-use open_cypher::{Span, parse};
+use open_cypher::{ParsedProgram, Span, parse};
 
 fn assert_decimal_integer(expression: &Expr, text: &str, span: Span) {
     assert_eq!(expression.span, span);
@@ -16,6 +16,46 @@ fn assert_decimal_integer(expression: &Expr, text: &str, span: Span) {
     };
     assert_eq!(integer.text, text);
     assert_eq!(integer.radix, IntegerRadix::Decimal);
+}
+
+fn first_call(parsed: &ParsedProgram) -> &CallClause {
+    let StatementKind::Query(statement) = &parsed.program.statements[0].kind else {
+        panic!("expected a query statement");
+    };
+    let QueryKind::Regular(query) = &statement.query.kind else {
+        panic!("expected a regular query");
+    };
+    let ClauseKind::Call(call) = &query.head.kind.clauses[0].kind else {
+        panic!("expected CALL as the first clause");
+    };
+    call
+}
+
+fn assert_yield_item(
+    source: &str,
+    item: &ProjectionItem,
+    item_text: &str,
+    expression_text: &str,
+    alias_text: Option<&str>,
+) {
+    assert_eq!(item.span.text(source), Some(item_text));
+    let ProjectionItemKind::Expression { expression, alias } = &item.kind else {
+        panic!("expected an expression YIELD item, got {item:#?}");
+    };
+    assert_eq!(expression.span.text(source), Some(expression_text));
+    let ExprKind::Variable(variable) = &expression.kind else {
+        panic!("expected a variable YIELD expression, got {expression:#?}");
+    };
+    assert_eq!(variable.span, expression.span);
+    assert_eq!(variable.span.text(source), Some(expression_text));
+    assert_eq!(
+        alias.as_ref().map(|name| name.kind.text.as_str()),
+        alias_text
+    );
+    assert_eq!(
+        alias.as_ref().and_then(|name| name.span.text(source)),
+        alias_text
+    );
 }
 
 #[test]
@@ -165,5 +205,84 @@ fn shortest_path_ast_retains_binding_selector_relationship_and_quantifier() {
     assert_eq!(
         end.variable.as_ref().map(|name| name.kind.text.as_str()),
         Some("b")
+    );
+}
+
+#[test]
+fn standalone_yield_items_keep_field_alias_and_item_spans_separate() {
+    let source = "CALL example.proc YIELD out AS alias, other";
+    let parsed = parse(source).expect("standalone procedure call should parse");
+    let call = first_call(&parsed);
+    let yield_clause = call
+        .yield_clause
+        .as_ref()
+        .expect("standalone CALL should retain YIELD");
+
+    assert_eq!(
+        yield_clause.span.text(source),
+        Some("YIELD out AS alias, other")
+    );
+    assert!(yield_clause.where_clause.is_none());
+    assert_eq!(yield_clause.items.len(), 2);
+    assert_yield_item(
+        source,
+        &yield_clause.items[0],
+        "out AS alias",
+        "out",
+        Some("alias"),
+    );
+    assert_yield_item(source, &yield_clause.items[1], "other", "other", None);
+}
+
+#[test]
+fn standalone_yield_accepts_a_contextual_keyword_field() {
+    let source = "CALL example.proc YIELD null AS n, count";
+    let parsed = parse(source).expect("contextual YIELD field should parse");
+    let call = first_call(&parsed);
+    let yield_clause = call
+        .yield_clause
+        .as_ref()
+        .expect("standalone CALL should retain YIELD");
+
+    assert_eq!(yield_clause.items.len(), 2);
+    assert_yield_item(
+        source,
+        &yield_clause.items[0],
+        "null AS n",
+        "null",
+        Some("n"),
+    );
+    assert_yield_item(source, &yield_clause.items[1], "count", "count", None);
+}
+
+#[test]
+fn in_query_yield_items_do_not_absorb_aliases_or_where_clauses() {
+    let source = "CALL example.proc() YIELD out AS alias, other WHERE other > 0 RETURN alias";
+    let parsed = parse(source).expect("in-query procedure call should parse");
+    let call = first_call(&parsed);
+    let yield_clause = call
+        .yield_clause
+        .as_ref()
+        .expect("in-query CALL should retain YIELD");
+
+    assert_eq!(
+        yield_clause.span.text(source),
+        Some("YIELD out AS alias, other WHERE other > 0")
+    );
+    assert_eq!(yield_clause.items.len(), 2);
+    assert_yield_item(
+        source,
+        &yield_clause.items[0],
+        "out AS alias",
+        "out",
+        Some("alias"),
+    );
+    assert_yield_item(source, &yield_clause.items[1], "other", "other", None);
+    assert_eq!(
+        yield_clause
+            .where_clause
+            .as_ref()
+            .and_then(|expression| expression.span.text(source)),
+        Some("other > 0")
     );
 }

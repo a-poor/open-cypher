@@ -36,7 +36,7 @@ fn non_reserved_keywords_are_names_only_when_the_grammar_needs_names() {
         });
     }
 
-    for keyword in [
+    const NON_RESERVED_KEYWORDS: [&str; 62] = [
         "allshortestpaths",
         "all",
         "and",
@@ -99,7 +99,8 @@ fn non_reserved_keywords_are_names_only_when_the_grammar_needs_names() {
         "with",
         "xor",
         "yield",
-    ] {
+    ];
+    for keyword in NON_RESERVED_KEYWORDS {
         let source = format!("RETURN {keyword} AS value");
         parse(&source).unwrap_or_else(|errors| {
             panic!("contextual expression name did not parse: {source}\n{errors:#?}")
@@ -199,25 +200,93 @@ fn non_reserved_keywords_are_names_only_when_the_grammar_needs_names() {
     };
     assert!(matches!(&expression.kind, ExprKind::Variable(name) if name.kind.text == "count"));
 
-    let keywords = [
-        "all", "and", "as", "call", "case", "create", "delete", "exists", "false", "match",
-        "merge", "null", "order", "return", "set", "where", "with", "yield",
-    ];
-    let mut source = String::from("RETURN ");
+    let mut alias_source = String::from("RETURN ");
+    let mut expression_source = String::from("RETURN ");
     let mut index = 0usize;
-    while source.len() < 63 * 1024 {
+    while expression_source.len() < 63 * 1024 {
         if index != 0 {
-            source.push_str(", ");
+            alias_source.push_str(", ");
+            expression_source.push_str(", ");
         }
-        source.push_str("0 AS ");
-        source.push_str(keywords[index % keywords.len()]);
+        let keyword = NON_RESERVED_KEYWORDS[index % NON_RESERVED_KEYWORDS.len()];
+        alias_source.push_str("0 AS ");
+        alias_source.push_str(keyword);
+        expression_source.push_str(keyword);
+        expression_source.push_str(" AS x");
+        expression_source.push_str(&index.to_string());
         index += 1;
     }
-    parse(&source).expect("contextual names must not have a fixed retry ceiling");
+    parse(&alias_source).expect("contextual aliases must not have a fixed retry ceiling");
+    parse(&expression_source)
+        .expect("contextual expression names must not cause unbounded full-parser retries");
     assert!(
-        parse(&format!("{source}, +")).is_err(),
-        "a large malformed contextual-name query must still be rejected"
+        parse(&format!("{alias_source}, +")).is_err(),
+        "a large malformed contextual-alias query must still be rejected"
     );
+    assert!(
+        parse(&format!("{expression_source}, +")).is_err(),
+        "a large malformed contextual-expression query must still be rejected"
+    );
+}
+
+#[test]
+fn contextual_fallback_preserves_aliased_literal_semantics() {
+    let parsed = parse(
+        "RETURN NULL AS n, TRUE AS t, FALSE AS f, INF AS i, INFINITY AS infinity, NAN AS nan, count",
+    )
+    .expect("native literals and a trailing contextual name should coexist");
+    let StatementKind::Query(statement) = &parsed.program.statements[0].kind else {
+        panic!("expected query")
+    };
+    let QueryKind::Regular(query) = &statement.query.kind else {
+        panic!("expected regular query")
+    };
+    let ClauseKind::Return(return_clause) = &query.head.kind.clauses[0].kind else {
+        panic!("expected RETURN")
+    };
+
+    let expressions = return_clause
+        .projection
+        .items
+        .iter()
+        .map(|item| {
+            let ProjectionItemKind::Expression { expression, .. } = &item.kind else {
+                panic!("expected expression projection")
+            };
+            expression
+        })
+        .collect::<Vec<_>>();
+
+    assert!(matches!(
+        expressions[0].kind,
+        ExprKind::Literal(ref literal) if literal.kind == LiteralKind::Null
+    ));
+    for (index, expected) in [(1, true), (2, false)] {
+        assert!(matches!(
+            expressions[index].kind,
+            ExprKind::Literal(ref literal)
+                if literal.kind == LiteralKind::Boolean(expected)
+        ));
+    }
+    for (index, expected) in [(3, "INF"), (4, "INFINITY"), (5, "NAN")] {
+        assert!(matches!(
+            expressions[index].kind,
+            ExprKind::Literal(ref literal)
+                if matches!(&literal.kind, LiteralKind::Float(value) if value.text == expected)
+        ));
+    }
+    assert!(matches!(
+        &expressions[6].kind,
+        ExprKind::Variable(name) if name.kind.text == "count"
+    ));
+}
+
+#[test]
+fn contextual_expression_fuzz_seed_remains_a_valid_query() {
+    let source = include_str!("../fuzz/corpus/parse_strict/contextual_expression_names");
+    parse(source).unwrap_or_else(|errors| {
+        panic!("contextual-expression fuzz seed must remain valid: {errors:#?}")
+    });
 }
 
 #[test]

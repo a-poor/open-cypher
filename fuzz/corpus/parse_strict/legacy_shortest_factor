@@ -1,0 +1,1 @@
+MATCH route = allShortestPaths((source)-[step]->(target)) RETURN route

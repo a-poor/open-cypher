@@ -1,6 +1,8 @@
-use std::hint::black_box;
+use std::{hint::black_box, time::Duration};
 
-use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use criterion::{
+    BenchmarkId, Criterion, SamplingMode, Throughput, criterion_group, criterion_main,
+};
 use open_cypher::{lex, parse, parse_recovering};
 use serde_json::Value;
 
@@ -212,6 +214,111 @@ fn contextual_projection_query(target_bytes: usize) -> String {
     source
 }
 
+fn contextual_expression_query(target_bytes: usize) -> String {
+    let keywords = [
+        "allshortestpaths",
+        "all",
+        "and",
+        "any",
+        "as",
+        "asc",
+        "ascending",
+        "by",
+        "call",
+        "case",
+        "contains",
+        "count",
+        "create",
+        "delete",
+        "desc",
+        "descending",
+        "detach",
+        "distinct",
+        "else",
+        "end",
+        "ends",
+        "exists",
+        "false",
+        "group",
+        "groups",
+        "in",
+        "inf",
+        "infinity",
+        "is",
+        "limit",
+        "match",
+        "merge",
+        "nan",
+        "none",
+        "not",
+        "null",
+        "offset",
+        "on",
+        "optional",
+        "or",
+        "order",
+        "path",
+        "paths",
+        "reduce",
+        "remove",
+        "return",
+        "set",
+        "shortest",
+        "shortestpath",
+        "single",
+        "skip",
+        "starts",
+        "then",
+        "trim",
+        "true",
+        "union",
+        "unwind",
+        "when",
+        "where",
+        "with",
+        "xor",
+        "yield",
+    ];
+    let mut source = String::from("RETURN ");
+    let mut index = 0usize;
+    while source.len() < target_bytes {
+        if index != 0 {
+            source.push_str(", ");
+        }
+        source.push_str(keywords[index % keywords.len()]);
+        source.push_str(" AS x");
+        source.push_str(&index.to_string());
+        index += 1;
+    }
+    source
+}
+
+fn label_predicate_query(target_bytes: usize) -> String {
+    let mut source = String::from("RETURN ");
+    let mut first = true;
+    while source.len() < target_bytes {
+        if !first {
+            source.push_str(", ");
+        }
+        source.push_str("n:A");
+        first = false;
+    }
+    source
+}
+
+fn property_access_query(target_bytes: usize) -> String {
+    let mut source = String::from("RETURN ");
+    let mut first = true;
+    while source.len() < target_bytes {
+        if !first {
+            source.push_str(", ");
+        }
+        source.push_str("n.a");
+        first = false;
+    }
+    source
+}
+
 fn scaling_benchmarks(criterion: &mut Criterion) {
     let inputs = [
         ("approximately_1_kib", list_query(500)),
@@ -220,6 +327,10 @@ fn scaling_benchmarks(criterion: &mut Criterion) {
         (
             "contextual_names_64_kib",
             contextual_projection_query(63 * 1024),
+        ),
+        (
+            "contextual_expression_names_64_kib",
+            contextual_expression_query(63 * 1024),
         ),
     ];
     let mut group = criterion.benchmark_group("scaling");
@@ -252,6 +363,60 @@ fn scaling_benchmarks(criterion: &mut Criterion) {
             bencher.iter(|| black_box(parse(black_box(source))));
         },
     );
+
+    let malformed_contextual_expression = format!("{}, +", contextual_expression_query(63 * 1024));
+    assert!(
+        parse(&malformed_contextual_expression).is_err(),
+        "malformed contextual-expression scaling input must be rejected"
+    );
+    group.throughput(Throughput::Bytes(
+        malformed_contextual_expression.len() as u64
+    ));
+    group.bench_with_input(
+        BenchmarkId::from_parameter("contextual_expression_names_64_kib_malformed"),
+        &malformed_contextual_expression,
+        |bencher, source| {
+            bencher.iter(|| black_box(parse(black_box(source))));
+        },
+    );
+    group.finish();
+}
+
+fn label_predicate_scaling_benchmarks(criterion: &mut Criterion) {
+    const SIZES_KIB: [usize; 5] = [4, 8, 16, 32, 64];
+
+    let mut group = criterion.benchmark_group("label_predicate_scaling");
+    group
+        .sample_size(10)
+        .sampling_mode(SamplingMode::Flat)
+        .warm_up_time(Duration::from_secs(1));
+
+    for size_kib in SIZES_KIB {
+        for (name, source) in [
+            ("label_predicates", label_predicate_query(size_kib * 1024)),
+            (
+                "property_access_control",
+                property_access_query(size_kib * 1024),
+            ),
+        ] {
+            assert!(
+                parse(&source).is_ok(),
+                "label scaling input {name}/{size_kib} KiB must parse"
+            );
+            group.throughput(Throughput::Bytes(source.len() as u64));
+            group.bench_with_input(
+                BenchmarkId::new(name, size_kib),
+                &source,
+                |bencher, source| {
+                    bencher.iter(|| {
+                        let parsed = parse(black_box(source)).expect("validated scaling input");
+                        black_box(parsed)
+                    });
+                },
+            );
+        }
+    }
+
     group.finish();
 }
 
@@ -262,6 +427,7 @@ criterion_group!(
     recovery_benchmarks,
     corpus_benchmark,
     tck_corpus_benchmark,
-    scaling_benchmarks
+    scaling_benchmarks,
+    label_predicate_scaling_benchmarks
 );
 criterion_main!(benches);
