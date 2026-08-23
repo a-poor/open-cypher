@@ -135,10 +135,17 @@ jobs:
         with:
           workspaces: fuzz -> fuzz/target
       - name: Build fuzz target
-        run: cargo +nightly fuzz build ${{ matrix.target }}
+        # cargo-fuzz 0.13.2 can infer musl from its prebuilt installer binary,
+        # but AddressSanitizer requires the runner's dynamically linked libc.
+        run: >-
+          cargo +nightly fuzz build
+          --target x86_64-unknown-linux-gnu
+          ${{ matrix.target }}
       - name: Replay seed and regression corpus
         run: >-
-          cargo +nightly fuzz run ${{ matrix.target }}
+          cargo +nightly fuzz run
+          --target x86_64-unknown-linux-gnu
+          ${{ matrix.target }}
           fuzz/corpus/${{ matrix.target }} --
           -dict=fuzz/cypher.dict
           -runs=0
