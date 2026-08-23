@@ -40,7 +40,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - uses: taiki-e/install-action@cargo-fuzz
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-fuzz@0.13.2
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: fuzz -> fuzz/target
