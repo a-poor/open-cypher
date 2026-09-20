@@ -40,7 +40,6 @@ jobs:
           --shard ${{ matrix.shard }}/${{ strategy.job-total }}
           --sharding round-robin
           --cargo-arg=--locked
-          --jobs 2
           --timeout 180
           --build-timeout 300
       - name: Upload mutation report
