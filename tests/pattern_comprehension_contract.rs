@@ -119,14 +119,37 @@ fn relationship_detail_brackets_and_label_pipes_do_not_split_the_comprehension()
 
 #[test]
 fn label_predicate_inside_comprehension_keeps_exact_offsets() {
-    // FIXME: a bare `WHERE b:Person` inside a comprehension fails to parse
-    // (works at top level and when parenthesized); test the parenthesized
-    // form until that is fixed.
+    let source = "MATCH (a) RETURN [(a)-->(b) WHERE b:Person | b]";
+    let parsed = parse(source).expect("label predicate should parse");
+    let bare = comprehension(first_return_expression(&parsed));
+    let predicate = bare.predicate.as_ref().expect("predicate");
+    assert_eq!(predicate.span.text(source), Some("b:Person"));
+    assert_eq!(bare.projection.span.text(source), Some("b"));
+
     let source = "MATCH (a) RETURN [(a)-->(b) WHERE (b:Person) | b]";
     let parsed = parse(source).expect("label predicate should parse");
-    let comprehension = comprehension(first_return_expression(&parsed));
-    let predicate = comprehension.predicate.as_ref().expect("predicate");
+    let parenthesized = comprehension(first_return_expression(&parsed));
+    let predicate = parenthesized.predicate.as_ref().expect("predicate");
     assert_eq!(predicate.span.text(source), Some("(b:Person)"));
+}
+
+#[test]
+fn label_disjunction_pipes_resolve_against_the_projection_pipe() {
+    // The label scanner must not swallow the projection separator: a `|`
+    // may belong to a label disjunction before it, after it, or be the
+    // separator itself.
+    let source = "MATCH (a) RETURN [(a)-->(b) WHERE b:X|Y | b.name]";
+    let parsed = parse(source).expect("disjunction in WHERE should parse");
+    let in_where = comprehension(first_return_expression(&parsed));
+    let predicate = in_where.predicate.as_ref().expect("predicate");
+    assert_eq!(predicate.span.text(source), Some("b:X|Y"));
+    assert_eq!(in_where.projection.span.text(source), Some("b.name"));
+
+    let source = "MATCH (a) RETURN [(a)-->(b) | b:C|D]";
+    let parsed = parse(source).expect("disjunction in projection should parse");
+    let in_projection = comprehension(first_return_expression(&parsed));
+    assert!(in_projection.predicate.is_none());
+    assert_eq!(in_projection.projection.span.text(source), Some("b:C|D"));
 }
 
 #[test]
@@ -185,6 +208,18 @@ fn nested_fragment_special_tokens_keep_exact_offsets() {
         projection.span.text(source),
         Some("shortestPath((a)-->(b))")
     );
+}
+
+#[test]
+fn pattern_expressions_inside_projections_keep_exact_offsets() {
+    let source = "MATCH (b) RETURN [(a)-->(b) | size((b)-->(c))]";
+    let parsed = parse(source).expect("pattern expression argument should parse");
+    let projection = &comprehension(first_return_expression(&parsed)).projection;
+    assert_eq!(projection.span.text(source), Some("size((b)-->(c))"));
+    let ExprKind::Function(function) = &projection.kind else {
+        panic!("expected a function invocation, got {projection:#?}")
+    };
+    assert_eq!(function.arguments[0].span.text(source), Some("(b)-->(c)"));
 }
 
 #[test]

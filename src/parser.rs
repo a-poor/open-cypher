@@ -924,7 +924,33 @@ fn is_pattern_expression_context(tokens: &[&Token], start: usize) -> bool {
         return true;
     }
 
+    // Like is_label_predicate_context, skip markers inside completed
+    // bracketed/braced constructs (a relationship-type `|` in `[:A|B]` is not
+    // an expression context), while a comprehension's projection `|` in the
+    // construct that still encloses the candidate remains visible.
+    let mut nested_brackets = 0usize;
+    let mut nested_braces = 0usize;
     for (index, token) in tokens[..start].iter().enumerate().rev() {
+        match token.kind {
+            TokenKind::RightBracket => {
+                nested_brackets = nested_brackets.saturating_add(1);
+                continue;
+            }
+            TokenKind::LeftBracket if nested_brackets != 0 => {
+                nested_brackets = nested_brackets.saturating_sub(1);
+                continue;
+            }
+            TokenKind::RightBrace => {
+                nested_braces = nested_braces.saturating_add(1);
+                continue;
+            }
+            TokenKind::LeftBrace if nested_braces != 0 => {
+                nested_braces = nested_braces.saturating_sub(1);
+                continue;
+            }
+            _ if nested_brackets != 0 || nested_braces != 0 => continue,
+            _ => {}
+        }
         if tokens
             .get(index + 1)
             .is_some_and(|next| next.kind == TokenKind::Equal)
@@ -932,6 +958,7 @@ fn is_pattern_expression_context(tokens: &[&Token], start: usize) -> bool {
             continue;
         }
         match token.kind {
+            TokenKind::Pipe => return true,
             TokenKind::Keyword(
                 Keyword::Where
                 | Keyword::Return
@@ -1978,7 +2005,51 @@ pub(crate) fn pattern_comprehension(
     if !lexed.diagnostics.is_empty() {
         return Err(user_parse_error());
     }
-    let tokens = nested_parser_tokens(&lexed.tokens, start);
+    // A `|` at the comprehension's top level may be either the projection
+    // separator or part of a label disjunction (for example `b:X|Y`). Try
+    // each candidate as the separator, left to right; reserving it keeps the
+    // label scanner from consuming it, and the first split that yields a
+    // valid comprehension wins.
+    for pipe_index in top_level_pipe_candidates(&lexed.tokens) {
+        let tokens = nested_parser_tokens(&lexed.tokens, start, Some(pipe_index));
+        if let Ok(expression) = parse_comprehension_tokens(source, start, end, &tokens) {
+            return Ok(expression);
+        }
+    }
+    Err(user_parse_error())
+}
+
+fn top_level_pipe_candidates(tokens: &[Token]) -> Vec<usize> {
+    let mut candidates = Vec::new();
+    let mut brackets = 0usize;
+    let mut parentheses = 0usize;
+    let mut braces = 0usize;
+    for (index, token) in tokens.iter().enumerate() {
+        if token.is_trivia() {
+            continue;
+        }
+        match token.kind {
+            TokenKind::LeftBracket => brackets += 1,
+            TokenKind::RightBracket => brackets = brackets.saturating_sub(1),
+            TokenKind::LeftParen => parentheses += 1,
+            TokenKind::RightParen => parentheses = parentheses.saturating_sub(1),
+            TokenKind::LeftBrace => braces += 1,
+            TokenKind::RightBrace => braces = braces.saturating_sub(1),
+            TokenKind::Pipe if brackets == 1 && parentheses == 0 && braces == 0 => {
+                candidates.push(index);
+            }
+            _ => {}
+        }
+    }
+    candidates
+}
+
+fn parse_comprehension_tokens(
+    source: &str,
+    start: usize,
+    end: usize,
+    tokens: &[SpannedParserToken],
+) -> Result<Expr, LalrpopError> {
     let outer_start = tokens
         .iter()
         .position(|token| token.0 == start && token.1 == ParserToken::LeftBracket)
@@ -1988,7 +2059,7 @@ pub(crate) fn pattern_comprehension(
         .rposition(|token| token.2 == end && token.1 == ParserToken::RightBracket)
         .ok_or_else(user_parse_error)?;
 
-    let pipe = find_top_level_token(&tokens, outer_start + 1, outer_end, ParserToken::Pipe)
+    let pipe = find_top_level_token(tokens, outer_start + 1, outer_end, ParserToken::Pipe)
         .ok_or_else(user_parse_error)?;
 
     let mut pattern_start = outer_start + 1;
@@ -2009,7 +2080,7 @@ pub(crate) fn pattern_comprehension(
         None
     };
 
-    let where_index = find_top_level_token(&tokens, pattern_start, pipe, ParserToken::Where);
+    let where_index = find_top_level_token(tokens, pattern_start, pipe, ParserToken::Where);
     let pattern_end = where_index.unwrap_or(pipe);
     if pattern_start >= pattern_end || pipe + 1 >= outer_end {
         return Err(user_parse_error());
@@ -2048,7 +2119,7 @@ pub(crate) fn pattern_expression(
     if !lexed.diagnostics.is_empty() {
         return Err(user_parse_error());
     }
-    let tokens = nested_parser_tokens(&lexed.tokens, start);
+    let tokens = nested_parser_tokens(&lexed.tokens, start, None);
     let pattern = parse_pattern_fragment(source, &tokens)?;
     Ok(Node::new(ExprKind::Pattern(pattern), Span::new(start, end)))
 }
@@ -2197,15 +2268,33 @@ fn user_parse_error() -> LalrpopError {
     ParseError::User { error: () }
 }
 
-fn nested_parser_tokens(tokens: &[Token], base: usize) -> Vec<SpannedParserToken> {
+/// `reserved_pipe` is a raw index into `tokens` naming a `|` that must come
+/// through as a plain `Pipe` token (a pattern comprehension's projection
+/// separator): forward scans starting before it see a truncated stream so
+/// they cannot consume it, while context checks keep the full view.
+fn nested_parser_tokens(
+    tokens: &[Token],
+    base: usize,
+    reserved_pipe: Option<usize>,
+) -> Vec<SpannedParserToken> {
     let significant = tokens
         .iter()
         .filter(|token| !token.is_trivia())
         .collect::<Vec<_>>();
+    let boundary = reserved_pipe.map(|raw| {
+        tokens[..raw]
+            .iter()
+            .filter(|token| !token.is_trivia())
+            .count()
+    });
     let mut result = Vec::with_capacity(significant.len());
     let mut index = 0;
     while index < significant.len() {
-        if let Some(end) = escaped_parameter_end(&significant, index) {
+        let scan: &[&Token] = match boundary {
+            Some(boundary) if index < boundary => &significant[..boundary],
+            _ => &significant,
+        };
+        if let Some(end) = escaped_parameter_end(scan, index) {
             result.push((
                 base + significant[index].span.start,
                 ParserToken::Parameter,
@@ -2215,7 +2304,7 @@ fn nested_parser_tokens(tokens: &[Token], base: usize) -> Vec<SpannedParserToken
             continue;
         }
         if index != 0 {
-            if let Some(end) = pattern_comprehension_end(&significant, index) {
+            if let Some(end) = pattern_comprehension_end(scan, index) {
                 result.push((
                     base + significant[index].span.start,
                     ParserToken::PatternComprehension,
@@ -2226,7 +2315,7 @@ fn nested_parser_tokens(tokens: &[Token], base: usize) -> Vec<SpannedParserToken
             }
             if significant[index].kind == TokenKind::LeftParen
                 && is_pattern_expression_context(&significant, index)
-                && let Some(end) = pattern_expression_end(&significant, index)
+                && let Some(end) = pattern_expression_end(scan, index)
             {
                 result.push((
                     base + significant[index].span.start,
@@ -2237,7 +2326,7 @@ fn nested_parser_tokens(tokens: &[Token], base: usize) -> Vec<SpannedParserToken
                 continue;
             }
             if is_relationship_label_start(&significant, index)
-                && let Some(end) = relationship_label_end(&significant, index)
+                && let Some(end) = relationship_label_end(scan, index)
             {
                 result.push((
                     base + significant[index].span.start,
@@ -2248,7 +2337,7 @@ fn nested_parser_tokens(tokens: &[Token], base: usize) -> Vec<SpannedParserToken
                 continue;
             }
             if is_label_predicate_context(&significant, index)
-                && let Some(end) = label_predicate_end(&significant, index)
+                && let Some(end) = label_predicate_end(scan, index)
             {
                 result.push((
                     base + significant[index].span.start,
@@ -2261,7 +2350,7 @@ fn nested_parser_tokens(tokens: &[Token], base: usize) -> Vec<SpannedParserToken
         }
 
         if !is_procedure_name_start(&significant, index)
-            && let Some(end) = qualified_function_name_end(&significant, index)
+            && let Some(end) = qualified_function_name_end(scan, index)
         {
             result.push((
                 base + significant[index].span.start,
