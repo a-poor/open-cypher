@@ -32,16 +32,20 @@ jobs:
       - name: Run mutation analysis
         id: mutants
         continue-on-error: true
-        run: >-
-          cargo mutants
-          --package open-cypher
-          --all-features
-          --exclude 'src/generated/**'
-          --shard ${{ matrix.shard }}/${{ strategy.job-total }}
-          --sharding round-robin
-          --cargo-arg=--locked
-          --timeout 180
-          --build-timeout 300
+        # Cap address space at 8 GiB so mutants that allocate unboundedly
+        # (e.g. broken loop counters) die with an allocation failure instead
+        # of OOM-killing the runner VM.
+        run: |
+          ulimit -v 8388608
+          cargo mutants \
+            --package open-cypher \
+            --all-features \
+            --exclude 'src/generated/**' \
+            --shard ${{ matrix.shard }}/${{ strategy.job-total }} \
+            --sharding round-robin \
+            --cargo-arg=--locked \
+            --timeout 180 \
+            --build-timeout 300
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@v7
