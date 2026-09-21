@@ -70,7 +70,7 @@ diagnostic data types:
 
 ```toml
 [dependencies]
-open-cypher = { version = "0.2.0-alpha.2", features = ["serde"] }
+open-cypher = { version = "0.2.0", features = ["serde"] }
 ```
 
 ## Development

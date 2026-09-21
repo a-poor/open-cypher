@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-21
+
+First stable release of the openCypher 2024.3 parser rewrite. Changes since
+`0.2.0-alpha.2`:
+
 ### Fixed
 
 - List comprehensions whose element expressions contain function calls and
@@ -60,6 +65,7 @@ to [Semantic Versioning](https://semver.org/).
 
 - Initial release: a Pest-based openCypher parser prototype.
 
-[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.2.0-alpha.2...HEAD
+[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/a-poor/open-cypher/compare/v0.2.0-alpha.2...v0.2.0
 [0.2.0-alpha.2]: https://github.com/a-poor/open-cypher/compare/v0.2.0-alpha.1...v0.2.0-alpha.2
 [0.2.0-alpha.1]: https://github.com/a-poor/open-cypher/releases/tag/v0.2.0-alpha.1
