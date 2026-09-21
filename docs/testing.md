@@ -94,11 +94,38 @@ parser code, fixtures, benches, and fuzz harnesses. Coverage is a floor and
 should be ratcheted upward; the production and external-corpus gates carry more
 semantic weight.
 
-A weekly `cargo-mutants` job supplements coverage by checking whether tests fail
-when handwritten Rust behavior is changed. Its initial report is informational:
-equivalent and data-model-only mutations must be reviewed before a stable set of
-documented exclusions and a blocking mutation threshold can be established.
-Generated parser source is excluded through `.cargo/mutants.toml`.
-
 Every minimized property or fuzz failure belongs in a deterministic regression
 test before it is considered fixed.
+
+## Mutation testing
+
+The weekly `mutation.yml` workflow runs `cargo-mutants` over the handwritten
+Rust in eight round-robin shards. It mutates one function at a time (flipping
+comparisons, deleting match arms, replacing return values, and so on) and
+records whether the test suite catches the change. The job does not fail on
+survivors; read `missed.txt` in the uploaded `mutants.out` artifact.
+
+Mutants that were applied by hand, survived the full suite plus large
+differential query corpora, and were judged equivalent to the original code
+are listed in the `exclude_re` ledger in `.cargo/mutants.toml`, each with a
+justification in the neighbouring triage tests. Entries pin exact
+`file:line:col` positions, so they go stale when `src/parser.rs` shifts;
+a stale entry simply stops matching and the mutant reappears as missed. It
+never hides a new mutant.
+
+The generated LALRPOP module is skipped through the
+`#[cfg_attr(mutants, mutants::skip)]` marker on `mod generated;` in
+`src/parser.rs`, with `--exclude 'src/generated/**'` as a fallback. Without
+the marker, `cargo mutants --list` spends minutes walking the 5 MB generated
+file; with it, listing finishes in well under a second.
+
+Targeted local runs are the quickest way to check a change:
+
+```console
+cargo mutants --list --package open-cypher
+cargo mutants --package open-cypher -F '<function name>' --jobs 2 --output /tmp/mutants
+```
+
+Pass `--output` outside the tree, since `mutants.out` is not ignored. The
+last full sweep before `0.2.0` had no surviving mutants; the remaining
+timeouts are a stable, known set of mutants that introduce infinite loops.

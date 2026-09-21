@@ -39,31 +39,52 @@ provenance and implementation coverage.
 
 ## Usage
 
+```toml
+[dependencies]
+open-cypher = "0.2.0"
+```
+
+`parse` is the strict entry point. It returns the syntax tree and the full
+token stream, or every diagnostic collected while lexing and parsing.
+
 ```rust
 use open_cypher::parse;
 
-let parsed = parse("MATCH (person:Person) RETURN person.name")?;
+let source = "MATCH (person:Person) WHERE person.age > 30 RETURN person.name";
 
-println!("{:#?}", parsed.program);
-for token in parsed.tokens {
-    println!("{:?} at {:?}", token.kind, token.span);
+match parse(source) {
+    Ok(parsed) => {
+        // Every node carries a byte span into `source`.
+        println!("{:#?}", parsed.program);
+        for token in parsed.tokens {
+            println!("{:?} at {:?}", token.kind, token.span);
+        }
+    }
+    Err(errors) => eprintln!("{}", errors.render(source)),
 }
-# Ok::<(), open_cypher::ParseErrors>(())
 ```
 
-For diagnostic-oriented use, `parse_recovering` always returns a root together
-with diagnostics collected during lexing and parsing. On a syntax error, the
-recovery is whole-input recovery: the root contains an error statement, not a
-locally recovered clause or expression. `lex` exposes every token, including
-whitespace and comments.
+A failed parse renders like this:
 
-The program entry point accepts empty input or one query with an optional
-trailing semicolon. It does not parse multi-statement scripts.
+```text
+error[OCY-P004]: unclosed delimiter `(`
+ --> 1:7
+  |
+1 | MATCH (person:Person RETURN person.name
+  |       ^
+  = help: add the matching delimiter before byte 39
+```
 
-Both of these are intentional scope decisions for the `0.2` series, not gaps
-on the way to `0.2.0`: finer-grained error recovery and multi-statement input
-are candidates for a later minor release and will be introduced without
-breaking the existing `parse` / `parse_recovering` contracts.
+`parse_recovering` always returns a program root together with the
+diagnostics, and `lex` exposes every token, including whitespace and comments.
+The [API documentation](https://docs.rs/open-cypher) walks through each entry
+point, and the `examples/` directory has runnable versions:
+
+```console
+cargo run --example parse
+cargo run --example recover
+cargo run --example lex
+```
 
 The optional `serde` feature implements serialization for public syntax and
 diagnostic data types:
@@ -72,6 +93,63 @@ diagnostic data types:
 [dependencies]
 open-cypher = { version = "0.2.0", features = ["serde"] }
 ```
+
+## Scope
+
+Supported:
+
+- the complete openCypher 2024.3 grammar, with every one of its 377 BNF
+  productions mapped to parser targets and executable witnesses;
+- a small set of deliberate extensions recorded in `spec/DEVIATIONS.toml`,
+  such as `COUNT {}` / `COLLECT {}` subqueries, `!=` and `||`, GQL path modes,
+  label expressions in `SET` / `REMOVE`, and empty or comment-only input.
+
+Out of scope for the `0.2` series:
+
+- semantic analysis and execution: names are not resolved, types are not
+  checked, and some inputs a database would reject at compile time (for
+  example a parameter used as a `MATCH` property map) parse successfully so a
+  later pass can report them;
+- multi-statement scripts: a program holds zero or one query with an optional
+  trailing semicolon;
+- partial recovery: a syntax error yields one whole-input error statement, not
+  locally repaired clauses. Recovery reports at most 32 diagnostics per parse.
+
+Finer-grained recovery and multi-statement input are candidates for a later
+minor release and will be introduced without breaking the existing `parse` /
+`parse_recovering` contracts.
+
+Known parser issues tracked for a later release:
+
+- `a[1:b]` is accepted as an index whose subscript is a label predicate on
+  the literal `1`, instead of being rejected.
+
+## Testing
+
+The test suite is layered so that a green unit test cannot be mistaken for
+language conformance. `docs/testing.md` covers each layer in detail; in short:
+
+- **Unit and integration tests** cover the public API, lexer boundaries,
+  diagnostics and recovery, AST shape and exact spans, historical `0.1` bugs,
+  and a file-backed smoke corpus. Property tests generate random queries
+  (`PROPTEST_CASES=4096` for the expanded run).
+- **TCK syntax projection.** Every query occurrence in the pinned openCypher
+  TCK is extracted into a checked-in JSONL file and parsed in CI, with an
+  explicit reviewed expectation for each `SyntaxError` scenario. This is a
+  syntax projection, not official TCK certification.
+- **Production traceability.** `spec/PRODUCTION_MAP.toml` and
+  `spec/WITNESSES.toml` map all 377 BNF productions to positive and negative
+  witness queries that `cargo xtask spec verify` executes.
+- **Fuzzing.** `fuzz/` holds `cargo-fuzz` targets for lexing, strict parsing,
+  recovery, and grammar-aware query generation. Pull requests replay the
+  checked-in corpora; a scheduled job fuzzes each target for ten minutes.
+  Minimized failures land as deterministic regression tests.
+- **Coverage.** CI enforces 85% line coverage over handwritten source, with
+  generated parser code, fixtures, benches, and fuzz harnesses excluded.
+- **Mutation testing.** A weekly sharded `cargo-mutants` run mutates the
+  handwritten Rust and checks that the tests notice. Mutants that were
+  triaged by hand and found equivalent are listed in `.cargo/mutants.toml`;
+  the last full sweep before `0.2.0` had no surviving mutants.
 
 ## Development
 
