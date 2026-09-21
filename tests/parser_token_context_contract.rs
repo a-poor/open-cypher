@@ -553,6 +553,253 @@ fn count_aliased_as_the_word_as_keeps_counts_expectation() {
     );
 }
 
+// --- is_pattern_expression_context -------------------------------------------
+
+/// The backward scan must step over a completed `[...]` (decrementing its
+/// bracket counter on the matching `[`) and still find the WHERE keyword, so
+/// the `(` after AND starts a pattern expression.
+#[test]
+fn pattern_expression_after_completed_list_literal() {
+    let source = "MATCH (a) WHERE a.p IN [1, 2] AND (a)-->(b) RETURN a";
+    let parsed = parse_ok(source);
+    let where_clause = match_where_clause(&parsed);
+    let ExprKind::Binary { right, .. } = &where_clause.kind else {
+        panic!("expected AND expression, got {where_clause:#?}")
+    };
+    assert!(
+        matches!(right.kind, ExprKind::Pattern(_)),
+        "expected a pattern expression, got {right:#?}"
+    );
+    assert_eq!(right.span.text(source), Some("(a)-->(b)"));
+}
+
+/// The backward scan must step over a completed `{...}` (decrementing its
+/// brace counter on the matching `{`) and still find the WHERE keyword.
+#[test]
+fn pattern_expression_after_completed_map_literal() {
+    let source = "MATCH (a) WHERE {x: 1} = a.p AND (a)-->(b) RETURN a";
+    let parsed = parse_ok(source);
+    let where_clause = match_where_clause(&parsed);
+    let ExprKind::Binary { right, .. } = &where_clause.kind else {
+        panic!("expected AND expression, got {where_clause:#?}")
+    };
+    assert!(
+        matches!(right.kind, ExprKind::Pattern(_)),
+        "expected a pattern expression, got {right:#?}"
+    );
+    assert_eq!(right.span.text(source), Some("(a)-->(b)"));
+}
+
+/// A property map containing CASE (whose WHEN/THEN/ELSE are
+/// expression-context markers) is skipped as a completed braced construct
+/// (its `}` must increment the brace counter): the later `(m)-->(o)` stays a
+/// MATCH pattern, not a pattern expression.
+#[test]
+fn case_inside_property_map_does_not_leak_pattern_expression_context() {
+    let source = "MATCH (n {p: CASE WHEN true THEN 1 ELSE 2 END}), (m)-->(o) RETURN n";
+    let parsed = parse_ok(source);
+    let rendered = format!("{:?}", parsed.program);
+    assert!(
+        !rendered.contains("Pattern(Pattern"),
+        "MATCH path must not become a pattern expression in {rendered}"
+    );
+}
+
+/// The scan stops at the nearest MATCH: an earlier WITH context must not
+/// turn a later MATCH's relationship pattern into a pattern expression.
+#[test]
+fn later_match_relationship_pattern_is_not_a_pattern_expression() {
+    let source = "MATCH (a) WITH a MATCH (b)-->(c) RETURN b";
+    let parsed = parse_ok(source);
+    let rendered = format!("{:?}", parsed.program);
+    assert!(
+        !rendered.contains("Pattern(Pattern"),
+        "MATCH path must not become a pattern expression in {rendered}"
+    );
+}
+
+/// The shortestPath carve-out requires `shortestPath(` immediately before
+/// the candidate `(`: a shortestPath variable two tokens back (followed by a
+/// comma) must not veto the pattern-expression classification.
+#[test]
+fn shortest_path_variable_two_back_does_not_veto_pattern_expression() {
+    let source = "WITH 1 AS shortestPath RETURN shortestPath, (a)-->(b)";
+    let parsed = parse_ok(source);
+    let expression = return_item_expression(&parsed, 1);
+    assert!(
+        matches!(expression.kind, ExprKind::Pattern(_)),
+        "expected a pattern expression, got {expression:#?}"
+    );
+    assert_eq!(expression.span.text(source), Some("(a)-->(b)"));
+}
+
+// --- relationship_syntax_end / pattern_expression_end ------------------------
+
+/// `<` and `-` split by whitespace lex as two tokens; the `(Less, Minus)`
+/// arm of `relationship_syntax_end` must recognize them as a left arrow so
+/// the WHERE operand is one pattern expression, not a `<` comparison.
+#[test]
+fn split_left_arrow_where_operand_is_a_pattern_expression() {
+    let source = "MATCH (a) WHERE (a) < -[:R]- (b) RETURN a";
+    let parsed = parse_ok(source);
+    let where_clause = match_where_clause(&parsed);
+    assert!(
+        matches!(where_clause.kind, ExprKind::Pattern(_)),
+        "expected a pattern expression, got {where_clause:#?}"
+    );
+    assert_eq!(where_clause.span.text(source), Some("(a) < -[:R]- (b)"));
+}
+
+/// A `{m,n}` quantifier after a relationship arrow is consumed by
+/// `pattern_expression_end` (cursor lands one past the closing `}`), so the
+/// whole `(a)-[:R]->{1,2}(b)` is classified as one pattern expression and
+/// the error is reported at the token after it, with binary-operator
+/// expectations.
+#[test]
+fn brace_quantified_pattern_expression_reports_error_after_the_pattern() {
+    let source = "MATCH (a) WHERE (a)-[:R]->{1,2}(b) RETURN a";
+    let outcome = parse_recovering(source);
+    assert_eq!(outcome.diagnostics.len(), 1, "{:#?}", outcome.diagnostics);
+    let diagnostic = &outcome.diagnostics[0];
+    assert_eq!(diagnostic.code, DiagnosticCode::UnexpectedToken);
+    assert_eq!(
+        (diagnostic.primary_span.start, diagnostic.primary_span.end),
+        (35, 41)
+    );
+    assert_eq!(
+        diagnostic.message,
+        "unexpected token `identifier`; expected `AND`, `OR`, or `XOR`"
+    );
+}
+
+/// A `*` quantifier after a relationship arrow advances the scan by one
+/// token before the next node's `(`, with the same observable contract as
+/// the braced quantifier above.
+#[test]
+fn star_quantified_pattern_expression_reports_error_after_the_pattern() {
+    let source = "MATCH (a) WHERE (a)-[:R]->*(b) RETURN a";
+    let outcome = parse_recovering(source);
+    assert_eq!(outcome.diagnostics.len(), 1, "{:#?}", outcome.diagnostics);
+    let diagnostic = &outcome.diagnostics[0];
+    assert_eq!(diagnostic.code, DiagnosticCode::UnexpectedToken);
+    assert_eq!(
+        (diagnostic.primary_span.start, diagnostic.primary_span.end),
+        (31, 37)
+    );
+    assert_eq!(
+        diagnostic.message,
+        "unexpected token `identifier`; expected `AND`, `OR`, or `XOR`"
+    );
+}
+
+// --- is_relationship_label_start / relationship_label_end --------------------
+
+/// A colon after an integer inside brackets is not a relationship label
+/// start (the token before the colon must be symbolic or `[`): `a[1:b]`
+/// parses, with the bracket content classified as a label predicate on the
+/// literal.
+#[test]
+fn integer_before_colon_inside_brackets_is_not_a_relationship_label_start() {
+    let source = "WITH [1,2,3] AS a, 2 AS b RETURN a[1:b]";
+    let parsed = parse_ok(source);
+    let expression = return_item_expression(&parsed, 0);
+    let ExprKind::Index { index, .. } = &expression.kind else {
+        panic!("expected an index expression, got {expression:#?}")
+    };
+    assert_is_label_predicate(index, source, "1:b");
+}
+
+/// `%` after a legacy `|:` separator is not a symbolic name, so
+/// `relationship_label_end` refuses the span and no relationship label
+/// expression token is formed: the diagnostic points at the first colon
+/// with the relationship-detail expectations.
+#[test]
+fn percent_after_legacy_pipe_colon_is_not_a_relationship_label_expression() {
+    let source = "MATCH (a)-[:A|:%]->(b) RETURN a";
+    let outcome = parse_recovering(source);
+    assert_eq!(outcome.diagnostics.len(), 1, "{:#?}", outcome.diagnostics);
+    let diagnostic = &outcome.diagnostics[0];
+    assert_eq!(diagnostic.code, DiagnosticCode::UnexpectedToken);
+    assert_eq!(
+        (diagnostic.primary_span.start, diagnostic.primary_span.end),
+        (11, 12)
+    );
+    assert_eq!(
+        diagnostic.message,
+        "unexpected token `:`; expected `*`, `IS`, `MATCH`, `PATH`, `RETURN`, `WHERE`, `]`, `escaped identifier`, `identifier`, `parameter`, `relationship label expression`, or `{`"
+    );
+}
+
+// --- parse_label_expression / legacy_label_tokens_are_consistent -------------
+
+/// A legacy relationship type list whose first name is a contextual keyword
+/// (`count`) must pass the legacy-consistency check and parse into the two
+/// type names.
+#[test]
+fn legacy_relationship_type_list_with_keyword_first_name_parses() {
+    let source = "MATCH (a)-[:count|:B]->(b) RETURN a";
+    let parsed = parse_ok(source);
+    let rendered = format!("{:?}", parsed.program);
+    assert!(
+        rendered.contains("text: \"count\"") && rendered.contains("text: \"B\""),
+        "expected both relationship type names in {rendered}"
+    );
+}
+
+// --- is_procedure_name_start --------------------------------------------------
+
+/// A CALL procedure name with more than three components: the backward walk
+/// over `name.name.` pairs must step two tokens at a time all the way to
+/// CALL, so no middle segment is misread as a qualified function name.
+#[test]
+fn deep_call_procedure_name_is_not_a_qualified_function() {
+    let source = "CALL a.b.c.d()";
+    let parsed = parse_ok(source);
+    let query = regular_query(&parsed);
+    assert!(
+        matches!(query.head.kind.clauses[0].kind, ClauseKind::Call(_)),
+        "expected a CALL clause"
+    );
+}
+
+// --- is_explicit_set_all ------------------------------------------------------
+
+/// `RETURN all(...)` — ALL followed by `(` is a quantifier invocation, never
+/// the SET-ALL projection token.
+#[test]
+fn return_all_with_parenthesis_is_a_quantifier_not_set_all() {
+    let source = "RETURN all(x IN [1] WHERE x > 0)";
+    let parsed = parse_ok(source);
+    let expression = return_item_expression(&parsed, 0);
+    assert!(
+        matches!(expression.kind, ExprKind::QuantifiedPredicate(_)),
+        "expected a quantified predicate, got {expression:#?}"
+    );
+    assert_eq!(
+        expression.span.text(source),
+        Some("all(x IN [1] WHERE x > 0)")
+    );
+}
+
+// --- contextual_name_signature ------------------------------------------------
+
+/// Two `exists` keywords with the same previous token but different next
+/// tokens have distinct signatures: resolving the bare `exists` must not
+/// also reclassify the `exists {` subquery.
+#[test]
+fn same_keyword_with_different_next_token_keeps_distinct_signatures() {
+    let source = "RETURN 1 + exists, 1 + exists { MATCH (n) }";
+    let parsed = parse_ok(source);
+    assert_eq!(
+        return_item_expression(&parsed, 0).span.text(source),
+        Some("1 + exists")
+    );
+    assert_eq!(
+        return_item_expression(&parsed, 1).span.text(source),
+        Some("1 + exists { MATCH (n) }")
+    );
+}
+
 /// `RETURN any ( ) as` — the followed-by-AS candidate (`)` is followed by
 /// nothing aliasable, so only `any` qualifies via priority one after its
 /// exact/AS checks) drives the retry, and the final diagnostic points at
