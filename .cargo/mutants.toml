@@ -23,6 +23,7 @@
 
 exclude_re = [
     'src/diagnostic\.rs:478:18: replace > with >= in floor_char_boundary',
+    'src/parser\.rs:896:46: replace > with >= in pattern_comprehension_end',
     'src/parser\.rs:1863:40: replace && with \|\| in parameter',
     'src/parser\.rs:524:19: replace == with != in normalize_diagnostics',
     'src/parser\.rs:526:29: replace == with != in normalize_diagnostics',

@@ -180,6 +180,10 @@ fn arithmetic_minuses_and_parens_do_not_fake_an_undirected_pattern() {
         // outer brackets, and neither is one in a WHERE predicate.
         "RETURN [x IN [[(a)-->(b) | b]] | x]",
         "RETURN [x IN xs WHERE (a)-->(b) | x]",
+        // Minuses outside the pattern region (after the projection pipe)
+        // are not relationship dashes, even with parenthesized operands
+        // before the pipe.
+        "RETURN [x IN z + (a) + (b) | c - d - e]",
     ] {
         let parsed = parse(source).expect("list comprehension should parse");
         let expression = first_return_expression(&parsed);
