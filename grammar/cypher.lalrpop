@@ -1268,7 +1268,7 @@ NameToken: bool = {
 
 extern {
     type Location = usize;
-    type Error = ();
+    type Error = usize;
 
     enum ParserToken {
         "identifier" => ParserToken::Identifier,

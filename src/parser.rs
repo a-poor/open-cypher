@@ -201,6 +201,7 @@ fn parse_tokens_with_contextual_names<T>(
         };
 
         let signature = contextual_name_signature(tokens, index);
+        let mut reclassified = Vec::new();
         for peer in 0..tokens.len() {
             if !resolved[peer]
                 && tokens[peer].1.is_contextual_name_candidate()
@@ -208,17 +209,25 @@ fn parse_tokens_with_contextual_names<T>(
             {
                 resolved[peer] = true;
                 contextual[peer].1 = ParserToken::Identifier;
+                reclassified.push(peer);
             }
         }
-        match parse_tokens(&contextual) {
+        let next_error = match parse_tokens(&contextual) {
             Ok(value) => return Ok(value),
-            Err(next_error)
-                if error_location(&next_error) > location
-                    || matches!(error, ParseError::User { .. }) =>
-            {
-                error = next_error;
-            }
-            Err(_) => break,
+            Err(next_error) => next_error,
+        };
+        // A retry counts as progress only when it fails farther along, and
+        // not when it fails on a token this pass just reclassified: that
+        // means the identifier reading is invalid there, so the earlier error
+        // (often inside a nested fragment) is the one worth reporting.
+        let next_location = error_location(&next_error);
+        let lands_on_reclassified = reclassified
+            .iter()
+            .any(|&peer| (tokens[peer].0..tokens[peer].2).contains(&next_location));
+        if next_location > location && !lands_on_reclassified {
+            error = next_error;
+        } else {
+            break;
         }
     }
 
@@ -305,11 +314,6 @@ fn parse_program(source: &str, tokens: &[SpannedParserToken]) -> Result<Program,
 
     let (head, unions) = match parse_regular_query(source, query_tokens) {
         Ok(query) => query,
-        Err(regular_error)
-            if !top_level_indices(query_tokens, |token| token == ParserToken::Union).is_empty() =>
-        {
-            return Err(regular_error);
-        }
         Err(regular_error) => {
             let input = query_tokens.iter().copied().map(Ok);
             let clause = match generated::StandaloneCallRootParser::new().parse(source, input) {
@@ -466,7 +470,7 @@ fn error_location(error: &LalrpopError) -> usize {
             *location
         }
         ParseError::UnrecognizedToken { token, .. } | ParseError::ExtraToken { token } => token.0,
-        ParseError::User { .. } => 0,
+        ParseError::User { error: location } => *location,
     }
 }
 
@@ -614,7 +618,8 @@ fn collect_delimiter_diagnostics(
     }
 }
 
-type LalrpopError = ParseError<usize, ParserToken, ()>;
+/// The user error payload is the source offset the nested fragment failed at.
+type LalrpopError = ParseError<usize, ParserToken, usize>;
 
 fn parse_diagnostic(source: &str, error: LalrpopError) -> Diagnostic {
     match error {
@@ -659,10 +664,10 @@ fn parse_diagnostic(source: &str, error: LalrpopError) -> Diagnostic {
             format!("extra token {token} after the end of the statement"),
             Span::new(start, end),
         ),
-        ParseError::User { .. } => Diagnostic::error(
+        ParseError::User { error: location } => Diagnostic::error(
             DiagnosticCode::UnexpectedToken,
             "input does not satisfy the selected syntax production",
-            Span::empty(source.len()),
+            Span::empty(location.min(source.len())),
         ),
     }
 }
@@ -1987,7 +1992,7 @@ pub(crate) fn list_comprehension_expr(
     let ComprehensionSource::Comprehension { variable, list } =
         split_comprehension_source(source_expression)
     else {
-        return Err(user_parse_error());
+        return Err(user_parse_error(start));
     };
     Ok(Node::new(
         ExprKind::ListComprehension(ListComprehension {
@@ -2039,24 +2044,29 @@ pub(crate) fn pattern_comprehension(
     end: usize,
 ) -> Result<Expr, LalrpopError> {
     let Some(fragment) = source.get(start..end) else {
-        return Err(user_parse_error());
+        return Err(user_parse_error(start));
     };
     let lexed = lexer::lex(fragment);
     if !lexed.diagnostics.is_empty() {
-        return Err(user_parse_error());
+        return Err(user_parse_error(start));
     }
     // A `|` at the comprehension's top level may be either the projection
     // separator or part of a label disjunction (for example `b:X|Y`). Try
     // each candidate as the separator, left to right; reserving it keeps the
     // label scanner from consuming it, and the first split that yields a
     // valid comprehension wins.
+    // When every split fails, report the one that got farthest: it is the
+    // most plausible reading, and its error points into the fragment instead
+    // of at the comprehension as a whole.
+    let mut best_error = None;
     for pipe_index in top_level_pipe_candidates(&lexed.tokens) {
         let tokens = nested_parser_tokens(&lexed.tokens, start, Some(pipe_index));
-        if let Ok(expression) = parse_comprehension_tokens(source, start, end, &tokens) {
-            return Ok(expression);
+        match parse_comprehension_tokens(source, start, end, &tokens) {
+            Ok(expression) => return Ok(expression),
+            Err(error) => retain_farthest_error(&mut best_error, error),
         }
     }
-    Err(user_parse_error())
+    Err(best_error.unwrap_or_else(|| user_parse_error(start)))
 }
 
 fn top_level_pipe_candidates(tokens: &[Token]) -> Vec<usize> {
@@ -2093,14 +2103,14 @@ fn parse_comprehension_tokens(
     let outer_start = tokens
         .iter()
         .position(|token| token.0 == start && token.1 == ParserToken::LeftBracket)
-        .ok_or_else(user_parse_error)?;
+        .ok_or_else(|| user_parse_error(start))?;
     let outer_end = tokens
         .iter()
         .rposition(|token| token.2 == end && token.1 == ParserToken::RightBracket)
-        .ok_or_else(user_parse_error)?;
+        .ok_or_else(|| user_parse_error(start))?;
 
     let pipe = find_top_level_token(tokens, outer_start + 1, outer_end, ParserToken::Pipe)
-        .ok_or_else(user_parse_error)?;
+        .ok_or_else(|| user_parse_error(start))?;
 
     let mut pattern_start = outer_start + 1;
     let binding = if pattern_start + 1 < pipe
@@ -2122,8 +2132,11 @@ fn parse_comprehension_tokens(
 
     let where_index = find_top_level_token(tokens, pattern_start, pipe, ParserToken::Where);
     let pattern_end = where_index.unwrap_or(pipe);
-    if pattern_start >= pattern_end || pipe + 1 >= outer_end {
-        return Err(user_parse_error());
+    if pattern_start >= pattern_end {
+        return Err(user_parse_error(tokens[pattern_end].0));
+    }
+    if pipe + 1 >= outer_end {
+        return Err(user_parse_error(tokens[outer_end].0));
     }
     let pattern = parse_pattern_fragment(source, &tokens[pattern_start..pattern_end])?;
     let predicate = match where_index {
@@ -2131,7 +2144,7 @@ fn parse_comprehension_tokens(
             source,
             &tokens[index + 1..pipe],
         )?)),
-        Some(_) => return Err(user_parse_error()),
+        Some(_) => return Err(user_parse_error(tokens[pipe].0)),
         None => None,
     };
     let projection = parse_expr_fragment(source, &tokens[pipe + 1..outer_end])?;
@@ -2153,11 +2166,11 @@ pub(crate) fn pattern_expression(
     end: usize,
 ) -> Result<Expr, LalrpopError> {
     let Some(fragment) = source.get(start..end) else {
-        return Err(user_parse_error());
+        return Err(user_parse_error(start));
     };
     let lexed = lexer::lex(fragment);
     if !lexed.diagnostics.is_empty() {
-        return Err(user_parse_error());
+        return Err(user_parse_error(start));
     }
     let tokens = nested_parser_tokens(&lexed.tokens, start, None);
     let pattern = parse_pattern_fragment(source, &tokens)?;
@@ -2206,11 +2219,11 @@ fn parse_label_expression(
     normalize_legacy_relationship: bool,
 ) -> Result<LabelExpression, LalrpopError> {
     let Some(fragment) = source.get(start..end) else {
-        return Err(user_parse_error());
+        return Err(user_parse_error(start));
     };
     let lexed = lexer::lex(fragment);
     if !lexed.diagnostics.is_empty() {
-        return Err(user_parse_error());
+        return Err(user_parse_error(start));
     }
     let mut tokens = lexed
         .tokens
@@ -2225,7 +2238,7 @@ fn parse_label_expression(
         })
         .collect::<Vec<_>>();
     if normalize_legacy_relationship && !legacy_label_tokens_are_consistent(&tokens) {
-        return Err(user_parse_error());
+        return Err(user_parse_error(start));
     }
     let mut normalized = Vec::with_capacity(tokens.len());
     for (index, mut token) in tokens.drain(..).enumerate() {
@@ -2304,8 +2317,8 @@ fn legacy_label_tokens_are_consistent(tokens: &[SpannedParserToken]) -> bool {
     true
 }
 
-fn user_parse_error() -> LalrpopError {
-    ParseError::User { error: () }
+fn user_parse_error(location: usize) -> LalrpopError {
+    ParseError::User { error: location }
 }
 
 /// `reserved_pipe` is a raw index into `tokens` naming a `|` that must come

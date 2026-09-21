@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // auto-generated: "lalrpop 0.23.1"
-// sha3: 97b5d41c74557c9a5e77b69b76536aa940d9c99f27c9b9ed7ba933bb943cc7ac
+// sha3: 84f6923a31fae508e72e835cf3b6883740f013ad6ba6cd51d9738e086f1a2279
 use crate::ast::*;
 use crate::parser::{
     ComparisonSuffix, ParserToken, PostfixSuffix, RelationshipDetail, fold_binary, fold_comparison,
@@ -3628,7 +3628,7 @@ mod __parse__ClauseRoot {
     where 
     {
         type Location = usize;
-        type Error = ();
+        type Error = usize;
         type Token = ParserToken;
         type TokenIndex = usize;
         type Symbol = __Symbol<>;
@@ -7793,7 +7793,7 @@ mod __parse__ClauseRoot {
             &self,
             source: &'input str,
             __tokens0: __TOKENS,
-        ) -> Result<Clause, __lalrpop_util::ParseError<usize, ParserToken, ()>>
+        ) -> Result<Clause, __lalrpop_util::ParseError<usize, ParserToken, usize>>
         {
             let __tokens = __tokens0.into_iter();
             let mut __tokens = __tokens.map(|t| __ToTriple::to_triple(t));
@@ -7848,7 +7848,7 @@ mod __parse__ClauseRoot {
         __states: &mut alloc::vec::Vec<i16>,
         __symbols: &mut alloc::vec::Vec<(usize,__Symbol<>,usize)>,
         _: core::marker::PhantomData<(&'input ())>,
-    ) -> Option<Result<Clause,__lalrpop_util::ParseError<usize, ParserToken, ()>>>
+    ) -> Option<Result<Clause,__lalrpop_util::ParseError<usize, ParserToken, usize>>>
     {
         let (__pop_states, __nonterminal) = match __action {
             0 => {
@@ -26165,7 +26165,7 @@ mod __parse__ExprFragment {
     where 
     {
         type Location = usize;
-        type Error = ();
+        type Error = usize;
         type Token = ParserToken;
         type TokenIndex = usize;
         type Symbol = __Symbol<>;
@@ -30330,7 +30330,7 @@ mod __parse__ExprFragment {
             &self,
             source: &'input str,
             __tokens0: __TOKENS,
-        ) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>>
+        ) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>>
         {
             let __tokens = __tokens0.into_iter();
             let mut __tokens = __tokens.map(|t| __ToTriple::to_triple(t));
@@ -30385,7 +30385,7 @@ mod __parse__ExprFragment {
         __states: &mut alloc::vec::Vec<i16>,
         __symbols: &mut alloc::vec::Vec<(usize,__Symbol<>,usize)>,
         _: core::marker::PhantomData<(&'input ())>,
-    ) -> Option<Result<Expr,__lalrpop_util::ParseError<usize, ParserToken, ()>>>
+    ) -> Option<Result<Expr,__lalrpop_util::ParseError<usize, ParserToken, usize>>>
     {
         let (__pop_states, __nonterminal) = match __action {
             0 => {
@@ -45549,7 +45549,7 @@ mod __parse__LabelPredicateFragment {
     where 
     {
         type Location = usize;
-        type Error = ();
+        type Error = usize;
         type Token = ParserToken;
         type TokenIndex = usize;
         type Symbol = __Symbol<>;
@@ -49714,7 +49714,7 @@ mod __parse__LabelPredicateFragment {
             &self,
             source: &'input str,
             __tokens0: __TOKENS,
-        ) -> Result<LabelExpression, __lalrpop_util::ParseError<usize, ParserToken, ()>>
+        ) -> Result<LabelExpression, __lalrpop_util::ParseError<usize, ParserToken, usize>>
         {
             let __tokens = __tokens0.into_iter();
             let mut __tokens = __tokens.map(|t| __ToTriple::to_triple(t));
@@ -49769,7 +49769,7 @@ mod __parse__LabelPredicateFragment {
         __states: &mut alloc::vec::Vec<i16>,
         __symbols: &mut alloc::vec::Vec<(usize,__Symbol<>,usize)>,
         _: core::marker::PhantomData<(&'input ())>,
-    ) -> Option<Result<LabelExpression,__lalrpop_util::ParseError<usize, ParserToken, ()>>>
+    ) -> Option<Result<LabelExpression,__lalrpop_util::ParseError<usize, ParserToken, usize>>>
     {
         let (__pop_states, __nonterminal) = match __action {
             0 => {
@@ -68108,7 +68108,7 @@ mod __parse__PatternFragment {
     where 
     {
         type Location = usize;
-        type Error = ();
+        type Error = usize;
         type Token = ParserToken;
         type TokenIndex = usize;
         type Symbol = __Symbol<>;
@@ -72273,7 +72273,7 @@ mod __parse__PatternFragment {
             &self,
             source: &'input str,
             __tokens0: __TOKENS,
-        ) -> Result<Pattern, __lalrpop_util::ParseError<usize, ParserToken, ()>>
+        ) -> Result<Pattern, __lalrpop_util::ParseError<usize, ParserToken, usize>>
         {
             let __tokens = __tokens0.into_iter();
             let mut __tokens = __tokens.map(|t| __ToTriple::to_triple(t));
@@ -72328,7 +72328,7 @@ mod __parse__PatternFragment {
         __states: &mut alloc::vec::Vec<i16>,
         __symbols: &mut alloc::vec::Vec<(usize,__Symbol<>,usize)>,
         _: core::marker::PhantomData<(&'input ())>,
-    ) -> Option<Result<Pattern,__lalrpop_util::ParseError<usize, ParserToken, ()>>>
+    ) -> Option<Result<Pattern,__lalrpop_util::ParseError<usize, ParserToken, usize>>>
     {
         let (__pop_states, __nonterminal) = match __action {
             0 => {
@@ -90690,7 +90690,7 @@ mod __parse__StandaloneCallRoot {
     where 
     {
         type Location = usize;
-        type Error = ();
+        type Error = usize;
         type Token = ParserToken;
         type TokenIndex = usize;
         type Symbol = __Symbol<>;
@@ -94855,7 +94855,7 @@ mod __parse__StandaloneCallRoot {
             &self,
             source: &'input str,
             __tokens0: __TOKENS,
-        ) -> Result<Clause, __lalrpop_util::ParseError<usize, ParserToken, ()>>
+        ) -> Result<Clause, __lalrpop_util::ParseError<usize, ParserToken, usize>>
         {
             let __tokens = __tokens0.into_iter();
             let mut __tokens = __tokens.map(|t| __ToTriple::to_triple(t));
@@ -94910,7 +94910,7 @@ mod __parse__StandaloneCallRoot {
         __states: &mut alloc::vec::Vec<i16>,
         __symbols: &mut alloc::vec::Vec<(usize,__Symbol<>,usize)>,
         _: core::marker::PhantomData<(&'input ())>,
-    ) -> Option<Result<Clause,__lalrpop_util::ParseError<usize, ParserToken, ()>>>
+    ) -> Option<Result<Clause,__lalrpop_util::ParseError<usize, ParserToken, usize>>>
     {
         let (__pop_states, __nonterminal) = match __action {
             0 => {
@@ -112145,7 +112145,7 @@ fn __action126<'input>(
     (_, l, _): (usize, usize, usize),
     (_, _, _): (usize, ParserToken, usize),
     (_, r, _): (usize, usize, usize),
-) -> Result<LabelExpression, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<LabelExpression, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     relationship_label_expression(source, l, r)
 }
 
@@ -112855,7 +112855,7 @@ fn __action169<'input>(
     (_, l, _): (usize, usize, usize),
     (_, _, _): (usize, ParserToken, usize),
     (_, r, _): (usize, usize, usize),
-) -> Result<ComparisonSuffix, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<ComparisonSuffix, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     label_comparison_suffix(source, l, r)
 }
 
@@ -113613,7 +113613,7 @@ fn __action221<'input>(
     (_, l, _): (usize, usize, usize),
     (_, _, _): (usize, ParserToken, usize),
     (_, r, _): (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     pattern_expression(source, l, r)
 }
 
@@ -114184,7 +114184,7 @@ fn __action252<'input>(
     (_, projection, _): (usize, Option<Expr>, usize),
     (_, _, _): (usize, ParserToken, usize),
     (_, r, _): (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     list_comprehension_expr(l, r, source_expression, Some(predicate), projection)
 }
 
@@ -114203,7 +114203,7 @@ fn __action253<'input>(
     (_, projection, _): (usize, Expr, usize),
     (_, _, _): (usize, ParserToken, usize),
     (_, r, _): (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     list_comprehension_expr(l, r, source_expression, None, Some(projection))
 }
 
@@ -114405,7 +114405,7 @@ fn __action262<'input>(
     (_, l, _): (usize, usize, usize),
     (_, _, _): (usize, ParserToken, usize),
     (_, r, _): (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     pattern_comprehension(source, l, r)
 }
 
@@ -118841,7 +118841,7 @@ fn __action545<'input>(
     __5: (usize, Expr, usize),
     __6: (usize, ParserToken, usize),
     __7: (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __4.0;
     let __end0 = __5.2;
     let __temp0 = __action544(source, __4, __5);
@@ -118863,7 +118863,7 @@ fn __action546<'input>(
     __3: (usize, Expr, usize),
     __4: (usize, ParserToken, usize),
     __5: (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __3.2;
     let __end0 = __4.0;
     let __temp0 = __action299(source, &__start0, &__end0);
@@ -119119,7 +119119,7 @@ fn __action559<'input>(
     source: &'input str,
     __0: (usize, ParserToken, usize),
     __1: (usize, usize, usize),
-) -> Result<ComparisonSuffix, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<ComparisonSuffix, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.0;
     let __end0 = __0.0;
     let __temp0 = __action429(source, &__start0, &__end0);
@@ -119862,7 +119862,7 @@ fn __action596<'input>(
     __4: (usize, Expr, usize),
     __5: (usize, ParserToken, usize),
     __6: (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.0;
     let __end0 = __0.0;
     let __temp0 = __action429(source, &__start0, &__end0);
@@ -119883,7 +119883,7 @@ fn __action597<'input>(
     __2: (usize, Expr, usize),
     __3: (usize, ParserToken, usize),
     __4: (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.0;
     let __end0 = __0.0;
     let __temp0 = __action429(source, &__start0, &__end0);
@@ -119905,7 +119905,7 @@ fn __action598<'input>(
     __3: (usize, Expr, usize),
     __4: (usize, ParserToken, usize),
     __5: (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.0;
     let __end0 = __0.0;
     let __temp0 = __action429(source, &__start0, &__end0);
@@ -121031,7 +121031,7 @@ fn __action656<'input>(
     source: &'input str,
     __0: (usize, ParserToken, usize),
     __1: (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.0;
     let __end0 = __0.0;
     let __temp0 = __action429(source, &__start0, &__end0);
@@ -121049,7 +121049,7 @@ fn __action657<'input>(
     source: &'input str,
     __0: (usize, ParserToken, usize),
     __1: (usize, usize, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.0;
     let __end0 = __0.0;
     let __temp0 = __action429(source, &__start0, &__end0);
@@ -121449,7 +121449,7 @@ fn __action677<'input>(
     source: &'input str,
     __0: (usize, ParserToken, usize),
     __1: (usize, usize, usize),
-) -> Result<LabelExpression, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<LabelExpression, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.0;
     let __end0 = __0.0;
     let __temp0 = __action429(source, &__start0, &__end0);
@@ -123120,7 +123120,7 @@ fn __action748<'input>(
 fn __action749<'input>(
     source: &'input str,
     __0: (usize, ParserToken, usize),
-) -> Result<ComparisonSuffix, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<ComparisonSuffix, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.2;
     let __end0 = __0.2;
     let __temp0 = __action426(source, &__start0, &__end0);
@@ -123804,7 +123804,7 @@ fn __action786<'input>(
     __3: (usize, ParserToken, usize),
     __4: (usize, Expr, usize),
     __5: (usize, ParserToken, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __5.2;
     let __end0 = __5.2;
     let __temp0 = __action426(source, &__start0, &__end0);
@@ -123824,7 +123824,7 @@ fn __action787<'input>(
     __1: (usize, Expr, usize),
     __2: (usize, Expr, usize),
     __3: (usize, ParserToken, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __3.2;
     let __end0 = __3.2;
     let __temp0 = __action426(source, &__start0, &__end0);
@@ -123845,7 +123845,7 @@ fn __action788<'input>(
     __2: (usize, ParserToken, usize),
     __3: (usize, Expr, usize),
     __4: (usize, ParserToken, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __4.2;
     let __end0 = __4.2;
     let __temp0 = __action426(source, &__start0, &__end0);
@@ -124846,7 +124846,7 @@ fn __action845<'input>(
 fn __action846<'input>(
     source: &'input str,
     __0: (usize, ParserToken, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.2;
     let __end0 = __0.2;
     let __temp0 = __action426(source, &__start0, &__end0);
@@ -124863,7 +124863,7 @@ fn __action846<'input>(
 fn __action847<'input>(
     source: &'input str,
     __0: (usize, ParserToken, usize),
-) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<Expr, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.2;
     let __end0 = __0.2;
     let __temp0 = __action426(source, &__start0, &__end0);
@@ -125293,7 +125293,7 @@ fn __action869<'input>(
 fn __action870<'input>(
     source: &'input str,
     __0: (usize, ParserToken, usize),
-) -> Result<LabelExpression, __lalrpop_util::ParseError<usize, ParserToken, ()>> {
+) -> Result<LabelExpression, __lalrpop_util::ParseError<usize, ParserToken, usize>> {
     let __start0 = __0.2;
     let __end0 = __0.2;
     let __temp0 = __action426(source, &__start0, &__end0);
@@ -132974,21 +132974,21 @@ fn __action1218<'input>(
 pub trait __ToTriple<'input> {
     fn to_triple(
         self,
-    ) -> Result<(usize, ParserToken, usize), __lalrpop_util::ParseError<usize, ParserToken, ()>>;
+    ) -> Result<(usize, ParserToken, usize), __lalrpop_util::ParseError<usize, ParserToken, usize>>;
 }
 
 impl<'input> __ToTriple<'input> for (usize, ParserToken, usize) {
     fn to_triple(
         self,
-    ) -> Result<(usize, ParserToken, usize), __lalrpop_util::ParseError<usize, ParserToken, ()>>
+    ) -> Result<(usize, ParserToken, usize), __lalrpop_util::ParseError<usize, ParserToken, usize>>
     {
         Ok(self)
     }
 }
-impl<'input> __ToTriple<'input> for Result<(usize, ParserToken, usize), ()> {
+impl<'input> __ToTriple<'input> for Result<(usize, ParserToken, usize), usize> {
     fn to_triple(
         self,
-    ) -> Result<(usize, ParserToken, usize), __lalrpop_util::ParseError<usize, ParserToken, ()>>
+    ) -> Result<(usize, ParserToken, usize), __lalrpop_util::ParseError<usize, ParserToken, usize>>
     {
         self.map_err(|error| __lalrpop_util::ParseError::User { error })
     }

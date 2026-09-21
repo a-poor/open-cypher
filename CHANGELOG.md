@@ -6,6 +6,22 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Standalone procedure calls whose procedure name or `YIELD` item is a
+  non-reserved keyword such as `union` (`CALL union YIELD *`,
+  `CALL foo YIELD union`) now parse. Any top-level `UNION` token used to
+  suppress the standalone-`CALL` fallback, which is the only rule that
+  accepts `YIELD *` or an argument-less call.
+
+### Changed
+
+- Syntax errors inside pattern expressions, pattern comprehensions, and
+  label expressions are now reported at the offending token, for example the
+  graph pattern quantifier in `(a)-[:R]->{1,2}(b)`. They were previously
+  reported at the start of the statement or dragged onto an unrelated later
+  keyword by the contextual-name retry.
+
 ## [0.2.0] - 2026-09-21
 
 First stable release of the openCypher 2024.3 parser rewrite. Changes since

@@ -2,7 +2,7 @@
 //! otherwise change: string decoding, quote styles, nested block comments,
 //! double-quoted string lexing, keyword lookup for 9- and 10-byte keywords,
 //! `Program::is_empty`, `Span::is_empty`, farthest-error selection, and the
-//! standalone-CALL fallback's interaction with `UNION` tokens.
+//! standalone-CALL fallback's treatment of `UNION` as an ordinary name.
 
 use open_cypher::ast::{
     ClauseKind, Expr, ExprKind, LiteralKind, ParameterName, ProjectionItemKind, QueryKind,
@@ -204,17 +204,43 @@ fn union_inside_call_arguments_is_not_top_level() {
     assert!(call.yield_clause.as_ref().is_some_and(|yield_| yield_.all));
 }
 
-// src/parser.rs: replace the UNION match guard in parse_program with false
+// src/parser.rs: the standalone-CALL fallback must run even when the query
+// contains a top-level UNION token. UNION is a non-reserved word in
+// openCypher 2024.3, so it can be the procedure name or a YIELD item; the
+// fallback is the only rule that accepts `YIELD *` or an argument-less call.
 #[test]
-fn top_level_union_disables_the_standalone_call_fallback() {
-    // Pins current behavior: a top-level UNION token after a failed regular
-    // parse suppresses the standalone-CALL fallback, so the reserved keyword
-    // is not silently accepted as a procedure name here. (Note the adjacent
-    // inconsistency: `CALL union` itself parses via contextual retries.)
-    assert!(parse("CALL union").is_ok());
-    let outcome = parse_recovering("CALL union YIELD *");
+fn union_is_an_ordinary_name_in_a_standalone_call() {
+    for (source, yields_all) in [
+        ("CALL union", false),
+        ("CALL union YIELD *", true),
+        ("CALL union YIELD x", false),
+        ("CALL union.foo YIELD *", true),
+        ("CALL foo YIELD union", false),
+    ] {
+        let parsed = parse(source)
+            .unwrap_or_else(|errors| panic!("{source} should parse:\n{}", errors.render(source)));
+        let StatementKind::Query(statement) = &parsed.program.statements[0].kind else {
+            panic!("{source}: expected a query statement");
+        };
+        let QueryKind::Regular(query) = &statement.query.kind else {
+            panic!("{source}: expected a regular query");
+        };
+        assert!(query.unions.is_empty(), "{source}: parsed as a union query");
+        let ClauseKind::Call(call) = &query.head.kind.clauses[0].kind else {
+            panic!("{source}: expected a CALL clause");
+        };
+        assert_eq!(
+            call.yield_clause.as_ref().is_some_and(|yield_| yield_.all),
+            yields_all,
+            "{source}"
+        );
+    }
+
+    // A genuine union whose right branch uses the standalone-only `YIELD *`
+    // is still rejected, and the diagnostic stays on the regular parse.
+    let outcome = parse_recovering("RETURN 1 UNION CALL foo() YIELD *");
     assert_eq!(outcome.diagnostics.len(), 1, "{:#?}", outcome.diagnostics);
     let diagnostic = &outcome.diagnostics[0];
     assert_eq!(diagnostic.code, DiagnosticCode::UnexpectedToken);
-    assert_eq!(diagnostic.primary_span, Span::new(11, 16));
+    assert_eq!(diagnostic.primary_span, Span::new(9, 14));
 }

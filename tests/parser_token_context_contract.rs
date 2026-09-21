@@ -652,11 +652,11 @@ fn split_left_arrow_where_operand_is_a_pattern_expression() {
 
 /// A `{m,n}` quantifier after a relationship arrow is consumed by
 /// `pattern_expression_end` (cursor lands one past the closing `}`), so the
-/// whole `(a)-[:R]->{1,2}(b)` is classified as one pattern expression and
-/// the error is reported at the token after it, with binary-operator
-/// expectations.
+/// whole `(a)-[:R]->{1,2}(b)` is classified as one pattern expression. The
+/// nested pattern parse then rejects the quantifier itself: the diagnostic
+/// sits on the `{` and expects the next node's `(`, not a binary operator.
 #[test]
-fn brace_quantified_pattern_expression_reports_error_after_the_pattern() {
+fn brace_quantified_pattern_expression_reports_error_at_the_quantifier() {
     let source = "MATCH (a) WHERE (a)-[:R]->{1,2}(b) RETURN a";
     let outcome = parse_recovering(source);
     assert_eq!(outcome.diagnostics.len(), 1, "{:#?}", outcome.diagnostics);
@@ -664,19 +664,16 @@ fn brace_quantified_pattern_expression_reports_error_after_the_pattern() {
     assert_eq!(diagnostic.code, DiagnosticCode::UnexpectedToken);
     assert_eq!(
         (diagnostic.primary_span.start, diagnostic.primary_span.end),
-        (35, 41)
+        (26, 27)
     );
-    assert_eq!(
-        diagnostic.message,
-        "unexpected token `identifier`; expected `AND`, `OR`, or `XOR`"
-    );
+    assert_eq!(diagnostic.message, "unexpected token `{`; expected `(`");
 }
 
 /// A `*` quantifier after a relationship arrow advances the scan by one
 /// token before the next node's `(`, with the same observable contract as
 /// the braced quantifier above.
 #[test]
-fn star_quantified_pattern_expression_reports_error_after_the_pattern() {
+fn star_quantified_pattern_expression_reports_error_at_the_quantifier() {
     let source = "MATCH (a) WHERE (a)-[:R]->*(b) RETURN a";
     let outcome = parse_recovering(source);
     assert_eq!(outcome.diagnostics.len(), 1, "{:#?}", outcome.diagnostics);
@@ -684,12 +681,9 @@ fn star_quantified_pattern_expression_reports_error_after_the_pattern() {
     assert_eq!(diagnostic.code, DiagnosticCode::UnexpectedToken);
     assert_eq!(
         (diagnostic.primary_span.start, diagnostic.primary_span.end),
-        (31, 37)
+        (26, 27)
     );
-    assert_eq!(
-        diagnostic.message,
-        "unexpected token `identifier`; expected `AND`, `OR`, or `XOR`"
-    );
+    assert_eq!(diagnostic.message, "unexpected token `*`; expected `(`");
 }
 
 // --- is_relationship_label_start / relationship_label_end --------------------
