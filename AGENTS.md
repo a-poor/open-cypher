@@ -54,6 +54,15 @@ cargo xtask tck verify && cargo xtask tck check
   regression test (strict-parse crash inputs go in
   `tests/fixtures/regressions/parse_strict`, which doubles as a fuzz corpus).
 - `PROPTEST_CASES=4096` runs the expanded property suite.
+- Mutation testing: targeted local runs are fine (for example
+  `cargo mutants --package open-cypher -F '<function name>' --jobs 2`, with
+  `--output` outside the tree since `mutants.out` is not ignored); the
+  definitive sweep is the `mutation.yml` workflow. `.cargo/mutants.toml`
+  holds the ledger of verified-equivalent mutants (line-number pinned:
+  refresh it after editing `src/parser.rs`). `cargo mutants --list
+  --package open-cypher` should finish in well under a second; if it takes
+  minutes, the `mutants::skip` marker on `mod generated;` in `src/parser.rs`
+  is gone.
 
 ## Fuzzing
 

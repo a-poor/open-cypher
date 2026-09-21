@@ -18,6 +18,13 @@ use crate::lexer;
 use crate::span::Span;
 use crate::token::{Keyword, Token, TokenKind};
 
+// `cfg(mutants)` is declared in Cargo.toml but never set, so rustc drops this
+// attribute and no `mutants` dependency is needed (an attribute macro could
+// not be applied to an out-of-line module anyway). cargo-mutants reads the
+// attribute textually and skips the module before loading the 5 MB LALRPOP
+// output; without it every run spends minutes discovering mutants in the
+// generated file only to discard them via the exclude glob afterwards.
+#[cfg_attr(mutants, mutants::skip)]
 #[path = "generated/cypher.rs"]
 #[allow(clippy::all)]
 mod generated;
