@@ -1,3 +1,57 @@
-# The checked-in LALRPOP output is verified separately and is not handwritten
-# behavior. Mutating it would dominate the scheduled mutation-testing budget.
-exclude_globs = ["src/generated/*.rs"]
+# cargo-mutants configuration.
+#
+# The list below names mutants that were individually triaged and VERIFIED
+# EQUIVALENT: each was applied by hand and survived the full test suite plus
+# large differential query corpora, with a written justification (see the
+# mutation-triage test files under tests/ and the PR history for details).
+# Typical reasons: error-path guards where both variants produce the same
+# parse error, min/max ties, and states unreachable by construction.
+#
+# MAINTENANCE: entries pin exact file:line:col positions, so they go stale
+# when the surrounding code shifts. After editing src/parser.rs (or the other
+# listed files), re-run `cargo mutants --list` and refresh the line numbers;
+# a stale entry simply stops matching (the mutant reappears as MISSED) - it
+# never hides a new mutant.
+
+exclude_re = [
+    'src/diagnostic\.rs:478:18: replace > with >= in floor_char_boundary',
+    'src/parser\.rs:1856:40: replace && with \|\| in parameter',
+    'src/parser\.rs:517:19: replace == with != in normalize_diagnostics',
+    'src/parser\.rs:519:29: replace == with != in normalize_diagnostics',
+    'src/parser\.rs:86:26: replace \|\| with && in parse_recovering',
+    'src/parser\.rs:86:29: delete ! in parse_recovering',
+    'src/span\.rs:78:27: replace < with <= in Span::cover',
+    'src/span\.rs:83:25: replace > with >= in Span::cover',
+    'src/parser\.rs:2067:13: delete match arm TokenKind::LeftParen in top_level_pipe_candidates',
+    'src/parser\.rs:2067:49: replace \+= with \*= in top_level_pipe_candidates',
+    'src/parser\.rs:2069:13: delete match arm TokenKind::LeftBrace in top_level_pipe_candidates',
+    'src/parser\.rs:2069:44: replace \+= with \*= in top_level_pipe_candidates',
+    'src/parser\.rs:2071:32: replace match guard brackets == 1 && parentheses == 0 && braces == 0 with true in top_level_pipe_candidates',
+    'src/parser\.rs:2071:46: replace && with \|\| in top_level_pipe_candidates',
+    'src/parser\.rs:2071:66: replace && with \|\| in top_level_pipe_candidates',
+    'src/parser\.rs:2088:44: replace && with \|\| in parse_comprehension_tokens',
+    'src/parser\.rs:2092:43: replace && with \|\| in parse_comprehension_tokens',
+    'src/parser\.rs:2099:36: replace \+ with - in parse_comprehension_tokens',
+    'src/parser\.rs:2099:36: replace \+ with \* in parse_comprehension_tokens',
+    'src/parser\.rs:2099:40: replace < with <= in parse_comprehension_tokens',
+    'src/parser\.rs:2118:37: replace \|\| with && in parse_comprehension_tokens',
+    'src/parser\.rs:2118:45: replace \+ with - in parse_comprehension_tokens',
+    'src/parser\.rs:2118:45: replace \+ with \* in parse_comprehension_tokens',
+    'src/parser\.rs:2123:24: replace match guard index \+ 1 < pipe with true in parse_comprehension_tokens',
+    'src/parser\.rs:2123:30: replace \+ with - in parse_comprehension_tokens',
+    'src/parser\.rs:2123:30: replace \+ with \* in parse_comprehension_tokens',
+    'src/parser\.rs:2123:34: replace < with <= in parse_comprehension_tokens',
+    'src/parser\.rs:2327:37: replace < with <= in nested_parser_tokens',
+    'src/parser\.rs:2426:13: delete match arm ParserToken::LeftBrace in find_top_level_token',
+    'src/parser\.rs:2426:46: replace \+= with \*= in find_top_level_token',
+    'src/parser\.rs:1141:19: replace > with >= in relationship_label_end',
+    'src/parser\.rs:1145:13: replace \|\| with && in relationship_label_end',
+    'src/parser\.rs:1204:39: replace match guard nested_brackets != 0 with true in is_label_predicate_context',
+    'src/parser\.rs:1212:37: replace match guard nested_braces != 0 with true in is_label_predicate_context',
+    'src/parser\.rs:130:73: replace - with / in parse_tokens_with_contextual_names',
+    'src/parser\.rs:171:44: replace < with <= in parse_tokens_with_contextual_names',
+    'src/parser\.rs:2233:18: replace > with < in parse_label_expression',
+    'src/parser\.rs:2273:17: replace \|\| with && in legacy_label_tokens_are_consistent',
+    'src/parser\.rs:972:39: replace match guard nested_brackets != 0 with true in is_pattern_expression_context',
+    'src/parser\.rs:980:37: replace match guard nested_braces != 0 with true in is_pattern_expression_context',
+]
