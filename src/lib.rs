@@ -156,10 +156,11 @@
 //! - **Partial recovery.** A syntax error yields one whole-input error
 //!   statement, not locally repaired clauses or expressions.
 //!
-//! Known parser issues tracked for a later release:
+//! Some accepted inputs look surprising but follow the 2024.3 grammar and are
+//! not parser bugs:
 //!
-//! - `a[1:b]` is accepted and parsed as an index whose subscript is a label
-//!   predicate on the literal `1`, instead of being rejected.
+//! - `a[1:b]` parses as an index whose subscript is `1:b`: a subscript is any
+//!   value expression, and a comparison predicand may carry a `:Label` test.
 //!
 //! # Feature flags
 //!

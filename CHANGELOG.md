@@ -26,8 +26,8 @@ to [Semantic Versioning](https://semver.org/).
 
 - Crate-level docs now include a getting-started walkthrough, error
   reporting and recovery examples, a scope section listing supported
-  extensions and known parser issues, and a testing overview. docs.rs builds
-  with all features enabled.
+  extensions and surprising-but-conformant acceptances, and a testing
+  overview. docs.rs builds with all features enabled.
 
 ## [0.2.0] - 2026-09-21
 
