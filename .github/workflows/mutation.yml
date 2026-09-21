@@ -28,7 +28,9 @@ jobs:
           tool: cargo-mutants
       - uses: Swatinem/rust-cache@v2
         with:
-          save-if: false
+          # All shards build the same baseline; one saves, the rest restore.
+          shared-key: mutation
+          save-if: ${{ matrix.shard == 0 }}
       - name: Run mutation analysis
         id: mutants
         continue-on-error: true
