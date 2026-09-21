@@ -17,7 +17,7 @@ type checking, execute queries, or claim official TCK certification.
 
 ## Status
 
-Version `0.2.0-alpha.1` is a clean break from the original Pest-based API. Its
+The `0.2` series is a clean break from the original Pest-based API. Its
 2024.3 syntax coverage is measured by a deterministic projection of every query
 occurrence in the pinned TCK and by executable traceability for all 377 BNF
 productions. This is parser evidence only, not semantic, runtime, or official
@@ -53,19 +53,24 @@ for token in parsed.tokens {
 
 For diagnostic-oriented use, `parse_recovering` always returns a root together
 with diagnostics collected during lexing and parsing. On a syntax error, the
-current recovery is whole-input recovery: the root contains an error statement,
-not a locally recovered clause or expression. `lex` exposes every token,
-including whitespace and comments.
+recovery is whole-input recovery: the root contains an error statement, not a
+locally recovered clause or expression. `lex` exposes every token, including
+whitespace and comments.
 
-The current program entry point accepts empty input or one query with an
-optional trailing semicolon. It does not parse multi-statement scripts.
+The program entry point accepts empty input or one query with an optional
+trailing semicolon. It does not parse multi-statement scripts.
+
+Both of these are intentional scope decisions for the `0.2` series, not gaps
+on the way to `0.2.0`: finer-grained error recovery and multi-statement input
+are candidates for a later minor release and will be introduced without
+breaking the existing `parse` / `parse_recovering` contracts.
 
 The optional `serde` feature implements serialization for public syntax and
 diagnostic data types:
 
 ```toml
 [dependencies]
-open-cypher = { version = "0.2.0-alpha.1", features = ["serde"] }
+open-cypher = { version = "0.2.0-alpha.2", features = ["serde"] }
 ```
 
 ## Development
