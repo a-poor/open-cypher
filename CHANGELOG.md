@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-21
+
 ### Fixed
 
 - Standalone procedure calls whose procedure name or `YIELD` item is a
@@ -88,7 +90,8 @@ First stable release of the openCypher 2024.3 parser rewrite. Changes since
 
 - Initial release: a Pest-based openCypher parser prototype.
 
-[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/a-poor/open-cypher/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/a-poor/open-cypher/compare/v0.2.0-alpha.2...v0.2.0
 [0.2.0-alpha.2]: https://github.com/a-poor/open-cypher/compare/v0.2.0-alpha.1...v0.2.0-alpha.2
 [0.2.0-alpha.1]: https://github.com/a-poor/open-cypher/releases/tag/v0.2.0-alpha.1

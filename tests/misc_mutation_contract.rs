@@ -185,11 +185,14 @@ fn syntax_errors_report_the_farthest_failure() {
     assert_eq!(diagnostic.primary_span, Span::new(23, 24));
 }
 
-// src/parser.rs: delete the depth-increment match arm in top_level_indices
+// src/parser.rs: the standalone-CALL fallback accepts a nested UNION. (This
+// no longer distinguishes the depth-increment arm of top_level_indices: with
+// the top-level UNION guard gone, that arm only prunes split points that
+// would fail anyway, and it is ledgered as equivalent.)
 #[test]
 fn union_inside_call_arguments_is_not_top_level() {
-    // The UNION lives inside the argument list; it must not stop the
-    // standalone-CALL fallback (which is the only rule accepting `YIELD *`).
+    // The UNION lives inside the argument list; the standalone-CALL fallback
+    // (the only rule accepting `YIELD *`) must still parse the whole call.
     let source = "CALL foo(COUNT { RETURN 1 UNION RETURN 2 }) YIELD *";
     let parsed = parse(source).unwrap_or_else(|errors| panic!("{errors:#?}"));
     let StatementKind::Query(statement) = &parsed.program.statements[0].kind else {

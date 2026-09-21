@@ -27,6 +27,13 @@ exclude_re = [
     'src/parser\.rs:1868:40: replace && with \|\| in parameter',
     'src/parser\.rs:528:19: replace == with != in normalize_diagnostics',
     'src/parser\.rs:530:29: replace == with != in normalize_diagnostics',
+    # Since the standalone-CALL fallback stopped consulting top-level UNION
+    # tokens, depth tracking in `top_level_indices` only prunes split points
+    # and clause boundaries that sit inside brackets. A prefix cut at such a
+    # point is unbalanced and never parses, so dropping the increment arm
+    # changes nothing observable (verified against the TCK projection and
+    # nested-UNION / nested-clause diagnostics); it only costs extra attempts.
+    'src/parser\.rs:488:13: delete match arm ParserToken::LeftParen \| ParserToken::LeftBracket \| ParserToken::LeftBrace in top_level_indices',
     'src/parser\.rs:93:26: replace \|\| with && in parse_recovering',
     'src/parser\.rs:93:29: delete ! in parse_recovering',
     'src/span\.rs:78:27: replace < with <= in Span::cover',

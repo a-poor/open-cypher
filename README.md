@@ -41,7 +41,7 @@ provenance and implementation coverage.
 
 ```toml
 [dependencies]
-open-cypher = "0.2.0"
+open-cypher = "0.2.1"
 ```
 
 `parse` is the strict entry point. It returns the syntax tree and the full
@@ -91,7 +91,7 @@ diagnostic data types:
 
 ```toml
 [dependencies]
-open-cypher = { version = "0.2.0", features = ["serde"] }
+open-cypher = { version = "0.2.1", features = ["serde"] }
 ```
 
 ## Scope
