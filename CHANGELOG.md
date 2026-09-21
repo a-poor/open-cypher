@@ -6,6 +6,15 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- List comprehensions whose element expressions contain function calls and
+  subtraction (`[x IN a - f(b) - g(c) | x]`), nested pattern comprehensions
+  (`[x IN [[(a)-->(b) | b]] | x]`), or a pattern expression in the filter
+  (`[x IN xs WHERE (a)-->(b) | x]`) are no longer misdetected as pattern
+  comprehensions and now parse. The detection heuristic only counts pattern
+  evidence from the comprehension's own pattern region.
+
 ## [0.2.0-alpha.2] - 2026-09-21
 
 ### Fixed

@@ -8,7 +8,7 @@
 use open_cypher::ast::{
     ClauseKind, Expr, ExprKind, PatternComprehension, ProjectionItemKind, QueryKind, StatementKind,
 };
-use open_cypher::{ParsedProgram, parse};
+use open_cypher::{ParsedProgram, Span, parse};
 
 fn first_return_expression(parsed: &ParsedProgram) -> &Expr {
     let StatementKind::Query(statement) = &parsed.program.statements[0].kind else {
@@ -173,6 +173,34 @@ fn arithmetic_minuses_and_parens_do_not_fake_an_undirected_pattern() {
         "RETURN [x IN f(a - b) + g(c - d) | x]",
         "RETURN [x IN a - b | (c) + (d)]",
         "RETURN [x IN xs | (a)-->(b)]",
+        // Function-call parens are not node patterns.
+        "RETURN [x IN a - f(b) - g(c) | x]",
+        "RETURN [x IN f(a) - g(b) - c | x]",
+        // An arrow inside a nested comprehension is not evidence for the
+        // outer brackets, and neither is one in a WHERE predicate.
+        "RETURN [x IN [[(a)-->(b) | b]] | x]",
+        "RETURN [x IN xs WHERE (a)-->(b) | x]",
+    ] {
+        let parsed = parse(source).expect("list comprehension should parse");
+        let expression = first_return_expression(&parsed);
+        assert!(
+            matches!(expression.kind, ExprKind::ListComprehension(_)),
+            "misdetected as a pattern comprehension: {source}"
+        );
+    }
+}
+
+#[test]
+fn nested_and_braced_parens_do_not_count_as_pattern_nodes() {
+    // The undirected-relationship heuristic counts top-level `(` tokens as
+    // nodes; parentheses nested inside other parentheses, inside braces, or
+    // after the projection pipe must not be counted, or these valid list
+    // comprehensions (two top-level minuses each) would be misdetected as
+    // pattern comprehensions and rejected.
+    for source in [
+        "RETURN [x IN a - f((b)) - c | x]",
+        "RETURN [x IN (a) - b - c | (x)]",
+        "RETURN [x IN m - {a: (1), b: (2)} - w | x]",
     ] {
         let parsed = parse(source).expect("list comprehension should parse");
         let expression = first_return_expression(&parsed);
@@ -223,9 +251,23 @@ fn pattern_expressions_inside_projections_keep_exact_offsets() {
 }
 
 #[test]
+fn empty_projection_error_points_at_the_offending_token() {
+    // `[(a)-->(b) |]` has a pipe but nothing after it, so it is not a
+    // pattern comprehension; it falls through to the list-literal path and
+    // the error must point at the `]` where an expression was expected --
+    // not at the start of the statement.
+    let source = "RETURN [(a)-->(b) |]";
+    let errors = parse(source).expect_err("empty projection must not parse");
+    assert_eq!(errors.diagnostics()[0].primary_span, Span::new(19, 20));
+}
+
+#[test]
 fn malformed_comprehensions_error_without_panicking() {
     for source in [
         "RETURN [p = | b]",
+        // A binding must be a name: a literal before `=` is not a binding,
+        // and the leftover `5 = ...` is not a valid pattern either.
+        "RETURN [5 = (a)-->(b) | b]",
         "RETURN [(a)-->(b) WHERE | b]",
         "RETURN [(a)-->(b) |]",
     ] {

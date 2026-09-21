@@ -859,14 +859,22 @@ fn pattern_comprehension_end(tokens: &[&Token], start: usize) -> Option<usize> {
         return None;
     }
 
+    // The heuristic only counts evidence from the comprehension's pattern
+    // region: before the first top-level WHERE or `|`, at bracket depth 1.
+    // Arrows in a WHERE predicate, constructs in nested brackets, and
+    // function-call or grouping parentheses (a `(` directly after a name or
+    // a closing delimiter) are not pattern evidence — `[x IN a - f(b) - g(c) | x]`
+    // is a list comprehension, not an undirected relationship pattern.
     let mut brackets = 0usize;
     let mut parentheses = 0usize;
     let mut braces = 0usize;
     let mut pipe_at = None;
+    let mut where_seen = false;
     let mut arrow = false;
     let mut top_level_nodes = 0usize;
     let mut top_level_minuses = 0usize;
     for (index, token) in tokens.iter().enumerate().skip(start) {
+        let in_pattern_region = pipe_at.is_none() && !where_seen;
         match token.kind {
             TokenKind::LeftBracket => brackets += 1,
             TokenKind::RightBracket => {
@@ -878,7 +886,17 @@ fn pattern_comprehension_end(tokens: &[&Token], start: usize) -> Option<usize> {
                 brackets = brackets.saturating_sub(1);
             }
             TokenKind::LeftParen => {
-                if pipe_at.is_none() && brackets == 1 && parentheses == 0 && braces == 0 {
+                let call_or_grouping = index > start
+                    && (matches!(
+                        tokens[index - 1].kind,
+                        TokenKind::RightParen | TokenKind::RightBracket | TokenKind::RightBrace
+                    ) || is_symbolic_name_kind(tokens[index - 1].kind));
+                if in_pattern_region
+                    && brackets == 1
+                    && parentheses == 0
+                    && braces == 0
+                    && !call_or_grouping
+                {
                     top_level_nodes += 1;
                 }
                 parentheses += 1;
@@ -889,9 +907,24 @@ fn pattern_comprehension_end(tokens: &[&Token], start: usize) -> Option<usize> {
             TokenKind::Pipe if brackets == 1 && parentheses == 0 && braces == 0 => {
                 pipe_at = Some(index)
             }
-            TokenKind::LeftArrow | TokenKind::RightArrow if pipe_at.is_none() => arrow = true,
+            // `where` followed by `=` is a contextual binding name, not the
+            // predicate keyword.
+            TokenKind::Keyword(Keyword::Where)
+                if in_pattern_region
+                    && brackets == 1
+                    && parentheses == 0
+                    && braces == 0
+                    && tokens
+                        .get(index + 1)
+                        .is_none_or(|next| next.kind != TokenKind::Equal) =>
+            {
+                where_seen = true;
+            }
+            TokenKind::LeftArrow | TokenKind::RightArrow if in_pattern_region && brackets == 1 => {
+                arrow = true;
+            }
             TokenKind::Minus
-                if pipe_at.is_none() && brackets == 1 && parentheses == 0 && braces == 0 =>
+                if in_pattern_region && brackets == 1 && parentheses == 0 && braces == 0 =>
             {
                 top_level_minuses += 1;
             }
