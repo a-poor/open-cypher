@@ -40,6 +40,15 @@ and rejected syntax expectations. The checked-in corpus contains stable seed
 and regression cases; CI-generated corpus growth is uploaded as an artifact and
 is not committed automatically.
 
+Each `fuzz-corpus-<target>` artifact contains a `fuzz-corpus-<target>.tar.gz`
+archive so the upload action only handles one file, even as the corpus grows
+to thousands of inputs. After downloading and unzipping the artifact, restore
+its corpus from the repository root (using `lex_str` as an example):
+
+```console
+tar -xzf /path/to/fuzz-corpus-lex_str.tar.gz -C fuzz/corpus
+```
+
 Minimize a failure before turning it into a deterministic integration test:
 
 ```console

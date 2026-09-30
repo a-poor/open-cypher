@@ -78,11 +78,22 @@ jobs:
           path: fuzz/artifacts/${{ matrix.target }}
           if-no-files-found: ignore
           retention-days: 14
+      - name: Archive evolved corpus
+        if: always()
+        env:
+          FUZZ_TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          # Large corpora can overflow upload-artifact's file discovery stack.
+          # Give the action one archive instead of thousands of input files.
+          tar -czf "$RUNNER_TEMP/fuzz-corpus-$FUZZ_TARGET.tar.gz" \
+            -C fuzz/corpus "$FUZZ_TARGET"
       - name: Upload evolved corpus
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: fuzz-corpus-${{ matrix.target }}
-          path: fuzz/corpus/${{ matrix.target }}
+          path: ${{ runner.temp }}/fuzz-corpus-${{ matrix.target }}.tar.gz
+          compression-level: 0
           if-no-files-found: error
           retention-days: 7
