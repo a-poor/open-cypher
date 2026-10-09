@@ -171,6 +171,16 @@ cargo bench --bench parser
 
 Fuzz targets live in `fuzz/` and use `cargo-fuzz`.
 
+The [upstream release workflow](.github/workflows/upstream-release.yml) checks
+the latest published openCypher release against `spec/UPSTREAM.toml` on the
+first day of each month at 07:23 UTC. It can also be run manually from Actions.
+A different tag or commit fails the check and adds release notes, a comparison
+link, and a `spec update` inspection command to the run summary. This is a
+maintenance signal; adopting the release is a separate, reviewed change.
+Enable failed-workflow notifications in GitHub to receive alerts. The schedule
+takes effect once the workflow is on the default branch; GitHub can disable
+[scheduled workflows after 60 days of repository inactivity](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
+
 ## Licensing
 
 Project-authored source is available under MIT or Apache-2.0. Vendored

@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+name: Upstream openCypher release
+
+on:
+  schedule:
+    # First day of each month at 07:23 UTC.
+    - cron: "23 7 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Compare latest release with pinned snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check upstream release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+          import tomllib
+
+          def github_api(endpoint):
+              result = subprocess.run(
+                  ["gh", "api", f"repos/opencypher/openCypher/{endpoint}"],
+                  check=True, stdout=subprocess.PIPE, text=True, timeout=60,
+              )
+              return json.loads(result.stdout)
+
+          with Path("spec/UPSTREAM.toml").open("rb") as source:
+              pinned = tomllib.load(source)
+          pinned_tag = pinned["tag"]
+          pinned_commit = pinned["commit"]
+          latest_tag = github_api("releases/latest")["tag_name"]
+
+          # Match the tag format accepted by `spec update`.
+          for tag in (pinned_tag, latest_tag):
+              if not isinstance(tag, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", tag):
+                  raise ValueError("Unsupported upstream tag format")
+
+          # Resolve the tag itself: target_commitish may only name a branch.
+          latest_commit = github_api(f"commits/tags/{latest_tag}")["sha"]
+          for commit in (pinned_commit, latest_commit):
+              if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):
+                  raise ValueError("Expected a full upstream commit SHA")
+
+          differs = (pinned_tag, pinned_commit) != (latest_tag, latest_commit)
+          if not differs:
+              status = "Up to date with the latest published openCypher release."
+          elif pinned_tag == latest_tag:
+              status = "The pinned upstream tag now points to a different commit."
+          else:
+              status = "The latest published openCypher release differs from the pinned snapshot."
+
+          upstream = "https://github.com/opencypher/openCypher"
+          summary = [
+              "## Upstream openCypher release", "", status, "",
+              "| Snapshot | Tag | Commit |",
+              "| --- | --- | --- |",
+              f"| Pinned | `{pinned_tag}` | `{pinned_commit}` |",
+              f"| Latest | `{latest_tag}` | `{latest_commit}` |", "",
+              f"[Release notes]({upstream}/releases/tag/{latest_tag})",
+          ]
+          if differs:
+              summary += [
+                  f"[Compare changes]({upstream}/compare/{pinned_commit}...{latest_commit})",
+                  "", "Inspect the candidate locally before deciding whether to adopt it:",
+                  "", "```sh",
+                  "cargo run --locked --package open-cypher-xtask -- "
+                  f"spec update '{latest_tag}' '{latest_commit}'",
+                  "```", "", "The pinned snapshot has not been changed.",
+              ]
+
+          report = "\n".join(summary) + "\n"
+          print(report)
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as output:
+              output.write(report)
+          if differs:
+              print(f"::error title=Upstream openCypher review required::{status} See the run summary.")
+              raise SystemExit(1)
