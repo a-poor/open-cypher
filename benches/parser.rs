@@ -67,7 +67,8 @@ fn strict_parser_benchmarks(criterion: &mut Criterion) {
 }
 
 fn recovery_benchmarks(criterion: &mut Criterion) {
-    const INVALID: [(&str, &str); 4] = [
+    const INVALID: [(&str, &str); 5] = [
+        ("clause_salvage", "MATCH (n) SET n.x = WITH n RETURN n"),
         ("unexpected_eof", "MATCH (n RETURN n"),
         ("trailing_operator", "RETURN 1 +"),
         ("wrong_closer", "RETURN [1, 2}"),
@@ -84,6 +85,23 @@ fn recovery_benchmarks(criterion: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::from_parameter(name),
             source,
+            |bencher, source| {
+                bencher.iter(|| black_box(parse_recovering(black_box(source))));
+            },
+        );
+    }
+    group.finish();
+}
+
+fn recovery_budget_benchmarks(criterion: &mut Criterion) {
+    let mut group = criterion.benchmark_group("recovery_budget");
+    for repetitions in [16, 125, 126, 200, 1024] {
+        let source = format!("MATCH (n) WITH n {}", "SET n.x = ".repeat(repetitions));
+        assert!(!parse_recovering(&source).diagnostics.is_empty());
+        group.throughput(Throughput::Bytes(source.len() as u64));
+        group.bench_with_input(
+            BenchmarkId::from_parameter(repetitions),
+            &source,
             |bencher, source| {
                 bencher.iter(|| black_box(parse_recovering(black_box(source))));
             },
@@ -425,6 +443,7 @@ criterion_group!(
     lexer_benchmarks,
     strict_parser_benchmarks,
     recovery_benchmarks,
+    recovery_budget_benchmarks,
     corpus_benchmark,
     tck_corpus_benchmark,
     scaling_benchmarks,

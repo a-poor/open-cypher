@@ -1,7 +1,18 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use open_cypher::{DiagnosticCode, lex, parse_recovering};
+use open_cypher::{
+    DiagnosticCode, Span,
+    ast::{QueryKind, StatementKind},
+    lex, parse_recovering,
+};
+
+fn check_span(source: &str, span: Span, parent: Span) {
+    assert!(span.start <= span.end);
+    assert!(parent.start <= span.start && span.end <= parent.end);
+    assert!(source.is_char_boundary(span.start));
+    assert!(source.is_char_boundary(span.end));
+}
 
 const MAX_RECOVERY_DIAGNOSTICS: usize = 32;
 
@@ -21,9 +32,32 @@ fuzz_target!(|data: &[u8]| {
         assert!(source.is_char_boundary(diagnostic.primary_span.start));
         assert!(source.is_char_boundary(diagnostic.primary_span.end));
     }
-    if let Some(parsed) = &outcome.value {
+    {
+        let parsed = outcome
+            .value
+            .as_ref()
+            .expect("recovery always returns a root");
         assert_eq!(parsed.tokens, lex(source).tokens);
-        assert!(parsed.program.span.end <= source.len());
+        check_span(source, parsed.program.span, Span::new(0, source.len()));
+        for statement in &parsed.program.statements {
+            check_span(source, statement.span, parsed.program.span);
+            if let StatementKind::Query(statement) = &statement.kind {
+                check_span(source, statement.query.span, parsed.program.span);
+                if let QueryKind::Regular(query) = &statement.query.kind {
+                    for single in std::iter::once(&query.head)
+                        .chain(query.unions.iter().map(|branch| &branch.query))
+                    {
+                        check_span(source, single.span, statement.query.span);
+                        let mut previous_end = single.span.start;
+                        for clause in &single.kind.clauses {
+                            check_span(source, clause.span, single.span);
+                            assert!(previous_end <= clause.span.start);
+                            previous_end = clause.span.end;
+                        }
+                    }
+                }
+            }
+        }
     }
     std::hint::black_box(outcome.value);
 });

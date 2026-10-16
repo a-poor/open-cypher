@@ -146,7 +146,7 @@
 //! - empty or comment-only input, one optional trailing semicolon, and
 //!   identifiers that start with an underscore.
 //!
-//! The following are out of scope for the `0.2` series:
+//! The following are out of scope for the `0.3` series:
 //!
 //! - **Semantics.** Names are not resolved, types are not checked, and no
 //!   query runs. Some inputs that a database would reject (for example a

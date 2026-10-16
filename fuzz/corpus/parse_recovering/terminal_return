@@ -1,0 +1,1 @@
+RETURN n MATCH (m) WITH m RETURN m

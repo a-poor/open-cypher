@@ -21,6 +21,11 @@ The `tck_corpus` group is a syntax-only workload derived from the version-pinned
 TCK. It parses all 4,109 unique accepted queries in one measured batch. It is
 not a benchmark of query execution and does not imply official TCK certification.
 
+`parse_invalid/clause_salvage` measures retention of valid clauses around a
+broken SET. `recovery_budget` scales malformed suffixes, including the 125/126
+boundary where the retry budget stops retaining WITH. These measure end-to-end
+recovering parsing, including the initial strict parse.
+
 Benchmark reports are evidence, not a portable throughput promise. Compare base
 and candidate revisions on the same quiet machine. See
 [`docs/benchmarking.md`](../docs/benchmarking.md) for the regression policy.

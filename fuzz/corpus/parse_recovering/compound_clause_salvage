@@ -1,0 +1,1 @@
+MERGE (n) ON CREATE SET n.x = 1 ON MATCH SET n.x = 2 SET n.x = RETURN n

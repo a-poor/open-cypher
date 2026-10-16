@@ -6,6 +6,28 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-16
+
+### Changed
+
+- `parse_recovering` now preserves valid top-level clauses around malformed
+  regions, inserting spanned `ClauseKind::Error` placeholders. Consumers must
+  handle error clauses inside recovered queries instead of checking only for
+  `StatementKind::Error`. Strict parsing and the public function signatures
+  are unchanged.
+- Recovery preserves the complete token stream and reports at most 32
+  diagnostics. It respects unclosed delimiters and terminal `RETURN` clauses;
+  retry-budget exhaustion leaves an error suffix. Ambiguous `UNION` inputs,
+  multi-statement inputs, and inputs without recoverable clauses still fall
+  back to a whole-input error statement. Expression-level repair is not included.
+
+### Internal
+
+- Added clause-recovery regression tests, including retry-budget boundaries,
+  and refreshed the verified-equivalent mutation ledger.
+- Added clause-salvage and retry-budget benchmarks, plus recovery fuzz seeds
+  and assertions for clause span validity, containment, and ordering.
+
 ## [0.2.1] - 2026-09-21
 
 ### Fixed
@@ -90,7 +112,8 @@ First stable release of the openCypher 2024.3 parser rewrite. Changes since
 
 - Initial release: a Pest-based openCypher parser prototype.
 
-[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/a-poor/open-cypher/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/a-poor/open-cypher/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/a-poor/open-cypher/compare/v0.2.0-alpha.2...v0.2.0
 [0.2.0-alpha.2]: https://github.com/a-poor/open-cypher/compare/v0.2.0-alpha.1...v0.2.0-alpha.2

@@ -17,7 +17,7 @@ type checking, execute queries, or claim official TCK certification.
 
 ## Status
 
-The `0.2` series is a clean break from the original Pest-based API. Its
+Versions `0.2` and later are a clean break from the original Pest-based API. The
 2024.3 syntax coverage is measured by a deterministic projection of every query
 occurrence in the pinned TCK and by executable traceability for all 377 BNF
 productions. This is parser evidence only, not semantic, runtime, or official
@@ -41,7 +41,7 @@ provenance and implementation coverage.
 
 ```toml
 [dependencies]
-open-cypher = "0.2.1"
+open-cypher = "0.3.0"
 ```
 
 `parse` is the strict entry point. It returns the syntax tree and the full
@@ -91,7 +91,7 @@ diagnostic data types:
 
 ```toml
 [dependencies]
-open-cypher = { version = "0.2.1", features = ["serde"] }
+open-cypher = { version = "0.3.0", features = ["serde"] }
 ```
 
 ## Scope
@@ -104,7 +104,7 @@ Supported:
   such as `COUNT {}` / `COLLECT {}` subqueries, `!=` and `||`, GQL path modes,
   label expressions in `SET` / `REMOVE`, and empty or comment-only input.
 
-Out of scope for the `0.2` series:
+Out of scope for the `0.3` series:
 
 - semantic analysis and execution: names are not resolved, types are not
   checked, and some inputs a database would reject at compile time (for
