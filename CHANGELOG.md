@@ -6,6 +6,15 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Recovering parsing now preserves top-level `UNION` branches, operator spans,
+  and `ALL`/`DISTINCT` quantifiers around malformed regions. Broken branches
+  contain error clauses; missing branches contain an empty-span error clause.
+  Valid clauses take precedence over splitting contextual uses of `union`.
+  The retry budget is shared across branches, with exhaustion leaving an
+  unsplit error suffix. Strict acceptance and the diagnostic cap are unchanged.
+
 ## [0.3.0] - 2026-10-16
 
 ### Changed

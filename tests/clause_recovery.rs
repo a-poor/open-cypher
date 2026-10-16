@@ -83,7 +83,6 @@ fn ambiguous_or_unrecoverable_queries_keep_error_statement() {
     for source in [
         "MATCH (n",
         "MATCH (n RETURN n",
-        "RETURN 1 UNION RETURN",
         "MATCH (n); RETURN",
         ";",
         "???",

@@ -85,8 +85,11 @@
 //! the diagnostics alongside a program root. Valid top-level clauses are retained,
 //! with [`ClauseKind::Error`](ast::ClauseKind::Error) placeholders for skipped
 //! regions. Recovery does not cross unclosed delimiters or repair expressions.
-//! Ambiguous UNION and multi-statement inputs, and inputs with no recoverable
-//! clauses, fall back to a whole-input error statement. The full token stream
+//! UNION branches retain their operators and clause structure, with empty-span
+//! error clauses for missing branches. Valid clauses take precedence over
+//! splitting contextual names. A shared retry budget leaves an unsplit error
+//! suffix on exhaustion. Multi-statement inputs and inputs with no recoverable
+//! clauses fall back to a whole-input error statement. The full token stream
 //! remains available. At most 32 diagnostics are reported per parse.
 //!
 //! ```

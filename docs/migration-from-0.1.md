@@ -53,9 +53,11 @@ The strict API returns `Err(ParseErrors)` if any lexical or syntactic error is
 present. The recovering API always returns a program root and retains valid
 top-level clauses around malformed regions, inserting `ClauseKind::Error`
 placeholders. It does not repair expressions or cross unclosed delimiters.
-Ambiguous UNION and multi-statement inputs, or inputs with no recoverable
-clauses, fall back to an error statement. Callers must not treat a present
-recovered AST as a valid query.
+UNION branches and their operators are preserved; a missing branch contains
+an empty-span error clause. Valid clauses take precedence over splitting
+contextual names. Multi-statement inputs, or inputs with no recoverable clauses,
+fall back to an error statement. Callers must not treat a present recovered AST
+as a valid query, including when traversing UNION branches.
 
 ## Removed Pest details
 
