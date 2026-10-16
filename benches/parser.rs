@@ -110,6 +110,23 @@ fn recovery_budget_benchmarks(criterion: &mut Criterion) {
     group.finish();
 }
 
+fn union_recovery_benchmarks(criterion: &mut Criterion) {
+    let mut group = criterion.benchmark_group("union_recovery");
+    for branches in [1, 4, 16, 64, 128] {
+        let source = format!("{}RETURN", "RETURN 1 UNION ALL ".repeat(branches));
+        assert!(!parse_recovering(&source).diagnostics.is_empty());
+        group.throughput(Throughput::Bytes(source.len() as u64));
+        group.bench_with_input(
+            BenchmarkId::from_parameter(branches),
+            &source,
+            |bencher, source| {
+                bencher.iter(|| black_box(parse_recovering(black_box(source))));
+            },
+        );
+    }
+    group.finish();
+}
+
 fn corpus_benchmark(criterion: &mut Criterion) {
     let corpus = valid_inputs();
     let byte_count = corpus.iter().map(|(_, source)| source.len() as u64).sum();
@@ -444,6 +461,7 @@ criterion_group!(
     strict_parser_benchmarks,
     recovery_benchmarks,
     recovery_budget_benchmarks,
+    union_recovery_benchmarks,
     corpus_benchmark,
     tck_corpus_benchmark,
     scaling_benchmarks,

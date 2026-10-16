@@ -75,9 +75,9 @@ pub fn parse(source: &str) -> Result<ParsedProgram, ParseErrors> {
 ///
 /// Recovery retains valid top-level clauses and inserts [`ClauseKind::Error`]
 /// placeholders for skipped regions. It does not repair expressions or cross
-/// unclosed delimiters. Ambiguous UNION and multi-statement inputs fall back to
-/// a whole-input error statement, as do inputs with no recoverable clauses.
-/// Recovery work is bounded; exhausting its retry budget leaves an error suffix.
+/// unclosed delimiters. UNION branches and operators are retained; valid clauses
+/// take precedence over splitting contextual names. Multi-statement inputs and
+/// inputs with no recoverable clauses fall back to an error statement. Work is bounded.
 #[must_use]
 pub fn parse_recovering(source: &str) -> ParseOutcome<ParsedProgram> {
     let lexed = lexer::lex(source);
@@ -2663,18 +2663,28 @@ fn recover_clauses(source: &str, tokens: &[SpannedParserToken]) -> Option<Progra
     };
     let first = tokens.first()?;
     let last = tokens.last()?;
-    // UNION may also be a contextual name. Without a successful strict parse,
-    // leave its interpretation to the caller rather than flattening branches.
-    if !top_level_indices(tokens, |token| {
-        matches!(token, ParserToken::Union | ParserToken::Semicolon)
-    })
-    .is_empty()
-    {
+    if !top_level_indices(tokens, |token| token == ParserToken::Semicolon).is_empty() {
         return None;
     }
+    let union_indices: Vec<_> = top_level_indices(tokens, |token| token == ParserToken::Union)
+        .into_iter()
+        .filter(|&index| {
+            !index.checked_sub(1).is_some_and(|previous| {
+                matches!(
+                    tokens[previous].1,
+                    ParserToken::As | ParserToken::Dot | ParserToken::Colon | ParserToken::Call
+                )
+            })
+        })
+        .collect();
     let mut boundaries = top_level_indices(tokens, clause_starts);
+    boundaries.extend(&union_indices);
+    boundaries.sort_unstable();
     boundaries.push(tokens.len());
     let mut clauses = Vec::new();
+    let mut branches = Vec::new();
+    let mut operators = Vec::new();
+    let mut branch_start = first.0;
     let mut cursor = 0;
     let mut skipped = None;
     let mut retained = false;
@@ -2684,6 +2694,45 @@ fn recover_clauses(source: &str, tokens: &[SpannedParserToken]) -> Option<Progra
     // as one error region instead of repeatedly reparsing it.
     let mut attempts = 128usize;
     while cursor < tokens.len() {
+        // A successful clause candidate can consume UNION as a contextual name.
+        // Only a UNION left at the cursor is an operator, and only at top level
+        // outside explicit name positions (even when their clause is malformed).
+        // Charge each split to the same budget as clause parsing; empty branches
+        // must not allow an unbounded number of recovery nodes.
+        if attempts > 0 && union_indices.binary_search(&cursor).is_ok() {
+            attempts -= 1;
+            let end = if clauses.is_empty() && skipped.is_none() {
+                branch_start
+            } else {
+                tokens[cursor - 1].2
+            };
+            if let Some(start) = skipped.take() {
+                clauses.push(Node::new(
+                    ClauseKind::Error(ErrorNode),
+                    Span::new(start, end),
+                ));
+            }
+            branches.push(recovered_branch(clauses, Span::new(branch_start, end)));
+            clauses = Vec::new();
+            let operator_start = tokens[cursor].0;
+            cursor += 1;
+            let kind = match tokens.get(cursor).map(|token| token.1) {
+                Some(ParserToken::All) => {
+                    cursor += 1;
+                    UnionOperator::All
+                }
+                Some(ParserToken::Distinct) => {
+                    cursor += 1;
+                    UnionOperator::Distinct
+                }
+                _ => UnionOperator::Default,
+            };
+            let operator_end = tokens[cursor - 1].2;
+            operators.push(Node::new(kind, Span::new(operator_start, operator_end)));
+            branch_start = tokens.get(cursor).map_or(operator_end, |token| token.0);
+            returned = false;
+            continue;
+        }
         let mut parsed = None;
         if !returned {
             for &end in boundaries.iter().filter(|&&end| end > cursor) {
@@ -2714,8 +2763,14 @@ fn recover_clauses(source: &str, tokens: &[SpannedParserToken]) -> Option<Progra
             cursor = end;
         } else {
             skipped.get_or_insert(tokens[cursor].0);
-            cursor = if returned || attempts == 0 {
+            cursor = if attempts == 0 {
                 tokens.len()
+            } else if returned {
+                union_indices
+                    .iter()
+                    .copied()
+                    .find(|&index| index > cursor)
+                    .unwrap_or(tokens.len())
             } else {
                 *boundaries.iter().find(|&&end| end > cursor)?
             };
@@ -2731,12 +2786,16 @@ fn recover_clauses(source: &str, tokens: &[SpannedParserToken]) -> Option<Progra
         ));
     }
     let query_span = Span::new(first.0, last.2);
-    let head = Node::new(SingleQueryKind { clauses }, query_span);
+    branches.push(recovered_branch(clauses, Span::new(branch_start, last.2)));
+    let mut branches = branches.into_iter();
+    let head = branches.next()?;
+    let unions = operators
+        .into_iter()
+        .zip(branches)
+        .map(|(operator, query)| UnionBranch { operator, query })
+        .collect();
     let query = Node::new(
-        QueryKind::Regular(RegularQuery {
-            head,
-            unions: Vec::new(),
-        }),
+        QueryKind::Regular(RegularQuery { head, unions }),
         query_span,
     );
     let span = terminator.map_or(query_span, |end| query_span.cover(end));
@@ -2749,4 +2808,11 @@ fn recover_clauses(source: &str, tokens: &[SpannedParserToken]) -> Option<Progra
         span,
     );
     Some(Program::new(vec![statement], span))
+}
+
+fn recovered_branch(mut clauses: Vec<Clause>, span: Span) -> SingleQuery {
+    if clauses.is_empty() {
+        clauses.push(Node::new(ClauseKind::Error(ErrorNode), span));
+    }
+    Node::new(SingleQueryKind { clauses }, span)
 }

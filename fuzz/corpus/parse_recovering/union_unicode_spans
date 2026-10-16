@@ -1,0 +1,1 @@
+RETURN '猫' UNION /* λ */ ALL RETURN

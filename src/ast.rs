@@ -167,6 +167,10 @@ pub type SingleQuery = Node<SingleQueryKind>;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SingleQueryKind {
     /// Clauses in source order.
+    ///
+    /// Recovery may insert error clauses. A missing UNION branch contains one
+    /// error clause with an empty span at the next operator, or at the preceding
+    /// operator's end when the missing branch is at EOF.
     pub clauses: Vec<Clause>,
 }
 

@@ -44,6 +44,13 @@ fuzz_target!(|data: &[u8]| {
             if let StatementKind::Query(statement) = &statement.kind {
                 check_span(source, statement.query.span, parsed.program.span);
                 if let QueryKind::Regular(query) = &statement.query.kind {
+                    let mut previous_end = query.head.span.end;
+                    for branch in &query.unions {
+                        check_span(source, branch.operator.span, statement.query.span);
+                        assert!(previous_end <= branch.operator.span.start);
+                        assert!(branch.operator.span.end <= branch.query.span.start);
+                        previous_end = branch.query.span.end;
+                    }
                     for single in std::iter::once(&query.head)
                         .chain(query.unions.iter().map(|branch| &branch.query))
                     {

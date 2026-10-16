@@ -26,6 +26,16 @@ broken SET. `recovery_budget` scales malformed suffixes, including the 125/126
 boundary where the retry budget stops retaining WITH. These measure end-to-end
 recovering parsing, including the initial strict parse.
 
+`union_recovery` scales valid UNION ALL branches followed by a broken RETURN,
+including inputs that exhaust the shared recovery budget. It also includes the
+initial strict parse, rather than measuring just the recovery pass.
+
+Long malformed UNION chains already scale poorly in the strict parser: replaying
+this workload against `v0.3.0` also took seconds at 128 branches on a local smoke
+run. The recovery retry budget limits additional candidate parsing, not total
+end-to-end latency. Strict UNION parsing remains performance debt; use a quiet
+machine for comparative timings (the initial smoke runs overlapped other checks).
+
 Benchmark reports are evidence, not a portable throughput promise. Compare base
 and candidate revisions on the same quiet machine. See
 [`docs/benchmarking.md`](../docs/benchmarking.md) for the regression policy.
