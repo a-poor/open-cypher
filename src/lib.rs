@@ -82,11 +82,12 @@
 //! # Recovering from errors
 //!
 //! [`parse_recovering`] never fails. It returns a [`ParseOutcome`] carrying
-//! the diagnostics alongside a program root. Recovery is currently
-//! whole-input recovery: when the input has a syntax error the root contains
-//! a single [`StatementKind::Error`](ast::StatementKind::Error) placeholder
-//! rather than a partially recovered tree, and the full token stream is still
-//! available. At most 32 diagnostics are reported per parse.
+//! the diagnostics alongside a program root. Valid top-level clauses are retained,
+//! with [`ClauseKind::Error`](ast::ClauseKind::Error) placeholders for skipped
+//! regions. Recovery does not cross unclosed delimiters or repair expressions.
+//! Ambiguous UNION and multi-statement inputs, and inputs with no recoverable
+//! clauses, fall back to a whole-input error statement. The full token stream
+//! remains available. At most 32 diagnostics are reported per parse.
 //!
 //! ```
 //! use open_cypher::parse_recovering;
@@ -153,8 +154,7 @@
 //!   semantic pass can report them with a better message.
 //! - **Multi-statement scripts.** A program contains zero or one query. A
 //!   second statement after the semicolon is a syntax error.
-//! - **Partial recovery.** A syntax error yields one whole-input error
-//!   statement, not locally repaired clauses or expressions.
+//! - **Expression-level recovery.** Malformed expressions are not locally repaired.
 //!
 //! Some accepted inputs look surprising but follow the 2024.3 grammar and are
 //! not parser bugs:

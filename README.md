@@ -112,12 +112,14 @@ Out of scope for the `0.2` series:
   later pass can report them;
 - multi-statement scripts: a program holds zero or one query with an optional
   trailing semicolon;
-- partial recovery: a syntax error yields one whole-input error statement, not
-  locally repaired clauses. Recovery reports at most 32 diagnostics per parse.
+- expression-level recovery: malformed expressions are not locally repaired.
 
-Finer-grained recovery and multi-statement input are candidates for a later
-minor release and will be introduced without breaking the existing `parse` /
-`parse_recovering` contracts.
+`parse_recovering` retains valid top-level clauses around malformed regions,
+using `ClauseKind::Error` placeholders with source spans. Recovery does not cross
+unclosed delimiters; ambiguous `UNION` and multi-statement inputs, or inputs
+with no recoverable clauses, retain a whole-input error statement. The complete
+token stream is preserved, and at most 32 diagnostics are reported per parse.
+Multi-statement input remains a candidate for a later minor release.
 
 Some accepted inputs look surprising but follow the 2024.3 grammar and are not
 parser bugs:

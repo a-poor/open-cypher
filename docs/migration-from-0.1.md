@@ -50,10 +50,12 @@ if let Some(partial) = outcome.value {
 ```
 
 The strict API returns `Err(ParseErrors)` if any lexical or syntactic error is
-present. The recovering API currently performs whole-input recovery: it always
-returns a program root, but a syntax failure replaces the query with an error
-statement rather than recovering individual clauses or expressions. Callers
-must not treat a present recovered AST as a valid query.
+present. The recovering API always returns a program root and retains valid
+top-level clauses around malformed regions, inserting `ClauseKind::Error`
+placeholders. It does not repair expressions or cross unclosed delimiters.
+Ambiguous UNION and multi-statement inputs, or inputs with no recoverable
+clauses, fall back to an error statement. Callers must not treat a present
+recovered AST as a valid query.
 
 ## Removed Pest details
 
