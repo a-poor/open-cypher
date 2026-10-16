@@ -66,4 +66,12 @@ exclude_re = [
     'src/parser\.rs:2299:17: replace \|\| with && in legacy_label_tokens_are_consistent',
     'src/parser\.rs:990:39: replace match guard nested_brackets != 0 with true in is_pattern_expression_context',
     'src/parser\.rs:998:37: replace match guard nested_braces != 0 with true in is_pattern_expression_context',
+    # Once RETURN is retained or attempts reaches zero, no later clause can
+    # parse. Replacing || with && visits the remaining boundaries instead of
+    # jumping to EOF, but keeps the same skipped start and final error span.
+    # Verified with the full all-feature suite and a temporary side-by-side
+    # comparison of 4,320 inputs (8^4 clause combinations plus 224 cases around
+    # budget exhaustion). See the budget and terminal-RETURN triage tests in
+    # tests/clause_recovery.rs. Only extra boundary traversal differs.
+    'src/parser\.rs:2717:34: replace \|\| with && in recover_clauses',
 ]

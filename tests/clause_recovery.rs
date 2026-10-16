@@ -109,3 +109,55 @@ fn recovery_budget_keeps_a_large_broken_suffix_as_an_error() {
     assert!(matches!(recovered[1].kind, ClauseKind::Error(_)));
     assert_eq!(recovered[1].span.end, source.trim_end().len());
 }
+
+#[test]
+fn exhausted_budget_does_not_recover_a_later_valid_clause() {
+    let source = format!("MATCH (n) {}RETURN n", "SET n.x = ".repeat(200));
+    let recovered = clauses(&source);
+    assert_eq!(recovered.len(), 2);
+    assert!(matches!(recovered[0].kind, ClauseKind::Match(_)));
+    assert!(matches!(recovered[1].kind, ClauseKind::Error(_)));
+    assert_eq!(recovered[1].span, Span::new(10, source.len()));
+}
+
+#[test]
+fn last_recovery_attempt_can_still_retain_a_valid_clause() {
+    // The first clause uses 127 nonempty candidates, leaving one attempt for
+    // WITH. Empty slices must not consume that remaining attempt. Adding one
+    // more boundary exhausts the budget before WITH can be recovered.
+    for (repetitions, expected_clauses) in [(125, 3), (126, 2)] {
+        let source = format!("MATCH (n) WITH n {}", "SET n.x = ".repeat(repetitions));
+        let recovered = clauses(&source);
+        assert_eq!(recovered.len(), expected_clauses);
+        assert!(matches!(recovered[0].kind, ClauseKind::Match(_)));
+        if repetitions == 125 {
+            assert!(matches!(recovered[1].kind, ClauseKind::With(_)));
+            assert_eq!(recovered[1].span, Span::new(10, 16));
+        }
+        assert!(matches!(
+            recovered.last().unwrap().kind,
+            ClauseKind::Error(_)
+        ));
+        assert_eq!(recovered.last().unwrap().span.end, source.trim_end().len());
+    }
+}
+
+#[test]
+fn terminal_return_coalesces_all_remaining_boundaries_into_one_error() {
+    // Mutation triage: once RETURN is retained, visiting each later boundary
+    // instead of jumping to EOF must not change the error region or its span.
+    for suffix in [
+        "MATCH (m) WITH m RETURN m",
+        "SET n.x = REMOVE n.x DETACH DELETE n",
+        "WITH [1, RETURN n] MATCH (m)",
+        "MATCH (m",
+    ] {
+        let source = format!("RETURN n {suffix}");
+        let recovered = clauses(&source);
+        assert_eq!(recovered.len(), 2);
+        assert!(matches!(recovered[0].kind, ClauseKind::Return(_)));
+        assert_eq!(recovered[0].span, Span::new(0, 8));
+        assert!(matches!(recovered[1].kind, ClauseKind::Error(_)));
+        assert_eq!(recovered[1].span, Span::new(9, source.len()));
+    }
+}
