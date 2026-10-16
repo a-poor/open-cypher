@@ -48,8 +48,8 @@ pub struct ParseOutcome<T> {
     /// The recovered value, when the selected entry point can construct one.
     ///
     /// [`parse_recovering`] currently always returns a `ParsedProgram`: valid
-    /// input produces the parsed tree, while invalid input produces a
-    /// whole-input error statement.
+    /// input produces the parsed tree, while invalid input preserves recoverable
+    /// clauses or falls back to a whole-input error statement.
     pub value: Option<T>,
     /// Lexer and parser diagnostics in deterministic source order.
     pub diagnostics: Vec<Diagnostic>,
@@ -73,8 +73,11 @@ pub fn parse(source: &str) -> Result<ParsedProgram, ParseErrors> {
 
 /// Parses while retaining diagnostics and always constructing a program root.
 ///
-/// Recovery is currently whole-input recovery. A syntax failure yields one
-/// error statement rather than locally recovered clause or expression nodes.
+/// Recovery retains valid top-level clauses and inserts [`ClauseKind::Error`]
+/// placeholders for skipped regions. It does not repair expressions or cross
+/// unclosed delimiters. Ambiguous UNION and multi-statement inputs fall back to
+/// a whole-input error statement, as do inputs with no recoverable clauses.
+/// Recovery work is bounded; exhausting its retry budget leaves an error suffix.
 #[must_use]
 pub fn parse_recovering(source: &str) -> ParseOutcome<ParsedProgram> {
     let lexed = lexer::lex(source);
@@ -96,7 +99,10 @@ pub fn parse_recovering(source: &str) -> ParseOutcome<ParsedProgram> {
 
     normalize_diagnostics(source.len(), &mut diagnostics);
 
-    let program = program.unwrap_or_else(|| recovered_program(source, &lexed.tokens));
+    let program = program.unwrap_or_else(|| {
+        recover_clauses(source, &significant)
+            .unwrap_or_else(|| recovered_program(source, &lexed.tokens))
+    });
     ParseOutcome {
         value: Some(ParsedProgram {
             program,
@@ -2643,4 +2649,104 @@ pub(crate) fn fold_postfix(mut expression: Expr, suffixes: Vec<PostfixSuffix>) -
         };
     }
     expression
+}
+
+/// Recover only at balanced, top-level boundaries. Parse each candidate with
+/// the same contextual-name rules as strict parsing, so keyword-shaped names
+/// and compound clauses (OPTIONAL MATCH, MERGE actions) remain intact.
+fn recover_clauses(source: &str, tokens: &[SpannedParserToken]) -> Option<Program> {
+    let (tokens, terminator) = match tokens.last() {
+        Some((start, ParserToken::Semicolon, end)) => {
+            (&tokens[..tokens.len() - 1], Some(Span::new(*start, *end)))
+        }
+        _ => (tokens, None),
+    };
+    let first = tokens.first()?;
+    let last = tokens.last()?;
+    // UNION may also be a contextual name. Without a successful strict parse,
+    // leave its interpretation to the caller rather than flattening branches.
+    if !top_level_indices(tokens, |token| {
+        matches!(token, ParserToken::Union | ParserToken::Semicolon)
+    })
+    .is_empty()
+    {
+        return None;
+    }
+    let mut boundaries = top_level_indices(tokens, clause_starts);
+    boundaries.push(tokens.len());
+    let mut clauses = Vec::new();
+    let mut cursor = 0;
+    let mut skipped = None;
+    let mut retained = false;
+    let mut returned = false;
+    // Recovery is best-effort: bound additional parser work on adversarial
+    // inputs with many candidate boundaries. Exhaustion preserves the suffix
+    // as one error region instead of repeatedly reparsing it.
+    let mut attempts = 128usize;
+    while cursor < tokens.len() {
+        let mut parsed = None;
+        if !returned {
+            for &end in boundaries.iter().filter(|&&end| end > cursor) {
+                if attempts == 0 {
+                    break;
+                }
+                attempts -= 1;
+                let candidate = parse_tokens_with_contextual_names(&tokens[cursor..end], |input| {
+                    generated::ClauseRootParser::new().parse(source, input.iter().copied().map(Ok))
+                });
+                if let Ok(clause) = candidate {
+                    // Prefer the longest valid clause: shorter candidates can
+                    // mistake a non-reserved name or MERGE action for a boundary.
+                    parsed = Some((clause, end));
+                }
+            }
+        }
+        if let Some((clause, end)) = parsed {
+            if let Some(start) = skipped.take() {
+                clauses.push(Node::new(
+                    ClauseKind::Error(ErrorNode),
+                    Span::new(start, tokens[cursor - 1].2),
+                ));
+            }
+            returned = matches!(clause.kind, ClauseKind::Return(_));
+            clauses.push(clause);
+            retained = true;
+            cursor = end;
+        } else {
+            skipped.get_or_insert(tokens[cursor].0);
+            cursor = if returned || attempts == 0 {
+                tokens.len()
+            } else {
+                *boundaries.iter().find(|&&end| end > cursor)?
+            };
+        }
+    }
+    if !retained {
+        return None;
+    }
+    if let Some(start) = skipped {
+        clauses.push(Node::new(
+            ClauseKind::Error(ErrorNode),
+            Span::new(start, last.2),
+        ));
+    }
+    let query_span = Span::new(first.0, last.2);
+    let head = Node::new(SingleQueryKind { clauses }, query_span);
+    let query = Node::new(
+        QueryKind::Regular(RegularQuery {
+            head,
+            unions: Vec::new(),
+        }),
+        query_span,
+    );
+    let span = terminator.map_or(query_span, |end| query_span.cover(end));
+    let statement = Node::new(
+        StatementKind::Query(QueryStatement {
+            mode: None,
+            query,
+            terminator,
+        }),
+        span,
+    );
+    Some(Program::new(vec![statement], span))
 }

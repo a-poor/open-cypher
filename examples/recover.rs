@@ -1,7 +1,7 @@
 use open_cypher::parse_recovering;
 
 fn main() {
-    let outcome = parse_recovering("MATCH (person RETURN person");
+    let outcome = parse_recovering("MATCH (person) SET person.name = RETURN person");
 
     for diagnostic in &outcome.diagnostics {
         eprintln!("{:?}: {}", diagnostic.code, diagnostic.message);
