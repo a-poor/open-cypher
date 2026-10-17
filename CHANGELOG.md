@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-16
+
 ### Performance
 
 - Stop retrying longer clause candidates after a definitive lookahead-token
@@ -23,7 +25,8 @@ to [Semantic Versioning](https://semver.org/).
   Consumers must handle expression errors inside otherwise structured clauses.
 - Recovering parsing now preserves top-level `UNION` branches, operator spans,
   and `ALL`/`DISTINCT` quantifiers around malformed regions. Broken branches
-  contain error clauses; missing branches contain an empty-span error clause.
+  retain recovered clauses where possible; missing branches contain an
+  empty-span error clause.
   Valid clauses take precedence over splitting contextual uses of `union`.
   The retry budget is shared across branches, with exhaustion leaving an
   unsplit error suffix. Strict acceptance and the diagnostic cap are unchanged.
@@ -134,7 +137,8 @@ First stable release of the openCypher 2024.3 parser rewrite. Changes since
 
 - Initial release: a Pest-based openCypher parser prototype.
 
-[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/a-poor/open-cypher/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/a-poor/open-cypher/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/a-poor/open-cypher/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/a-poor/open-cypher/compare/v0.2.0-alpha.2...v0.2.0

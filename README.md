@@ -41,7 +41,7 @@ provenance and implementation coverage.
 
 ```toml
 [dependencies]
-open-cypher = "0.3.0"
+open-cypher = "0.4.0"
 ```
 
 `parse` is the strict entry point. It returns the syntax tree and the full
@@ -91,7 +91,7 @@ diagnostic data types:
 
 ```toml
 [dependencies]
-open-cypher = { version = "0.3.0", features = ["serde"] }
+open-cypher = { version = "0.4.0", features = ["serde"] }
 ```
 
 ## Scope
@@ -104,7 +104,7 @@ Supported:
   such as `COUNT {}` / `COLLECT {}` subqueries, `!=` and `||`, GQL path modes,
   label expressions in `SET` / `REMOVE`, and empty or comment-only input.
 
-Out of scope for the `0.3` series:
+Out of scope for the `0.4` series:
 
 - semantic analysis and execution: names are not resolved, types are not
   checked, and some inputs a database would reject at compile time (for

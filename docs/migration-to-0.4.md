@@ -1,6 +1,6 @@
 # Recovery changes in 0.4
 
-The upcoming 0.4 release preserves more structure in `parse_recovering` results.
+The 0.4 release preserves more structure in `parse_recovering` results.
 The public AST types are unchanged, but consumers must handle error nodes inside
 expressions as well as statements and clauses. `parse` still rejects malformed
 input; recovery does not make an invalid query valid.
