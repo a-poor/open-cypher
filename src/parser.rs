@@ -74,10 +74,10 @@ pub fn parse(source: &str) -> Result<ParsedProgram, ParseErrors> {
 /// Parses while retaining diagnostics and always constructing a program root.
 ///
 /// Recovery retains valid top-level clauses and inserts [`ClauseKind::Error`]
-/// placeholders for skipped regions. It does not repair expressions or cross
-/// unclosed delimiters. UNION branches and operators are retained; valid clauses
+/// placeholders for skipped regions. Missing operands use [`ExprKind::Error`].
+/// UNION branches and operators are retained; valid clauses
 /// take precedence over splitting contextual names. Multi-statement inputs and
-/// inputs with no recoverable clauses fall back to an error statement. Work is bounded.
+/// inputs with no recoverable clauses fall back to an error statement. Delimiters are not repaired.
 #[must_use]
 pub fn parse_recovering(source: &str) -> ParseOutcome<ParsedProgram> {
     let lexed = lexer::lex(source);
@@ -694,6 +694,7 @@ fn parse_diagnostic(source: &str, error: LalrpopError) -> Diagnostic {
 }
 
 fn normalized_expected(mut expected: Vec<String>) -> String {
+    expected.retain(|item| item.trim_matches('"') != "error expression");
     for item in &mut expected {
         *item = item.trim_matches('"').to_owned();
     }
@@ -1411,6 +1412,8 @@ fn label_primary_end(tokens: &[&Token], start: usize) -> Option<usize> {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) enum ParserToken {
+    // Only injected by recovery; never produced from source tokens.
+    ErrorExpression,
     Identifier,
     EscapedIdentifier,
     Parameter,
@@ -1548,6 +1551,7 @@ impl ParserToken {
         !matches!(
             self,
             Self::Identifier
+                | Self::ErrorExpression
                 | Self::EscapedIdentifier
                 | Self::Parameter
                 | Self::Integer
@@ -1601,6 +1605,7 @@ impl ParserToken {
 
     const fn name(self) -> &'static str {
         match self {
+            Self::ErrorExpression => "error expression",
             Self::Identifier => "identifier",
             Self::EscapedIdentifier => "escaped identifier",
             Self::Parameter => "parameter",
@@ -2750,6 +2755,7 @@ fn recover_clauses(source: &str, tokens: &[SpannedParserToken]) -> Option<Progra
         }
         let mut parsed = None;
         if !returned {
+            let mut failed = Vec::new();
             for &end in boundaries.iter().filter(|&&end| end > cursor) {
                 if attempts == 0 {
                     break;
@@ -2762,6 +2768,23 @@ fn recover_clauses(source: &str, tokens: &[SpannedParserToken]) -> Option<Progra
                     // Prefer the longest valid clause: shorter candidates can
                     // mistake a non-reserved name or MERGE action for a boundary.
                     parsed = Some((clause, end));
+                } else if let Err(error) = candidate {
+                    failed.push((end, error));
+                }
+            }
+            // A valid clause always wins over a repaired one, including clauses
+            // that consume keyword-shaped names or compound-clause boundaries.
+            if parsed.is_none() {
+                for (end, error) in failed {
+                    if let Some(clause) = recover_expression_operands(
+                        source,
+                        &tokens[cursor..end],
+                        error,
+                        &mut attempts,
+                    ) {
+                        parsed = Some((clause, end));
+                        break;
+                    }
                 }
             }
         }
@@ -2832,6 +2855,86 @@ fn recovered_branch(mut clauses: Vec<Clause>, span: Span) -> SingleQuery {
     Node::new(SingleQueryKind { clauses }, span)
 }
 
+/// Insert only expressions explicitly expected by the grammar. No source token
+/// is removed or reinterpreted as a name or delimiter. The initial strict error
+/// remains the public diagnostic; these retries only construct the partial AST.
+fn recover_expression_operands(
+    source: &str,
+    tokens: &[SpannedParserToken],
+    mut error: LalrpopError,
+    attempts: &mut usize,
+) -> Option<Clause> {
+    if *attempts == 0 {
+        return None;
+    }
+    let mut repaired = tokens.to_vec();
+    for _ in 0..4 {
+        if *attempts == 0 {
+            return None;
+        }
+        let (mut index, mut location, expected) = match &error {
+            ParseError::UnrecognizedEof { expected, .. } => {
+                (repaired.len(), repaired.last()?.2, expected)
+            }
+            ParseError::UnrecognizedToken { token, expected } => {
+                if token.1 == ParserToken::ErrorExpression {
+                    return None;
+                }
+                (
+                    repaired.iter().position(|candidate| candidate == token)?,
+                    token.0,
+                    expected,
+                )
+            }
+            _ => return None,
+        };
+        if !expected
+            .iter()
+            .any(|item| item.trim_matches('"') == "error expression")
+        {
+            // Contextual-name parsing can consume AS as the missing operand,
+            // then fail on the alias. Try the explicit alias interpretation
+            // only immediately after an operator; the grammar validates it.
+            let alias_marker = index.checked_sub(1)?;
+            let operator = alias_marker.checked_sub(1)?;
+            if repaired[alias_marker].1 != ParserToken::As
+                || !matches!(
+                    repaired[operator].1,
+                    ParserToken::Plus
+                        | ParserToken::Minus
+                        | ParserToken::Star
+                        | ParserToken::Slash
+                        | ParserToken::Percent
+                        | ParserToken::Caret
+                        | ParserToken::And
+                        | ParserToken::Or
+                        | ParserToken::Xor
+                        | ParserToken::Not
+                        | ParserToken::Equal
+                        | ParserToken::NotEqual
+                        | ParserToken::Less
+                        | ParserToken::LessEqual
+                        | ParserToken::Greater
+                        | ParserToken::GreaterEqual
+                )
+            {
+                return None;
+            }
+            index = alias_marker;
+            location = repaired[index].0;
+        }
+        repaired.insert(index, (location, ParserToken::ErrorExpression, location));
+        *attempts -= 1;
+        match parse_tokens_with_contextual_names(&repaired, |input| {
+            generated::ClauseRootParser::new().parse(source, input.iter().copied().map(Ok))
+        }) {
+            Ok(clause) => return Some(clause),
+            Err(next) => error = next,
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 thread_local! {
     static STRICT_CLAUSE_ATTEMPTS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -2854,6 +2957,27 @@ mod union_performance_tests {
                 attempts <= 2 * branches + 1,
                 "{branches} branches used {attempts} clause parses"
             );
+        }
+    }
+}
+
+#[cfg(test)]
+mod expression_recovery_tests {
+    use super::*;
+
+    #[test]
+    fn expression_retries_obey_the_remaining_shared_budget() {
+        let source = "RETURN [1 +, 2 +]";
+        let tokens = parser_tokens(&lexer::lex(source).tokens);
+        let error = parse_tokens_with_contextual_names(&tokens, |input| {
+            generated::ClauseRootParser::new().parse(source, input.iter().copied().map(Ok))
+        })
+        .unwrap_err();
+        for available in [0, 1, 2] {
+            let mut attempts = available;
+            let result = recover_expression_operands(source, &tokens, error.clone(), &mut attempts);
+            assert_eq!(result.is_some(), available == 2);
+            assert_eq!(attempts, 0);
         }
     }
 }

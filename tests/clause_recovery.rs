@@ -23,14 +23,14 @@ fn clauses(source: &str) -> Vec<open_cypher::ast::Clause> {
 
 #[test]
 fn retains_clauses_before_and_after_errors_with_original_spans() {
-    let source = "  MATCH (n) SET n.x = WITH n RETURN n;  ";
+    let source = "  MATCH (n) SET n. = 1 WITH n RETURN n;  ";
     let recovered = clauses(source);
     assert_eq!(recovered.len(), 4);
     assert!(matches!(recovered[0].kind, ClauseKind::Match(_)));
     assert!(matches!(recovered[1].kind, ClauseKind::Error(_)));
     assert_eq!(
         &source[recovered[1].span.start..recovered[1].span.end],
-        "SET n.x ="
+        "SET n. = 1"
     );
     assert!(matches!(recovered[2].kind, ClauseKind::With(_)));
     assert!(matches!(recovered[3].kind, ClauseKind::Return(_)));
@@ -40,7 +40,7 @@ fn retains_clauses_before_and_after_errors_with_original_spans() {
 
 #[test]
 fn handles_leading_trailing_and_multiple_broken_regions() {
-    let recovered = clauses("? MATCH (n) SET n.x = WITH n REMOVE");
+    let recovered = clauses("? MATCH (n) SET n. = 1 WITH n REMOVE n.");
     assert_eq!(recovered.len(), 5);
     for index in [0, 2, 4] {
         assert!(matches!(recovered[index].kind, ClauseKind::Error(_)));
@@ -59,7 +59,7 @@ fn preserves_compound_clauses_and_contextual_names() {
         "MATCH (n) WHERE n.return = 1",
         "DETACH DELETE n",
     ] {
-        let source = format!("{valid} SET n.x = RETURN n");
+        let source = format!("{valid} SET n. = 1 RETURN n");
         let recovered = clauses(&source);
         assert_eq!(recovered.len(), 3, "{source}");
         assert_eq!(recovered[0].span, Span::new(0, valid.len()));

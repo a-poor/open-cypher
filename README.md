@@ -112,7 +112,7 @@ Out of scope for the `0.3` series:
   later pass can report them;
 - multi-statement scripts: a program holds zero or one query with an optional
   trailing semicolon;
-- expression-level recovery: malformed expressions are not locally repaired.
+- arbitrary syntax repair: recovery does not invent identifiers or close delimiters.
 
 `parse_recovering` retains valid top-level clauses around malformed regions,
 using `ClauseKind::Error` placeholders with source spans. Recovery does not cross
@@ -123,6 +123,13 @@ Multi-statement inputs and inputs with no recoverable clauses retain a whole-inp
 error statement. A shared retry budget bounds recovery across all branches;
 exhaustion leaves an unsplit error suffix. The complete token stream is preserved,
 and at most 32 diagnostics are reported per parse.
+Missing expression operands can be retained as empty-span `ExprKind::Error`
+nodes, preserving operators, precedence, and valid siblings. For example,
+`RETURN 1 +` retains an addition whose right operand is an error. This is
+insertion-only recovery: source tokens are not deleted, and unclosed delimiters
+or errors requiring identifier repair still fall back to clause errors. Each
+candidate allows at most four insertions, charged to the shared retry budget.
+Consumers must inspect expression errors as well as clause/statement errors.
 Multi-statement input remains a candidate for a later minor release.
 
 Some accepted inputs look surprising but follow the 2024.3 grammar and are not

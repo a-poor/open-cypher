@@ -913,6 +913,7 @@ MapProjectionItemNode: MapProjectionItem = {
 };
 
 PrimaryExpr: Expr = {
+    <l:@L> "error expression" <r:@R> => Node::new(ExprKind::Error(ErrorNode), Span::new(l, r)),
     LiteralExpr,
     ParameterExpr,
     PatternComprehensionExpr,
@@ -1271,6 +1272,7 @@ extern {
     type Error = usize;
 
     enum ParserToken {
+        "error expression" => ParserToken::ErrorExpression,
         "identifier" => ParserToken::Identifier,
         "escaped identifier" => ParserToken::EscapedIdentifier,
         "parameter" => ParserToken::Parameter,

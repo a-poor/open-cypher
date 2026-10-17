@@ -67,7 +67,12 @@ fn strict_parser_benchmarks(criterion: &mut Criterion) {
 }
 
 fn recovery_benchmarks(criterion: &mut Criterion) {
-    const INVALID: [(&str, &str); 5] = [
+    const INVALID: [(&str, &str); 7] = [
+        ("expression_nested", "RETURN f(1 +, [2, , 3]), 4"),
+        (
+            "expression_limit",
+            "MATCH (n) RETURN [1 +, 2 +, 3 +, 4 +, 5 +]",
+        ),
         ("clause_salvage", "MATCH (n) SET n.x = WITH n RETURN n"),
         ("unexpected_eof", "MATCH (n RETURN n"),
         ("trailing_operator", "RETURN 1 +"),
