@@ -130,6 +130,31 @@ insertion-only recovery: source tokens are not deleted, and unclosed delimiters
 or errors requiring identifier repair still fall back to clause errors. Each
 candidate allows at most four insertions, charged to the shared retry budget.
 Consumers must inspect expression errors as well as clause/statement errors.
+The unreleased `ast::visit` API provides a read-only visitor for that traversal:
+
+```rust
+use open_cypher::{ast::visit::Visitor, parse_recovering, Span};
+
+#[derive(Default)]
+struct Errors(Vec<Span>);
+impl<'ast> Visitor<'ast> for Errors {
+    fn visit_error(&mut self, span: Span) {
+        self.0.push(span);
+    }
+}
+
+let parsed = parse_recovering("RETURN 1 +").value.unwrap();
+let mut errors = Errors::default();
+errors.visit_program(&parsed.program);
+assert_eq!(errors.0, vec![Span::empty(10)]);
+```
+
+Default visitors descend through every UNION branch and nested expression,
+query, and pattern. Override a node hook and call its corresponding `walk_*`
+function to continue descending, or omit the call to skip that subtree.
+Traversal uses AST field order and borrows nodes; it does not clone the tree.
+Names, operators, and other metadata are available through the owning nodes.
+
 See the [0.4 recovery migration notes](docs/migration-to-0.4.md) for before/after
 AST examples and recovery boundaries.
 Multi-statement input remains a candidate for a later minor release.

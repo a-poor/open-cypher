@@ -7,6 +7,8 @@
 
 use crate::span::Span;
 
+pub mod visit;
+
 /// A syntax value and its source extent.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
