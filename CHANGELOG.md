@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Read-only `ast::visit::Visitor` hooks and default `walk_*` functions for
+  statements, queries, clauses, expressions, patterns, and label expressions.
+  Traversal includes all UNION branches and nested queries and reports every
+  error-node category through `visit_error`. Hooks support borrowed-node
+  collection and subtree pruning.
+
 ## [0.4.0] - 2026-10-16
 
 ### Performance
