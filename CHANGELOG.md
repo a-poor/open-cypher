@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-16
+
 ### Changed
 
 - Recover missing operands immediately before contextual `WHEN`, `THEN`,
@@ -153,7 +155,8 @@ First stable release of the openCypher 2024.3 parser rewrite. Changes since
 
 - Initial release: a Pest-based openCypher parser prototype.
 
-[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/a-poor/open-cypher/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/a-poor/open-cypher/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/a-poor/open-cypher/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/a-poor/open-cypher/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/a-poor/open-cypher/compare/v0.2.0...v0.2.1

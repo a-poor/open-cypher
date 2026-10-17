@@ -10,15 +10,14 @@
 `open-cypher` is an unofficial Rust lexer and parser for the
 [openCypher](https://opencypher.org/) query language.
 
-The `0.2` rewrite targets the openCypher 2024.3 grammar with a lossless Logos
+It targets the openCypher 2024.3 grammar with a lossless Logos
 token stream, a LALRPOP parser, a typed and spanned AST, and structured
 diagnostics. The crate parses syntax only: it does not resolve names, perform
 type checking, execute queries, or claim official TCK certification.
 
 ## Status
 
-Versions `0.2` and later are a clean break from the original Pest-based API. The
-2024.3 syntax coverage is measured by a deterministic projection of every query
+The 2024.3 syntax coverage is measured by a deterministic projection of every query
 occurrence in the pinned TCK and by executable traceability for all 377 BNF
 productions. This is parser evidence only, not semantic, runtime, or official
 TCK certification.
@@ -41,7 +40,7 @@ provenance and implementation coverage.
 
 ```toml
 [dependencies]
-open-cypher = "0.4.0"
+open-cypher = "0.5.0"
 ```
 
 `parse` is the strict entry point. It returns the syntax tree and the full
@@ -91,8 +90,12 @@ diagnostic data types:
 
 ```toml
 [dependencies]
-open-cypher = { version = "0.4.0", features = ["serde"] }
+open-cypher = { version = "0.5.0", features = ["serde"] }
 ```
+
+Upgrading from the original `0.1` Pest-based API? See the
+[migration guide](docs/migration-from-0.1.md) for the breaking changes introduced
+in `0.2`.
 
 ## Scope
 
@@ -104,7 +107,7 @@ Supported:
   such as `COUNT {}` / `COLLECT {}` subqueries, `!=` and `||`, GQL path modes,
   label expressions in `SET` / `REMOVE`, and empty or comment-only input.
 
-Out of scope for the `0.4` series:
+Out of scope for the `0.5` series:
 
 - semantic analysis and execution: names are not resolved, types are not
   checked, and some inputs a database would reject at compile time (for
@@ -130,7 +133,7 @@ insertion-only recovery: source tokens are not deleted, and unclosed delimiters
 or errors requiring identifier repair still fall back to clause errors. Each
 candidate allows at most four insertions, charged to the shared retry budget.
 Consumers must inspect expression errors as well as clause/statement errors.
-The unreleased `ast::visit` API provides a read-only visitor for that traversal:
+The `ast::visit` API provides a read-only visitor for that traversal:
 
 ```rust
 use open_cypher::{ast::visit::Visitor, parse_recovering, Span};
@@ -155,14 +158,15 @@ function to continue descending, or omit the call to skip that subtree.
 Traversal uses AST field order and borrows nodes; it does not clone the tree.
 Names, operators, and other metadata are available through the owning nodes.
 
-Unreleased recovery also handles missing operands before contextual CASE
+Recovery also handles missing operands before contextual CASE
 boundaries (for example, `RETURN CASE WHEN true THEN 1 + ELSE 2 END`) and
 comprehension `WHERE` boundaries. Predicates and projections such as
 `RETURN [x IN [1,2] WHERE x > | x +]` retain both missing operands. Valid
 contextual-name clauses take precedence; repairs retain the same insertion
 and retry limits.
 
-See the [0.4 recovery migration notes](docs/migration-to-0.4.md) for before/after
+See the [0.5 migration notes](docs/migration-to-0.5.md) for visitor usage and new
+recovery boundaries, and the [0.4 recovery migration notes](docs/migration-to-0.4.md) for before/after
 AST examples and recovery boundaries.
 Multi-statement input remains a candidate for a later minor release.
 
