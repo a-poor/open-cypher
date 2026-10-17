@@ -155,6 +155,13 @@ function to continue descending, or omit the call to skip that subtree.
 Traversal uses AST field order and borrows nodes; it does not clone the tree.
 Names, operators, and other metadata are available through the owning nodes.
 
+Unreleased recovery also handles missing operands before contextual CASE
+boundaries (for example, `RETURN CASE WHEN true THEN 1 + ELSE 2 END`) and
+comprehension `WHERE` boundaries. Predicates and projections such as
+`RETURN [x IN [1,2] WHERE x > | x +]` retain both missing operands. Valid
+contextual-name clauses take precedence; repairs retain the same insertion
+and retry limits.
+
 See the [0.4 recovery migration notes](docs/migration-to-0.4.md) for before/after
 AST examples and recovery boundaries.
 Multi-statement input remains a candidate for a later minor release.
