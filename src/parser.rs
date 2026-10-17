@@ -2892,35 +2892,42 @@ fn recover_expression_operands(
             .iter()
             .any(|item| item.trim_matches('"') == "error expression")
         {
-            // Contextual-name parsing can consume AS as the missing operand,
-            // then fail on the alias. Try the explicit alias interpretation
-            // only immediately after an operator; the grammar validates it.
-            let alias_marker = index.checked_sub(1)?;
-            let operator = alias_marker.checked_sub(1)?;
-            if repaired[alias_marker].1 != ParserToken::As
-                || !matches!(
-                    repaired[operator].1,
-                    ParserToken::Plus
-                        | ParserToken::Minus
-                        | ParserToken::Star
-                        | ParserToken::Slash
-                        | ParserToken::Percent
-                        | ParserToken::Caret
-                        | ParserToken::And
-                        | ParserToken::Or
-                        | ParserToken::Xor
-                        | ParserToken::Not
-                        | ParserToken::Equal
-                        | ParserToken::NotEqual
-                        | ParserToken::Less
-                        | ParserToken::LessEqual
-                        | ParserToken::Greater
-                        | ParserToken::GreaterEqual
-                )
-            {
+            // Contextual-name parsing can consume a structural keyword as the
+            // missing operand, then fail on the following token (or EOF). Try
+            // its structural interpretation only immediately after an operator;
+            // the grammar validates the surrounding CASE/comprehension/alias.
+            let boundary = index.checked_sub(1)?;
+            let operator = boundary.checked_sub(1)?;
+            if !matches!(
+                repaired[boundary].1,
+                ParserToken::As
+                    | ParserToken::When
+                    | ParserToken::Then
+                    | ParserToken::Else
+                    | ParserToken::End
+                    | ParserToken::Where
+            ) || !matches!(
+                repaired[operator].1,
+                ParserToken::Plus
+                    | ParserToken::Minus
+                    | ParserToken::Star
+                    | ParserToken::Slash
+                    | ParserToken::Percent
+                    | ParserToken::Caret
+                    | ParserToken::And
+                    | ParserToken::Or
+                    | ParserToken::Xor
+                    | ParserToken::Not
+                    | ParserToken::Equal
+                    | ParserToken::NotEqual
+                    | ParserToken::Less
+                    | ParserToken::LessEqual
+                    | ParserToken::Greater
+                    | ParserToken::GreaterEqual
+            ) {
                 return None;
             }
-            index = alias_marker;
+            index = boundary;
             location = repaired[index].0;
         }
         repaired.insert(index, (location, ParserToken::ErrorExpression, location));
@@ -2967,17 +2974,22 @@ mod expression_recovery_tests {
 
     #[test]
     fn expression_retries_obey_the_remaining_shared_budget() {
-        let source = "RETURN [1 +, 2 +]";
-        let tokens = parser_tokens(&lexer::lex(source).tokens);
-        let error = parse_tokens_with_contextual_names(&tokens, |input| {
-            generated::ClauseRootParser::new().parse(source, input.iter().copied().map(Ok))
-        })
-        .unwrap_err();
-        for available in [0, 1, 2] {
-            let mut attempts = available;
-            let result = recover_expression_operands(source, &tokens, error.clone(), &mut attempts);
-            assert_eq!(result.is_some(), available == 2);
-            assert_eq!(attempts, 0);
+        for source in [
+            "RETURN [1 +, 2 +]",
+            "RETURN CASE WHEN 1 + THEN 2 + ELSE 3 END",
+        ] {
+            let tokens = parser_tokens(&lexer::lex(source).tokens);
+            let error = parse_tokens_with_contextual_names(&tokens, |input| {
+                generated::ClauseRootParser::new().parse(source, input.iter().copied().map(Ok))
+            })
+            .unwrap_err();
+            for available in [0, 1, 2] {
+                let mut attempts = available;
+                let result =
+                    recover_expression_operands(source, &tokens, error.clone(), &mut attempts);
+                assert_eq!(result.is_some(), available == 2);
+                assert_eq!(attempts, 0);
+            }
         }
     }
 }

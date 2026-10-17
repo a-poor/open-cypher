@@ -286,13 +286,14 @@ fn case_result_keeps_other_arms_and_else_expression() {
 }
 
 #[test]
-fn ambiguous_case_keyword_uses_fallback_and_retains_preceding_clause() {
-    // ELSE can be a contextual operand name. Recovery does not guess whether
-    // to reinterpret it as a CASE boundary after consuming it as an operand.
+fn contextual_case_boundary_recovers_and_retains_preceding_clause() {
     let source = "MATCH (n) RETURN CASE WHEN true THEN 1 + ELSE 2 END";
     let result = clauses(source);
     assert!(matches!(result[0].kind, ClauseKind::Match(_)));
-    assert!(matches!(result[1].kind, ClauseKind::Error(_)));
+    let ExprKind::Case(case) = &expression(&result[1], 0).kind else {
+        panic!()
+    };
+    assert_missing_right(&case.alternatives[0].then, source.find("ELSE").unwrap());
 }
 
 #[test]

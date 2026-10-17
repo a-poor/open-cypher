@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Recover missing operands immediately before contextual `WHEN`, `THEN`,
+  `ELSE`, `END`, and comprehension `WHERE` boundaries after an operator.
+  Grammar-validated insertion preserves CASE arms and comprehension structure.
+  Valid contextual-name clauses still win; the four-insertion limit, shared
+  retry budget, strict diagnostics, and delimiter/name fallback are retained.
+
 ### Added
 
 - Read-only `ast::visit::Visitor` hooks and default `walk_*` functions for
