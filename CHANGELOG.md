@@ -6,6 +6,13 @@ to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Performance
+
+- Stop retrying longer clause candidates after a definitive lookahead-token
+  error, and stop considering UNION splits beyond that error. This removes
+  redundant strict parsing of long malformed UNION chains while preserving
+  contextual-name handling and diagnostics.
+
 ### Changed
 
 - Recovering parsing now preserves top-level `UNION` branches, operator spans,

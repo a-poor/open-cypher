@@ -30,11 +30,27 @@ recovering parsing, including the initial strict parse.
 including inputs that exhaust the shared recovery budget. It also includes the
 initial strict parse, rather than measuring just the recovery pass.
 
-Long malformed UNION chains already scale poorly in the strict parser: replaying
-this workload against `v0.3.0` also took seconds at 128 branches on a local smoke
-run. The recovery retry budget limits additional candidate parsing, not total
-end-to-end latency. Strict UNION parsing remains performance debt; use a quiet
-machine for comparative timings (the initial smoke runs overlapped other checks).
+Strict parsing stops extending candidates after a definitive lookahead-token
+error and skips UNION splits beyond that error. A unit test bounds clause-parser
+attempts for this malformed-chain workload through 512 branches, independently of
+wall-clock timing. This is a bound on parser attempts, not a claim of linear
+end-to-end runtime: token scans and contextual-name retries still contribute work.
+
+A local macOS arm64 comparison against `1254b68` (2026-10-16, no overlapping
+checks, 10 samples, 1-second warmup and measurement targets) measured:
+
+| UNION branches | Before | After |
+| --- | ---: | ---: |
+| 1 | 65.5 µs | 55.5 µs |
+| 4 | 411 µs | 285 µs |
+| 16 | 4.72 ms | 1.54 ms |
+| 64 | 149 ms | 2.02 ms |
+| 128 | 1.16 s | 2.39 ms |
+
+These are Criterion point estimates for end-to-end recovering parsing. The
+recovery retry budget still limits additional candidate parsing rather than
+total latency. Save a baseline with `--save-baseline before-union-perf`, then
+compare with `--baseline before-union-perf` using the same benchmark command.
 
 Benchmark reports are evidence, not a portable throughput promise. Compare base
 and candidate revisions on the same quiet machine. See
