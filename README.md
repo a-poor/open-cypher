@@ -130,6 +130,8 @@ insertion-only recovery: source tokens are not deleted, and unclosed delimiters
 or errors requiring identifier repair still fall back to clause errors. Each
 candidate allows at most four insertions, charged to the shared retry budget.
 Consumers must inspect expression errors as well as clause/statement errors.
+See the [0.4 recovery migration notes](docs/migration-to-0.4.md) for before/after
+AST examples and recovery boundaries.
 Multi-statement input remains a candidate for a later minor release.
 
 Some accepted inputs look surprising but follow the 2024.3 grammar and are not

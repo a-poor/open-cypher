@@ -235,6 +235,108 @@ fn recovered_expression_round_trips_through_json() {
     assert_eq!(outcome, decoded);
 }
 
+fn assert_missing_right(expression: &Expr, location: usize) {
+    let ExprKind::Binary { right, .. } = &expression.kind else {
+        panic!("expected binary expression: {expression:?}")
+    };
+    assert!(matches!(right.kind, ExprKind::Error(_)));
+    assert_eq!(right.span, Span::empty(location));
+}
+
+#[test]
+fn map_values_keep_keys_and_valid_siblings() {
+    let source = "RETURN {broken: 1 +, intact: 2}, 3";
+    let result = clauses(source);
+    let ExprKind::Map(entries) = &expression(&result[0], 0).kind else {
+        panic!()
+    };
+    assert_eq!(entries.len(), 2);
+    assert_eq!(
+        &source[entries[0].key.span.start..entries[0].key.span.end],
+        "broken"
+    );
+    assert_missing_right(&entries[0].value, source.find(',').unwrap());
+    assert!(matches!(entries[1].value.kind, ExprKind::Literal(_)));
+    assert!(matches!(
+        expression(&result[0], 1).kind,
+        ExprKind::Literal(_)
+    ));
+}
+
+#[test]
+fn case_result_keeps_other_arms_and_else_expression() {
+    let source = "RETURN CASE WHEN true THEN (1 +) WHEN false THEN 4 ELSE 2 END, 3";
+    let result = clauses(source);
+    let ExprKind::Case(case) = &expression(&result[0], 0).kind else {
+        panic!()
+    };
+    assert_eq!(case.alternatives.len(), 2);
+    assert!(matches!(
+        case.alternatives[1].then.kind,
+        ExprKind::Literal(_)
+    ));
+    let ExprKind::Parenthesized(result) = &case.alternatives[0].then.kind else {
+        panic!()
+    };
+    assert_missing_right(result, source.find(')').unwrap());
+    assert!(matches!(
+        case.else_expression.as_ref().unwrap().kind,
+        ExprKind::Literal(_)
+    ));
+}
+
+#[test]
+fn ambiguous_case_keyword_uses_fallback_and_retains_preceding_clause() {
+    // ELSE can be a contextual operand name. Recovery does not guess whether
+    // to reinterpret it as a CASE boundary after consuming it as an operand.
+    let source = "MATCH (n) RETURN CASE WHEN true THEN 1 + ELSE 2 END";
+    let result = clauses(source);
+    assert!(matches!(result[0].kind, ClauseKind::Match(_)));
+    assert!(matches!(result[1].kind, ClauseKind::Error(_)));
+}
+
+#[test]
+fn list_comprehension_keeps_binding_list_and_projection() {
+    let source = "RETURN [x IN [1, 2] | x +], 3";
+    let result = clauses(source);
+    let ExprKind::ListComprehension(comprehension) = &expression(&result[0], 0).kind else {
+        panic!()
+    };
+    assert!(matches!(comprehension.list.kind, ExprKind::List(_)));
+    assert_missing_right(
+        comprehension.projection.as_ref().unwrap(),
+        source.rfind(']').unwrap(),
+    );
+    assert!(matches!(
+        expression(&result[0], 1).kind,
+        ExprKind::Literal(_)
+    ));
+}
+
+#[test]
+fn projection_modifiers_retain_missing_operands() {
+    for modifier in ["ORDER BY", "SKIP", "OFFSET", "LIMIT"] {
+        let source = format!("RETURN 1 {modifier} 2 +");
+        let result = clauses(&source);
+        let ClauseKind::Return(clause) = &result[0].kind else {
+            panic!()
+        };
+        let projection = &clause.projection;
+        let operand = match modifier {
+            "ORDER BY" => &projection.order_by.as_ref().unwrap().items[0].expression,
+            "SKIP" => projection.skip.as_ref().unwrap(),
+            "OFFSET" => projection.offset.as_ref().unwrap(),
+            "LIMIT" => projection.limit.as_ref().unwrap(),
+            _ => unreachable!(),
+        };
+        assert_missing_right(operand, source.len());
+        assert!(matches!(
+            expression(&result[0], 0).kind,
+            ExprKind::Literal(_)
+        ));
+    }
+}
+
 proptest::proptest! {
     #[test]
     fn missing_operand_keeps_valid_siblings(
