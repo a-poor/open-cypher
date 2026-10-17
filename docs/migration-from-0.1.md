@@ -52,7 +52,10 @@ if let Some(partial) = outcome.value {
 The strict API returns `Err(ParseErrors)` if any lexical or syntactic error is
 present. The recovering API always returns a program root and retains valid
 top-level clauses around malformed regions, inserting `ClauseKind::Error`
-placeholders. It does not repair expressions or cross unclosed delimiters.
+placeholders. Missing expression operands can become empty-span `ExprKind::Error`
+nodes while their operators and valid siblings survive. Callers must inspect
+expression errors too. Recovery does not delete tokens, invent identifiers,
+or close unclosed delimiters; such errors still use clause-level fallback.
 UNION branches and their operators are preserved; a missing branch contains
 an empty-span error clause. Valid clauses take precedence over splitting
 contextual names. Multi-statement inputs, or inputs with no recoverable clauses,

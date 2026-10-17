@@ -772,6 +772,7 @@ pub enum ExprKind {
     Subquery(SubqueryExpression),
     Pattern(Pattern),
     Parenthesized(Box<Expr>),
+    /// A missing operand inserted by recovery, with an empty source span.
     Error(ErrorNode),
 }
 

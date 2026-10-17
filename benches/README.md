@@ -55,3 +55,40 @@ compare with `--baseline before-union-perf` using the same benchmark command.
 Benchmark reports are evidence, not a portable throughput promise. Compare base
 and candidate revisions on the same quiet machine. See
 [`docs/benchmarking.md`](../docs/benchmarking.md) for the regression policy.
+
+## Expression recovery (0.4 preparation)
+
+Local macOS 26.5.1 arm64 measurements with rustc 1.99.0 compared `8f02ec1`
+(UNION optimization, before expression recovery) with `b0162d9`. Both used the
+same benchmark inputs, 30 samples, a 1-second warmup, and a 2-second measurement
+target. No project checks ran concurrently. The baseline worktree was given the
+two new expression benchmark inputs; the package's release artifacts were
+cleaned when switching revisions to prevent shared-target artifact reuse.
+
+| Input | Before, two runs | Expression recovery, two runs |
+| --- | ---: | ---: |
+| `RETURN 1 +` | 27.4–51.6 µs | 26.1–26.1 µs |
+| Nested call/list missing operands | 46.9–59.9 µs | 42.0–42.5 µs |
+| Five missing operands, exceeding repair limit | 48.0–76.6 µs | 79.1–79.4 µs |
+| 64 UNION prefixes + incomplete RETURN | 2.98–3.74 ms | 1.97–1.98 ms |
+| 128 UNION prefixes + incomplete RETURN | 2.47–2.49 ms | 2.34–2.35 ms |
+
+Ranges above are Criterion point estimates across two runs, not confidence
+intervals. Baseline variance was substantial, so these do **not** establish a
+new speedup or precise overhead percentage. The failed-repair case costs up to
+about 31 µs more than the faster baseline run: four attempted insertions do work
+even when the final result still falls back to a clause error. Successful
+repairs also produce richer ASTs than the baseline, so outputs differ.
+
+The earlier UNION fix remains effective on these inputs: 128 prefixes take
+about 2.35 ms, versus the previously recorded 1.16 seconds before pruning.
+This is workload-specific evidence, not an end-to-end complexity guarantee.
+
+Reproduce the selected cases on each revision with:
+
+```console
+cargo bench --bench parser --locked -- 'parse_invalid/(expression_nested|expression_limit|trailing_operator)|union_recovery/(64|128)$' --sample-size 30 --warm-up-time 1 --measurement-time 2 --save-baseline before-expression
+```
+
+On the candidate, replace `--save-baseline before-expression` with
+`--baseline before-expression`.

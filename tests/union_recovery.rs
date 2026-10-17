@@ -15,7 +15,7 @@ proptest! {
     ) {
         let broken = broken % values.len();
         let branches: Vec<_> = values.iter().enumerate().map(|(index, value)| {
-            if index == broken { "RETURN 1 + *".to_owned() }
+            if index == broken { "RETURN 1 0".to_owned() }
             else { format!("RETURN{whitespace}{value}") }
         }).collect();
         let operator = if all { "UNION ALL" } else { "UNION DISTINCT" };
@@ -87,7 +87,7 @@ fn retains_valid_branch_and_broken_tail_with_exact_spans() {
     ));
     assert!(matches!(
         query.unions[0].query.kind.clauses[0].kind,
-        ClauseKind::Error(_)
+        ClauseKind::Return(_)
     ));
     let parsed = parse_recovering(source).value.unwrap();
     assert_eq!(parsed.program.span, Span::new(2, 24));
@@ -100,9 +100,9 @@ fn retains_valid_branch_and_broken_tail_with_exact_spans() {
 #[test]
 fn retains_quantifiers_and_recovers_first_middle_and_last_branches() {
     for source in [
-        "RETURN 1 + * UNION ALL RETURN 2 UNION DISTINCT RETURN 3",
-        "RETURN 1 UNION ALL RETURN 2 + * UNION DISTINCT RETURN 3",
-        "RETURN 1 UNION ALL RETURN 2 UNION DISTINCT RETURN 3 + *",
+        "RETURN 1 0 UNION ALL RETURN 2 UNION DISTINCT RETURN 3",
+        "RETURN 1 UNION ALL RETURN 2 0 UNION DISTINCT RETURN 3",
+        "RETURN 1 UNION ALL RETURN 2 UNION DISTINCT RETURN 3 0",
     ] {
         let query = recovered(source);
         assert_eq!(query.unions.len(), 2);
@@ -151,7 +151,7 @@ fn missing_branches_have_empty_error_spans() {
 
 #[test]
 fn clause_recovery_and_terminal_return_are_local_to_each_branch() {
-    let source = "MATCH (n) SET n.x = RETURN n UNION MATCH (m) SET m.x = RETURN m";
+    let source = "MATCH (n) SET n. = 1 RETURN n UNION MATCH (m) SET m. = 1 RETURN m";
     let query = recovered(source);
     assert_eq!(query.unions.len(), 1);
     for branch in [&query.head, &query.unions[0].query] {
@@ -202,7 +202,7 @@ fn nested_union_is_not_promoted_and_unclosed_delimiters_block_splitting() {
     for source in [
         "MATCH (n) WITH [1, UNION RETURN n",
         "MATCH (n) WITH {x: UNION RETURN n}",
-        "MATCH (n) RETURN EXISTS { RETURN 1 UNION RETURN }",
+        "MATCH (n) RETURN EXISTS { RETURN 1 UNION RETURN n. }",
     ] {
         let query = recovered(source);
         assert!(query.unions.is_empty(), "{source}");
@@ -216,10 +216,10 @@ fn nested_union_is_not_promoted_and_unclosed_delimiters_block_splitting() {
 #[test]
 fn explicit_name_positions_do_not_split_even_in_broken_clauses() {
     for broken in [
-        "WITH 1 AS union +",
-        "SET n.union =",
+        "WITH 1 AS union 0",
+        "SET n.union = 1 0",
         "CALL union +",
-        "WITH n:union +",
+        "WITH n:union 0",
     ] {
         let source = format!("MATCH (n) {broken} RETURN n UNION RETURN");
         let query = recovered(&source);
@@ -270,7 +270,7 @@ fn exhausted_budget_leaves_one_unsplit_suffix() {
 fn unrecoverable_and_multi_statement_inputs_keep_whole_input_error() {
     for source in [
         "UNION",
-        "RETURN + * UNION RETURN + *",
+        "RETURN 1 0 UNION RETURN 1 0",
         "RETURN 1; UNION RETURN 2",
         "RETURN 1 UNION RETURN 2; RETURN 3",
     ] {

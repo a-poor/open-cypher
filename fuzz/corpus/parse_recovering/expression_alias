@@ -1,0 +1,1 @@
+WITH 1 + AS value, 2 AS other RETURN value, other

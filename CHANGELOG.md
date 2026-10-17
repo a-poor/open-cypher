@@ -15,6 +15,12 @@ to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Recovering parsing now inserts empty-span `ExprKind::Error` nodes for missing
+  operands, preserving operators, precedence, aliases, and valid sibling
+  expressions where possible. Source tokens are not deleted, identifiers and
+  delimiters are not invented, and failed repairs retain clause-level fallback.
+  Up to four insertions per candidate share the existing recovery retry budget.
+  Consumers must handle expression errors inside otherwise structured clauses.
 - Recovering parsing now preserves top-level `UNION` branches, operator spans,
   and `ALL`/`DISTINCT` quantifiers around malformed regions. Broken branches
   contain error clauses; missing branches contain an empty-span error clause.

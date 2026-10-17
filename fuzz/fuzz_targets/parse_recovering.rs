@@ -3,7 +3,7 @@
 use libfuzzer_sys::fuzz_target;
 use open_cypher::{
     DiagnosticCode, Span,
-    ast::{QueryKind, StatementKind},
+    ast::{ClauseKind, Expr, ExprKind, ProjectionItemKind, QueryKind, StatementKind},
     lex, parse_recovering,
 };
 
@@ -16,6 +16,22 @@ fn check_span(source: &str, span: Span, parent: Span) {
 
 const MAX_RECOVERY_DIAGNOSTICS: usize = 32;
 
+fn check_expression(source: &str, expression: &Expr, parent: Span) {
+    check_span(source, expression.span, parent);
+    let check = |child: &Expr| check_expression(source, child, expression.span);
+    match &expression.kind {
+        ExprKind::Error(_) => assert!(expression.span.is_empty()),
+        ExprKind::Binary { left, right, .. } => {
+            check(left);
+            check(right);
+        }
+        ExprKind::Unary { operand, .. } | ExprKind::Parenthesized(operand) => check(operand),
+        ExprKind::List(items) => items.iter().for_each(check),
+        ExprKind::Function(function) => function.arguments.iter().for_each(check),
+        _ => {}
+    }
+}
+
 fuzz_target!(|data: &[u8]| {
     let source = String::from_utf8_lossy(data);
     let source = source.as_ref();
@@ -27,6 +43,7 @@ fuzz_target!(|data: &[u8]| {
     );
     for diagnostic in &outcome.diagnostics {
         assert_ne!(diagnostic.code, DiagnosticCode::Internal);
+        assert!(!diagnostic.message.contains("error expression"));
         assert!(diagnostic.primary_span.start <= diagnostic.primary_span.end);
         assert!(diagnostic.primary_span.end <= source.len());
         assert!(source.is_char_boundary(diagnostic.primary_span.start));
@@ -60,6 +77,20 @@ fuzz_target!(|data: &[u8]| {
                             check_span(source, clause.span, single.span);
                             assert!(previous_end <= clause.span.start);
                             previous_end = clause.span.end;
+                            let projection = match &clause.kind {
+                                ClauseKind::Return(clause) => Some(&clause.projection),
+                                ClauseKind::With(clause) => Some(&clause.projection),
+                                _ => None,
+                            };
+                            if let Some(projection) = projection {
+                                for item in &projection.items {
+                                    if let ProjectionItemKind::Expression { expression, .. } =
+                                        &item.kind
+                                    {
+                                        check_expression(source, expression, item.span);
+                                    }
+                                }
+                            }
                         }
                     }
                 }

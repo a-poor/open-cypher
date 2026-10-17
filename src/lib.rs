@@ -84,7 +84,10 @@
 //! [`parse_recovering`] never fails. It returns a [`ParseOutcome`] carrying
 //! the diagnostics alongside a program root. Valid top-level clauses are retained,
 //! with [`ClauseKind::Error`](ast::ClauseKind::Error) placeholders for skipped
-//! regions. Recovery does not cross unclosed delimiters or repair expressions.
+//! regions. Missing operands become empty-span [`ExprKind::Error`](ast::ExprKind::Error)
+//! nodes, retaining surrounding operators and valid siblings. Recovery inserts
+//! at most four operands per candidate and shares the clause retry budget. It
+//! does not delete source tokens, invent identifiers, or close delimiters.
 //! UNION branches retain their operators and clause structure, with empty-span
 //! error clauses for missing branches. Valid clauses take precedence over
 //! splitting contextual names. A shared retry budget leaves an unsplit error
