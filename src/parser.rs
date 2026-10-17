@@ -368,6 +368,15 @@ fn parse_regular_query(
     };
 
     for union_index in top_level_indices(tokens, |token| token == ParserToken::Union) {
+        // A token error is independent of tokens after that lookahead. A split
+        // beyond it cannot turn the same invalid prefix into a single query.
+        // Keep EOF and user errors on the exhaustive path: extending those
+        // candidates can change the result or its diagnostic.
+        if let ParseError::UnrecognizedToken { token, .. } = &unsplit_error
+            && tokens[union_index].0 > token.0
+        {
+            break;
+        }
         let Ok(head) = parse_single_query(source, &tokens[..union_index]) else {
             continue;
         };
@@ -430,6 +439,8 @@ fn parse_single_query(
         let mut best_error = None;
         let mut parsed = None;
         for end in candidate_ends {
+            #[cfg(test)]
+            STRICT_CLAUSE_ATTEMPTS.with(|attempts| attempts.set(attempts.get() + 1));
             let input = tokens[cursor..end].iter().copied().map(Ok);
             match generated::ClauseRootParser::new().parse(source, input) {
                 Ok(clause) => {
@@ -439,6 +450,10 @@ fn parse_single_query(
                     parsed = Some((clause, end));
                     break;
                 }
+                // The generated LR parser has already rejected a concrete
+                // lookahead token. Appending tokens cannot change that action,
+                // so all longer candidates would repeat the same failure.
+                Err(error @ ParseError::UnrecognizedToken { .. }) => return Err(error),
                 Err(error) => retain_farthest_error(&mut best_error, error),
             }
         }
@@ -2815,4 +2830,30 @@ fn recovered_branch(mut clauses: Vec<Clause>, span: Span) -> SingleQuery {
         clauses.push(Node::new(ClauseKind::Error(ErrorNode), span));
     }
     Node::new(SingleQueryKind { clauses }, span)
+}
+
+#[cfg(test)]
+thread_local! {
+    static STRICT_CLAUSE_ATTEMPTS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(test)]
+mod union_performance_tests {
+    use super::*;
+
+    #[test]
+    fn malformed_union_chains_use_linear_clause_parse_attempts() {
+        for branches in [16, 128, 512] {
+            let source = format!("{}RETURN", "RETURN 1 UNION ALL ".repeat(branches));
+            let tokens = parser_tokens(&lexer::lex(&source).tokens);
+            STRICT_CLAUSE_ATTEMPTS.with(|attempts| attempts.set(0));
+            let error = parse_regular_query(&source, &tokens).unwrap_err();
+            assert_eq!(error_location(&error), source.find("UNION").unwrap());
+            let attempts = STRICT_CLAUSE_ATTEMPTS.with(|attempts| attempts.get());
+            assert!(
+                attempts <= 2 * branches + 1,
+                "{branches} branches used {attempts} clause parses"
+            );
+        }
+    }
 }
